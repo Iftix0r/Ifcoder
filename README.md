@@ -51,6 +51,24 @@ Yangi kalit generatsiya qilish:
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
+## Production sozlamalari (cPanel)
+
+`config/settings.py` quyidagi environment variable'larni o'qiydi (cPanel'da *Setup Python App →
+Environment Variables* bo'limidan qo'shiladi). Hech biri o'rnatilmasa, lokal ishlab chiqish
+uchun xavfsiz fallback qiymatlar ishlatiladi — production'da barchasini o'rnating:
+
+| Variable | Nima uchun | Misol |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Django'ning kripto imzo kaliti | `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
+| `DJANGO_DEBUG` | `False` qilib qo'yilsa, xatoliklar oshkor qilinmaydi va HTTPS/cookie xavfsizlik sozlamalari yoqiladi | `False` |
+| `IFCODER_FERNET_KEY` | Vault (API kalitlar, 2FA) shifrlash kaliti — yuqoriga qarang | (generatsiya qilingan Fernet kalit) |
+
+`DJANGO_DEBUG=False` o'rnatilganda avtomatik yoqiladigan sozlamalar: `SECURE_SSL_REDIRECT`,
+`SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, HSTS (`SECURE_HSTS_SECONDS=31536000` va
+subdomenlar/preload). Bular sayt Let's Encrypt SSL bilan ishlagani uchun xavfsiz — agar hali
+SSL sertifikat ulanmagan bo'lsa, avval uni yoqing, aks holda saytga HTTP orqali kirib bo'lmay
+qoladi.
+
 ## 2FA (ikki bosqichli tasdiqlash)
 
 `/panel/vault/2fa/setup/` orqali yoqiladi: Google Authenticator (yoki shunga o'xshash ilova)

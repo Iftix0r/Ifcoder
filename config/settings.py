@@ -21,10 +21,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n#hz%55&8k!y489-_@dq=$6-5ntn)el$-=x8j-q8@%1kjm@x)b'
+# Lokal ishlab chiqish uchun fallback qiymat quyida qoladi; production'da
+# DJANGO_SECRET_KEY environment variable orqali albatta almashtiring.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-n#hz%55&8k!y489-_@dq=$6-5ntn)el$-=x8j-q8@%1kjm@x)b',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Production serverda DJANGO_DEBUG=False environment variable sifatida o'rnatiladi.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [
     'iftix0r.uz', 'www.iftix0r.uz',
@@ -147,6 +153,17 @@ VAULT_FERNET_KEY = os.environ.get(
     'IFCODER_FERNET_KEY',
     'J_olCMzOvnbqcq4kf533E_qJx6dYSLq-6c_fVv2GPB0=',
 )
+
+# Production (DEBUG=False) uchun xavfsizlik sozlamalari — cPanel'dagi
+# iftix0r.uz Let's Encrypt SSL bilan xizmat qilgani uchun HTTPS majburlanadi.
+# Lokal (DEBUG=True) rivojlantirishga ta'sir qilmaydi.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
