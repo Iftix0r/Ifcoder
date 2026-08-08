@@ -1,0 +1,14 @@
+{% load i18n %}
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}"></button>
+<nav class="sticky ic-nav" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
+  <input type="search" id="nav-filter" placeholder="{% translate 'Qidirish...' %}" aria-label="{% translate 'Filter navigation items' %}">
+  <div class="ic-nav-links">
+    <a href="{% url 'dashboard:home' %}">&larr; Dashboard</a>
+    <a href="{% url 'admin:index' %}" class="{% if request.resolver_match.view_name == 'admin:index' %}active{% endif %}">Admin bosh sahifasi</a>
+    <a href="{% url 'admin:clients_client_changelist' %}" class="{% if 'clients_client' in request.resolver_match.view_name %}active{% endif %}">Mijozlar</a>
+    <a href="{% url 'admin:projects_project_changelist' %}" class="{% if 'projects_project' in request.resolver_match.view_name %}active{% endif %}">Loyihalar</a>
+    <a href="{% url 'admin:bots_bot_changelist' %}" class="{% if 'bots_bot' in request.resolver_match.view_name %}active{% endif %}">Botlar</a>
+    <a href="{% url 'admin:auth_user_changelist' %}" class="{% if 'auth_user' in request.resolver_match.view_name %}active{% endif %}">Foydalanuvchilar</a>
+    <a href="{% url 'admin:auth_group_changelist' %}" class="{% if 'auth_group' in request.resolver_match.view_name %}active{% endif %}">Guruhlar</a>
+  </div>
+</nav>
