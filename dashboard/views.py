@@ -1,4 +1,7 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
+from django.core.cache import cache
 from django.db.models import Sum
 from django.shortcuts import render
 from django.utils import timezone
@@ -8,6 +11,43 @@ from clients.models import Client
 from finance.models import Expense, Income, Invoice
 from infrastructure.models import Domain, SSLCertificate
 from projects.models import Project
+
+LOGIN_ATTEMPT_LIMIT = 5
+LOGIN_ATTEMPT_WINDOW = 300  # soniya
+
+
+class ThrottledLoginView(LoginView):
+    """Login urinishlarini IP bo'yicha cheklaydi (parol qo'pol kuch hujumidan himoya).
+
+    Eslatma: IP manzil request.META['REMOTE_ADDR'] orqali olinadi. cPanel kabi
+    reverse-proxy ortida bu har doim proksi IP'siga teng bo'lishi mumkin — bu
+    holatda cheklov barcha foydalanuvchilar uchun umumiy bo'lib qoladi (baribir
+    himoya beradi, faqat IP-bo'yicha aniqlik pasayadi).
+    """
+
+    template_name = "dashboard/login.html"
+
+    def _cache_key(self):
+        ip = self.request.META.get("REMOTE_ADDR", "unknown")
+        return f"login-attempts:{ip}"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == "POST" and cache.get(self._cache_key(), 0) >= LOGIN_ATTEMPT_LIMIT:
+            messages.error(
+                request,
+                "Juda ko'p noto'g'ri urinish. Bir necha daqiqadan so'ng qayta urinib ko'ring.",
+            )
+            return render(request, self.template_name, {"form": self.get_form_class()()})
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+        key = self._cache_key()
+        cache.set(key, cache.get(key, 0) + 1, LOGIN_ATTEMPT_WINDOW)
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        cache.delete(self._cache_key())
+        return super().form_valid(form)
 
 
 @login_required

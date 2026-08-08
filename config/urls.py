@@ -20,6 +20,8 @@ from django.http import HttpResponse
 from django.urls import include, path
 from django.views.generic import RedirectView
 
+from dashboard.views import ThrottledLoginView
+
 
 def robots_txt(request):
     # Bu shaxsiy CRM/boshqaruv paneli — qidiruv tizimlari indekslamasligi kerak.
@@ -29,7 +31,7 @@ def robots_txt(request):
 urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
     path('admin/', admin.site.urls),
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='dashboard/login.html'), name='login'),
+    path('accounts/login/', ThrottledLoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('panel/clients/', include('clients.urls')),
     path('panel/projects/', include('projects.urls')),

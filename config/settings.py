@@ -13,8 +13,16 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Lokal rivojlantirishda .env fayl orqali environment variable'larni o'rnatish
+# uchun (DJANGO_SECRET_KEY, DJANGO_DEBUG, IFCODER_FERNET_KEY va h.k.). Fayl
+# .gitignore'da — production'da esa cPanel/Passenger o'z environment
+# variable'larini beradi, .env fayl kerak emas (mavjud bo'lmasa jim o'tkaziladi).
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
