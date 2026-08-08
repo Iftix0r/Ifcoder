@@ -1,0 +1,63 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ client.name }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ client.name }}</h1>
+    <div class="sub">Qo'shilgan: {{ client.created_at|date:"d.m.Y" }}</div>
+  </div>
+  <a class="btn" href="{% url 'clients:edit' client.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    <h2 class="section-title">Loyihalar</h2>
+    {% if client.projects.all %}
+    <div class="table-wrap">
+    <table>
+      <tr><th>Nomi</th><th>Holati</th><th>Muddat</th></tr>
+      {% for p in client.projects.all %}
+      <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
+        <td>{{ p.name }}</td>
+        <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+        <td>{{ p.deadline|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">Loyihalar yo'q.</div>
+    {% endif %}
+
+    <h2 class="section-title">Botlar</h2>
+    {% if client.bots.all %}
+    <div class="table-wrap">
+    <table>
+      <tr><th>Nomi</th><th>Platforma</th><th>Holati</th></tr>
+      {% for b in client.bots.all %}
+      <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+        <td>{{ b.name }}</td>
+        <td>{{ b.get_platform_display }}</td>
+        <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">Botlar yo'q.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Telefon</span><span>{{ client.phone|default:"—" }}</span></li>
+      <li><span class="k">Telegram</span><span>{{ client.telegram|default:"—" }}</span></li>
+      <li><span class="k">Email</span><span>{{ client.email|default:"—" }}</span></li>
+    </ul>
+    {% if client.notes %}
+    <h2 class="section-title">Izoh</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ client.notes }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

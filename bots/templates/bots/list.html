@@ -1,0 +1,51 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Botlar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Botlar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:bots|length }} ta bot</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'bots:add' %}">+ Bot qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Nomi yoki username bo'yicha qidirish..." value="{{ q }}">
+    <select name="platform">
+      <option value="">Barcha platformalar</option>
+      {% for value, label in platform_choices %}
+      <option value="{{ value }}" {% if platform == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="status">
+      <option value="">Barcha holatlar</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q or status or platform %}<a class="btn btn-sm" href="{% url 'bots:list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if bots %}
+<div class="table-wrap">
+<table>
+  <tr><th>Nomi</th><th>Platforma</th><th>Holati</th><th>Loyiha</th><th>Mijoz</th></tr>
+  {% for b in bots %}
+  <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+    <td>{{ b.name }}</td>
+    <td>{{ b.get_platform_display }}</td>
+    <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+    <td>{{ b.project|default:"—" }}</td>
+    <td>{{ b.client|default:"—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

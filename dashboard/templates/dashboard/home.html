@@ -2,37 +2,45 @@
 {% block title %}Dashboard — Ifcoder{% endblock %}
 {% block content %}
 
+<div class="page-header">
+  <div>
+    <h1>Bosh sahifa</h1>
+    <div class="sub">Umumiy ko'rinish</div>
+  </div>
+</div>
+
 <div class="grid">
-  <div class="card">
+  <a class="card" style="text-decoration:none;" href="{% url 'clients:list' %}">
     <div class="value">{{ clients_count }}</div>
     <div class="label">Mijozlar</div>
-  </div>
-  <div class="card">
+  </a>
+  <a class="card" style="text-decoration:none;" href="{% url 'projects:list' %}">
     <div class="value">{{ projects_count }}</div>
     <div class="label">Loyihalar</div>
-  </div>
-  <div class="card">
+  </a>
+  <a class="card" style="text-decoration:none;" href="{% url 'bots:list' %}">
     <div class="value">{{ bots_count }}</div>
     <div class="label">Botlar</div>
-  </div>
-  <div class="card">
+  </a>
+  <a class="card" style="text-decoration:none;" href="{% url 'bots:list' %}?status=active">
     <div class="value">{{ bots_active_count }}</div>
     <div class="label">Faol botlar</div>
-  </div>
+  </a>
   {% for s in projects_by_status %}
-  <div class="card">
+  <a class="card" style="text-decoration:none;" href="{% url 'projects:list' %}?status={{ s.value }}">
     <div class="value">{{ s.count }}</div>
     <div class="label">Loyiha — {{ s.label }}</div>
-  </div>
+  </a>
   {% endfor %}
 </div>
 
-<h2>So'nggi loyihalar</h2>
+<h2 class="section-title">So'nggi loyihalar</h2>
 {% if recent_projects %}
+<div class="table-wrap">
 <table>
   <tr><th>Nomi</th><th>Mijoz</th><th>Holati</th><th>Muddat</th></tr>
   {% for p in recent_projects %}
-  <tr>
+  <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
     <td>{{ p.name }}</td>
     <td>{{ p.client|default:"—" }}</td>
     <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
@@ -40,16 +48,18 @@
   </tr>
   {% endfor %}
 </table>
+</div>
 {% else %}
-<div class="empty">Hozircha loyihalar yo'q. <a href="/admin/projects/project/add/" style="color:var(--accent);">Qo'shish</a></div>
+<div class="empty">Hozircha loyihalar yo'q. <a href="{% url 'projects:add' %}" style="color:var(--accent);">Qo'shish</a></div>
 {% endif %}
 
-<h2>So'nggi botlar</h2>
+<h2 class="section-title">So'nggi botlar</h2>
 {% if recent_bots %}
+<div class="table-wrap">
 <table>
   <tr><th>Nomi</th><th>Platforma</th><th>Holati</th><th>Loyiha</th></tr>
   {% for b in recent_bots %}
-  <tr>
+  <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
     <td>{{ b.name }}</td>
     <td>{{ b.get_platform_display }}</td>
     <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
@@ -57,24 +67,27 @@
   </tr>
   {% endfor %}
 </table>
+</div>
 {% else %}
-<div class="empty">Hozircha botlar yo'q. <a href="/admin/bots/bot/add/" style="color:var(--accent);">Qo'shish</a></div>
+<div class="empty">Hozircha botlar yo'q. <a href="{% url 'bots:add' %}" style="color:var(--accent);">Qo'shish</a></div>
 {% endif %}
 
-<h2>So'nggi mijozlar</h2>
+<h2 class="section-title">So'nggi mijozlar</h2>
 {% if recent_clients %}
+<div class="table-wrap">
 <table>
   <tr><th>Ism</th><th>Telefon</th><th>Telegram</th></tr>
   {% for c in recent_clients %}
-  <tr>
+  <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
     <td>{{ c.name }}</td>
     <td>{{ c.phone|default:"—" }}</td>
     <td>{{ c.telegram|default:"—" }}</td>
   </tr>
   {% endfor %}
 </table>
+</div>
 {% else %}
-<div class="empty">Hozircha mijozlar yo'q. <a href="/admin/clients/client/add/" style="color:var(--accent);">Qo'shish</a></div>
+<div class="empty">Hozircha mijozlar yo'q. <a href="{% url 'clients:add' %}" style="color:var(--accent);">Qo'shish</a></div>
 {% endif %}
 
 {% endblock %}

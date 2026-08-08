@@ -1,0 +1,47 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ project.name }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ project.name }}</h1>
+    <div class="sub">Yaratilgan: {{ project.created_at|date:"d.m.Y" }}</div>
+  </div>
+  <a class="btn" href="{% url 'projects:edit' project.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if project.description %}
+    <h2 class="section-title">Tavsif</h2>
+    <div style="font-size:14px;white-space:pre-wrap;margin-bottom:20px;">{{ project.description }}</div>
+    {% endif %}
+
+    <h2 class="section-title">Botlar</h2>
+    {% if project.bots.all %}
+    <div class="table-wrap">
+    <table>
+      <tr><th>Nomi</th><th>Platforma</th><th>Holati</th></tr>
+      {% for b in project.bots.all %}
+      <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+        <td>{{ b.name }}</td>
+        <td>{{ b.get_platform_display }}</td>
+        <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">Botlar yo'q.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Mijoz</span><span>{% if project.client %}<a href="{% url 'clients:detail' project.client.pk %}">{{ project.client }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Holati</span><span class="badge {{ project.status }}">{{ project.get_status_display }}</span></li>
+      <li><span class="k">Muddat</span><span>{{ project.deadline|default:"—" }}</span></li>
+      <li><span class="k">Repo</span><span>{% if project.repo_url %}<a href="{{ project.repo_url }}" target="_blank" rel="noopener">havola</a>{% else %}—{% endif %}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ bot.name }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ bot.name }}</h1>
+    <div class="sub">Qo'shilgan: {{ bot.created_at|date:"d.m.Y" }}</div>
+  </div>
+  <a class="btn" href="{% url 'bots:edit' bot.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if bot.notes %}
+    <h2 class="section-title">Izoh</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ bot.notes }}</div>
+    {% else %}
+    <div class="empty">Izoh yo'q.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Username</span><span>{{ bot.username|default:"—" }}</span></li>
+      <li><span class="k">Platforma</span><span>{{ bot.get_platform_display }}</span></li>
+      <li><span class="k">Holati</span><span class="badge {{ bot.status }}">{{ bot.get_status_display }}</span></li>
+      <li><span class="k">Loyiha</span><span>{% if bot.project %}<a href="{% url 'projects:detail' bot.project.pk %}">{{ bot.project }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Mijoz</span><span>{% if bot.client %}<a href="{% url 'clients:detail' bot.client.pk %}">{{ bot.client }}</a>{% else %}—{% endif %}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if object %}Botni tahrirlash{% else %}Yangi bot{% endif %} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{% if object %}Botni tahrirlash{% else %}Yangi bot{% endif %}</h1>
+</div>
+<div class="form-card">
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+    <p>
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {{ field.errors }}
+    </p>
+    {% endfor %}
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Saqlash</button>
+      <a class="btn" href="{% if object %}{% url 'bots:detail' object.pk %}{% else %}{% url 'bots:list' %}{% endif %}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

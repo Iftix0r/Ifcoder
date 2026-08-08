@@ -8,13 +8,17 @@
   :root {
     --bg: #0f1115;
     --panel: #171a21;
+    --panel-2: #1d212a;
     --border: #262b36;
     --text: #e6e8eb;
     --muted: #9aa3af;
     --accent: #5b8def;
+    --accent-dim: rgba(91,141,239,0.15);
     --green: #3fb950;
     --yellow: #d9a441;
+    --red: #e5534b;
     --gray: #6b7280;
+    --sidebar-w: 220px;
   }
   * { box-sizing: border-box; }
   body {
@@ -23,87 +27,190 @@
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
-  header {
+  a { color: inherit; }
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: var(--sidebar-w);
+    flex: 0 0 var(--sidebar-w);
+    border-right: 1px solid var(--border);
+    padding: 20px 14px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar .brand {
+    display: block;
+    font-weight: 700;
+    font-size: 18px;
+    text-decoration: none;
+    color: var(--text);
+    padding: 6px 10px 20px;
+  }
+  .sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .sidebar nav a:hover { background: var(--panel); color: var(--text); }
+  .sidebar nav a.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+  .sidebar .user {
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .sidebar .user a { color: var(--muted); text-decoration: none; }
+  .sidebar .user a:hover { color: var(--text); }
+  .content { flex: 1; min-width: 0; }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 60px;
+  }
+  .topbar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .topbar .brand { font-weight: 700; text-decoration: none; color: var(--text); }
+  .topbar-nav { display: flex; gap: 14px; overflow-x: auto; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .topbar-nav a { white-space: nowrap; text-decoration: none; color: var(--muted); font-size: 14px; padding: 4px 2px; }
+  .topbar-nav a.active { color: var(--accent); font-weight: 600; }
+
+  .page-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 28px;
-    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
   }
-  header a.brand {
-    color: var(--text);
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 18px;
-  }
-  header nav a {
-    color: var(--muted);
-    text-decoration: none;
-    margin-left: 18px;
-    font-size: 14px;
-  }
-  header nav a:hover { color: var(--text); }
-  main {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 28px;
-  }
+  .page-header h1 { font-size: 22px; margin: 0; }
+  .page-header .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
     margin-bottom: 28px;
   }
   .card {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 18px;
+    padding: 16px;
   }
-  .card .value {
-    font-size: 28px;
-    font-weight: 700;
-  }
-  .card .label {
-    color: var(--muted);
-    font-size: 13px;
-    margin-top: 4px;
-  }
-  h2 {
-    font-size: 15px;
+  .card .value { font-size: 26px; font-weight: 700; }
+  .card .label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  h2.section-title {
+    font-size: 14px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin: 32px 0 12px;
   }
-  table {
-    width: 100%;
-    border-collapse: collapse;
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .toolbar form { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+  .toolbar input[type="text"], .toolbar select {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  th, td {
-    text-align: left;
-    padding: 10px 14px;
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 8px;
     font-size: 14px;
-    border-bottom: 1px solid var(--border);
   }
+  .toolbar input[type="text"] { flex: 1; min-width: 160px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    color: var(--text);
+    background: var(--panel);
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--panel-2); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #4a7bd8; }
+  .btn-danger { color: var(--red); }
+  .btn-sm { padding: 5px 10px; font-size: 13px; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); }
+  th, td { text-align: left; padding: 10px 14px; font-size: 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
   th { color: var(--muted); font-weight: 500; }
   tr:last-child td { border-bottom: none; }
-  .empty { color: var(--muted); padding: 14px; font-size: 14px; }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 12px;
-    background: rgba(91,141,239,0.15);
-    color: var(--accent);
-  }
+  tr.row-link { cursor: pointer; }
+  tr.row-link:hover { background: var(--panel-2); }
+  .empty { color: var(--muted); padding: 20px; font-size: 14px; text-align: center; border: 1px dashed var(--border); border-radius: 10px; }
+
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; background: var(--accent-dim); color: var(--accent); }
   .badge.completed { background: rgba(63,185,80,0.15); color: var(--green); }
   .badge.paused { background: rgba(217,164,65,0.15); color: var(--yellow); }
   .badge.inactive { background: rgba(107,114,128,0.2); color: var(--gray); }
+
+  .pagination { display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap; }
+  .pagination a, .pagination span { padding: 6px 11px; border-radius: 6px; font-size: 13px; text-decoration: none; color: var(--muted); border: 1px solid var(--border); }
+  .pagination .current { color: var(--text); background: var(--panel); }
+  .pagination a:hover { color: var(--text); }
+
+  .form-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+    max-width: 560px;
+  }
+  .form-card p { margin: 0 0 16px; }
+  .form-card label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .form-card input, .form-card select, .form-card textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: 7px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .form-card textarea { min-height: 90px; resize: vertical; }
+  .form-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .errorlist { color: var(--red); font-size: 13px; list-style: none; padding: 0; margin: 4px 0 0; }
+
+  .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
+  .detail-list { list-style: none; padding: 0; margin: 0; }
+  .detail-list li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; display: flex; justify-content: space-between; gap: 10px; }
+  .detail-list li:last-child { border-bottom: none; }
+  .detail-list .k { color: var(--muted); }
+
   form.login {
     max-width: 320px;
     margin: 80px auto;
@@ -131,22 +238,54 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .errorlist { color: #e5534b; font-size: 13px; list-style: none; padding: 0; }
+
+  @media (max-width: 820px) {
+    .sidebar { display: none; }
+    .topbar { display: flex; }
+    .topbar-nav { display: flex; }
+    main { padding: 20px 16px 50px; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 {% if user.is_authenticated %}
-<header>
-  <a class="brand" href="{% url 'dashboard:home' %}">Ifcoder</a>
-  <nav>
-    <a href="{% url 'dashboard:home' %}">Dashboard</a>
-    <a href="/admin/">Admin</a>
-    <a href="{% url 'logout' %}">Chiqish ({{ user.username }})</a>
-  </nav>
-</header>
-{% endif %}
+<div class="layout">
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'dashboard:home' %}">Ifcoder</a>
+    <nav>
+      <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}">Bosh sahifa</a>
+      <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">Mijozlar</a>
+      <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}">Loyihalar</a>
+      <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">Botlar</a>
+      <a href="/admin/">Admin panel</a>
+    </nav>
+    <div class="user">
+      {{ user.username }}<br>
+      <a href="{% url 'logout' %}">Chiqish</a>
+    </div>
+  </aside>
+  <div class="content">
+    <div class="topbar">
+      <a class="brand" href="{% url 'dashboard:home' %}">Ifcoder</a>
+      <a href="{% url 'logout' %}" style="color:var(--muted);text-decoration:none;font-size:13px;">Chiqish</a>
+    </div>
+    <div class="topbar-nav">
+      <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}">Bosh sahifa</a>
+      <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">Mijozlar</a>
+      <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}">Loyihalar</a>
+      <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">Botlar</a>
+      <a href="/admin/">Admin</a>
+    </div>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% else %}
 <main>
-{% block content %}{% endblock %}
+  {% block login_content %}{% endblock %}
 </main>
+{% endif %}
 </body>
 </html>

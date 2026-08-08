@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Loyihalar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Loyihalar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:projects|length }} ta loyiha</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'projects:add' %}">+ Loyiha qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Nomi yoki tavsifi bo'yicha qidirish..." value="{{ q }}">
+    <select name="status">
+      <option value="">Barcha holatlar</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q or status %}<a class="btn btn-sm" href="{% url 'projects:list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if projects %}
+<div class="table-wrap">
+<table>
+  <tr><th>Nomi</th><th>Mijoz</th><th>Holati</th><th>Muddat</th><th>Botlar</th></tr>
+  {% for p in projects %}
+  <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
+    <td>{{ p.name }}</td>
+    <td>{{ p.client|default:"—" }}</td>
+    <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+    <td>{{ p.deadline|default:"—" }}</td>
+    <td>{{ p.bots.count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}
