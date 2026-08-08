@@ -4,32 +4,36 @@
 
 <div class="page-header">
   <div>
-    <h1>Bosh sahifa</h1>
+    <h1>Xush kelibsiz, {{ user.username }}</h1>
     <div class="sub">Umumiy ko'rinish</div>
   </div>
 </div>
 
 <div class="grid">
-  <a class="card" style="text-decoration:none;" href="{% url 'clients:list' %}">
+  <a class="card" href="{% url 'clients:list' %}">
+    <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5z"/></svg></div>
     <div class="value">{{ clients_count }}</div>
     <div class="label">Mijozlar</div>
   </a>
-  <a class="card" style="text-decoration:none;" href="{% url 'projects:list' %}">
+  <a class="card" href="{% url 'projects:list' %}">
+    <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg></div>
     <div class="value">{{ projects_count }}</div>
     <div class="label">Loyihalar</div>
   </a>
-  <a class="card" style="text-decoration:none;" href="{% url 'bots:list' %}">
+  <a class="card" href="{% url 'bots:list' %}">
+    <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.75 4.5A1.25 1.25 0 004.5 5.75v6.5a1.25 1.25 0 001.25 1.25h4.5a1.25 1.25 0 001.25-1.25v-6.5A1.25 1.25 0 0010.25 4.5h-4.5zM6 7a1 1 0 112 0 1 1 0 01-2 0zm4 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg></div>
     <div class="value">{{ bots_count }}</div>
     <div class="label">Botlar</div>
   </a>
-  <a class="card" style="text-decoration:none;" href="{% url 'bots:list' %}?status=active">
+  <a class="card stat-green" href="{% url 'bots:list' %}?status=active">
+    <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 108 0a8 8 0 000 16zm3.78-9.72l-4.25 4.25a.75.75 0 01-1.06 0L4.22 8.28a.75.75 0 011.06-1.06l1.75 1.75 3.72-3.72a.75.75 0 111.06 1.06z"/></svg></div>
     <div class="value">{{ bots_active_count }}</div>
     <div class="label">Faol botlar</div>
   </a>
   {% for s in projects_by_status %}
-  <a class="card" style="text-decoration:none;" href="{% url 'projects:list' %}?status={{ s.value }}">
+  <a class="card {% if s.value == 'completed' %}stat-green{% elif s.value == 'paused' %}stat-yellow{% endif %}" href="{% url 'projects:list' %}?status={{ s.value }}">
     <div class="value">{{ s.count }}</div>
-    <div class="label">Loyiha — {{ s.label }}</div>
+    <div class="label">{{ s.label }}</div>
   </a>
   {% endfor %}
 </div>

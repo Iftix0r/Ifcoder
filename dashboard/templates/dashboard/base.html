@@ -67,24 +67,41 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    background: var(--bg);
   }
   .sidebar .brand-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 8px 18px;
+    padding: 4px 8px 20px;
   }
   .sidebar .brand {
-    font-weight: 600;
-    font-size: 16px;
-    text-decoration: none;
-    color: var(--text);
-  }
-  .sidebar nav { display: flex; flex-direction: column; }
-  .sidebar nav a {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .sidebar .brand .mark {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--accent);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex: 0 0 auto;
+  }
+  .sidebar nav { display: flex; flex-direction: column; }
+  .sidebar nav .nav-label {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 12px 10px 6px;
+  }
+  .sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     padding: 7px 10px;
     border-radius: var(--radius);
     text-decoration: none;
@@ -92,13 +109,16 @@
     font-size: 14px;
     margin-bottom: 1px;
     border-left: 2px solid transparent;
+    transition: background 0.12s ease, color 0.12s ease;
   }
-  .sidebar nav a .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; }
+  .sidebar nav a svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--muted); }
   .sidebar nav a:hover { background: var(--panel); }
   .sidebar nav a.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .sidebar nav a.active .dot { background: var(--accent); }
+  .sidebar nav a.active svg { color: var(--accent); }
   .sidebar nav a.admin-link { color: var(--muted); font-size: 13px; margin-top: 10px; padding-top: 11px; border-top: 1px solid var(--border); border-left: none; }
+  .sidebar nav a.admin-link svg { color: var(--muted); }
   .sidebar nav a.admin-link:hover { color: var(--text); background: transparent; }
+  .sidebar nav a.admin-link:hover svg { color: var(--text); }
 
   .sidebar .footer { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); }
   .user-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
@@ -161,10 +181,21 @@
     border-radius: var(--radius);
     padding: 14px 16px;
     box-shadow: var(--shadow);
+    transition: border-color 0.12s ease, transform 0.12s ease;
   }
   a.card { display: block; text-decoration: none; color: inherit; }
-  a.card:hover { border-color: var(--accent); }
-  .card .value { font-size: 24px; font-weight: 600; color: var(--text); }
+  a.card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .card .icon {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: var(--accent-dim); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .card .icon svg { width: 16px; height: 16px; }
+  .card.stat-green .icon { background: var(--green-dim); color: var(--green); }
+  .card.stat-yellow .icon { background: var(--yellow-dim); color: var(--yellow); }
+  .card.stat-gray .icon { background: var(--gray-dim); color: var(--gray); }
+  .card .value { font-size: 24px; font-weight: 600; color: var(--text); line-height: 1.2; }
   .card .label { color: var(--muted); font-size: 12px; margin-top: 4px; }
 
   h2.section-title { font-size: 13px; color: var(--muted); font-weight: 600; margin: 30px 0 10px; }
@@ -188,6 +219,7 @@
     border: 1px solid var(--border);
     color: var(--text); background: var(--panel);
     cursor: pointer; box-shadow: var(--shadow);
+    transition: background 0.12s ease, border-color 0.12s ease;
   }
   .btn:hover { background: var(--panel-2); border-color: var(--muted); }
   .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
@@ -274,18 +306,28 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="brand-row">
-      <a class="brand" href="{% url 'dashboard:home' %}">Ifcoder</a>
+      <a class="brand" href="{% url 'dashboard:home' %}"><span class="mark">I</span>Ifcoder</a>
       <button class="theme-toggle" onclick="toggleTheme()" aria-label="Mavzuni almashtirish" title="Mavzuni almashtirish">
         <svg class="icon-sun" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13.5a.75.75 0 01.75.75v1a.75.75 0 01-1.5 0v-1a.75.75 0 01.75-.75zM3.05 3.05a.75.75 0 011.06 0l.71.7a.75.75 0 01-1.06 1.06l-.71-.7a.75.75 0 010-1.06zm9.13 9.13a.75.75 0 011.06 0l.7.71a.75.75 0 01-1.06 1.06l-.7-.71a.75.75 0 010-1.06zM16 8a.75.75 0 01-.75.75h-1a.75.75 0 010-1.5h1A.75.75 0 0116 8zM2.5 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1A.75.75 0 012.5 8zm10.68-4.95a.75.75 0 010 1.06l-.7.71a.75.75 0 11-1.06-1.06l.7-.7a.75.75 0 011.06 0zm-9.13 9.13a.75.75 0 010 1.06l-.71.7a.75.75 0 01-1.06-1.06l.71-.7a.75.75 0 011.06 0z"/></svg>
         <svg class="icon-moon" viewBox="0 0 16 16" fill="currentColor"><path d="M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786z"/></svg>
       </button>
     </div>
     <nav>
-      <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}"><span class="dot"></span>Bosh sahifa</a>
-      <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}"><span class="dot"></span>Mijozlar</a>
-      <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}"><span class="dot"></span>Loyihalar</a>
-      <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}"><span class="dot"></span>Botlar</a>
-      <a href="/panel/" class="admin-link">Admin panel</a>
+      <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.75 1.75 0 012.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0113.25 15h-3.5a.75.75 0 01-.75-.75V9.5a.25.25 0 00-.25-.25h-1.5a.25.25 0 00-.25.25v4.75a.75.75 0 01-.75.75h-3.5A1.75 1.75 0 011 13.25V6.23c0-.531.242-1.034.657-1.367l5.25-4.2z"/></svg>
+        Bosh sahifa</a>
+      <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5zM11 4a.75.75 0 100 1.5 1.5 1.5 0 01.666 2.844.75.75 0 00-.416.672v.352a.75.75 0 00.574.73c1.2.289 2.162 1.2 2.522 2.372a.75.75 0 101.434-.44 5.01 5.01 0 00-2.56-3.012A3 3 0 0011 4z"/></svg>
+        Mijozlar</a>
+      <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM2 6.75a.75.75 0 01.75-.75h1.5a.75.75 0 01.75.75v1.5a.75.75 0 01-.75.75h-1.5a.75.75 0 01-.75-.75v-1.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM7.75 6a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg>
+        Loyihalar</a>
+      <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1zM5.75 4.5A1.25 1.25 0 004.5 5.75v6.5a1.25 1.25 0 001.25 1.25h4.5a1.25 1.25 0 001.25-1.25v-6.5A1.25 1.25 0 0010.25 4.5h-4.5zM6 7a1 1 0 112 0 1 1 0 01-2 0zm4 0a1 1 0 11-2 0 1 1 0 012 0zm-5 3.25a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75z"/></svg>
+        Botlar</a>
+      <a href="/admin/" class="admin-link">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a1.5 1.5 0 01.94.328l5.25 4.2A1.5 1.5 0 0115 5.68v.32a1 1 0 01-1 1v6.5a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 01-1-1v-.32a1.5 1.5 0 01.81-1.331l5.25-4.2A1.5 1.5 0 018 0zM6 8.5a.5.5 0 000 1h4a.5.5 0 000-1H6z"/></svg>
+        Django admin</a>
     </nav>
     <div class="footer">
       <div class="user-row">
@@ -311,7 +353,7 @@
       <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">Mijozlar</a>
       <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}">Loyihalar</a>
       <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">Botlar</a>
-      <a href="/panel/">Admin</a>
+      <a href="/admin/">Admin</a>
     </div>
     <main>
       {% block content %}{% endblock %}
