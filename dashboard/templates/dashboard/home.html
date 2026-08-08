@@ -1,0 +1,80 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Dashboard — Ifcoder{% endblock %}
+{% block content %}
+
+<div class="grid">
+  <div class="card">
+    <div class="value">{{ clients_count }}</div>
+    <div class="label">Mijozlar</div>
+  </div>
+  <div class="card">
+    <div class="value">{{ projects_count }}</div>
+    <div class="label">Loyihalar</div>
+  </div>
+  <div class="card">
+    <div class="value">{{ bots_count }}</div>
+    <div class="label">Botlar</div>
+  </div>
+  <div class="card">
+    <div class="value">{{ bots_active_count }}</div>
+    <div class="label">Faol botlar</div>
+  </div>
+  {% for s in projects_by_status %}
+  <div class="card">
+    <div class="value">{{ s.count }}</div>
+    <div class="label">Loyiha — {{ s.label }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<h2>So'nggi loyihalar</h2>
+{% if recent_projects %}
+<table>
+  <tr><th>Nomi</th><th>Mijoz</th><th>Holati</th><th>Muddat</th></tr>
+  {% for p in recent_projects %}
+  <tr>
+    <td>{{ p.name }}</td>
+    <td>{{ p.client|default:"—" }}</td>
+    <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+    <td>{{ p.deadline|default:"—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="empty">Hozircha loyihalar yo'q. <a href="/admin/projects/project/add/" style="color:var(--accent);">Qo'shish</a></div>
+{% endif %}
+
+<h2>So'nggi botlar</h2>
+{% if recent_bots %}
+<table>
+  <tr><th>Nomi</th><th>Platforma</th><th>Holati</th><th>Loyiha</th></tr>
+  {% for b in recent_bots %}
+  <tr>
+    <td>{{ b.name }}</td>
+    <td>{{ b.get_platform_display }}</td>
+    <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+    <td>{{ b.project|default:"—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="empty">Hozircha botlar yo'q. <a href="/admin/bots/bot/add/" style="color:var(--accent);">Qo'shish</a></div>
+{% endif %}
+
+<h2>So'nggi mijozlar</h2>
+{% if recent_clients %}
+<table>
+  <tr><th>Ism</th><th>Telefon</th><th>Telegram</th></tr>
+  {% for c in recent_clients %}
+  <tr>
+    <td>{{ c.name }}</td>
+    <td>{{ c.phone|default:"—" }}</td>
+    <td>{{ c.telegram|default:"—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="empty">Hozircha mijozlar yo'q. <a href="/admin/clients/client/add/" style="color:var(--accent);">Qo'shish</a></div>
+{% endif %}
+
+{% endblock %}
