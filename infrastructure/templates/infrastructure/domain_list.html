@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Domenlar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Domenlar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:domains|length }} ta domen</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'infrastructure:domain_add' %}">+ Domen qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Nomi yoki registrator bo'yicha qidirish..." value="{{ q }}">
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q %}<a class="btn btn-sm" href="{% url 'infrastructure:domain_list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if domains %}
+<div class="table-wrap">
+<table>
+  <tr><th>Nomi</th><th>Registrator</th><th>Tugash sanasi</th><th>Avto-uzaytirish</th><th>SSL</th></tr>
+  {% for d in domains %}
+  <tr class="row-link" onclick="location.href='{% url 'infrastructure:domain_detail' d.pk %}'">
+    <td>{{ d.name }}</td>
+    <td>{{ d.registrar|default:"—" }}</td>
+    <td>
+      {% if d.is_expired %}<span class="badge expired">{{ d.expiration_date }}</span>
+      {% elif d.is_expiring_soon %}<span class="badge expiring">{{ d.expiration_date }}</span>
+      {% else %}{{ d.expiration_date }}{% endif %}
+    </td>
+    <td>{% if d.auto_renew %}Ha{% else %}Yo'q{% endif %}</td>
+    <td>{{ d.certificates.count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

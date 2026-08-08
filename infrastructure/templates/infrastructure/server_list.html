@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Serverlar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Serverlar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:servers|length }} ta server</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'infrastructure:server_add' %}">+ Server qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Nomi, IP yoki provayder bo'yicha qidirish..." value="{{ q }}">
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q %}<a class="btn btn-sm" href="{% url 'infrastructure:server_list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if servers %}
+<div class="table-wrap">
+<table>
+  <tr><th>Nomi</th><th>IP manzil</th><th>Provayder</th><th>SSH port</th></tr>
+  {% for s in servers %}
+  <tr class="row-link" onclick="location.href='{% url 'infrastructure:server_detail' s.pk %}'">
+    <td>{{ s.name }}</td>
+    <td>{{ s.ip_address }}</td>
+    <td>{{ s.provider|default:"—" }}</td>
+    <td>{{ s.ssh_port }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ domain.name }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ domain.name }}</h1>
+    <div class="sub">Qo'shilgan: {{ domain.created_at|date:"d.m.Y" }}</div>
+  </div>
+  <a class="btn" href="{% url 'infrastructure:domain_edit' domain.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    <h2 class="section-title">SSL sertifikatlar</h2>
+    {% if domain.certificates.all %}
+    <div class="table-wrap">
+    <table>
+      <tr><th>Beruvchi</th><th>Tugash sanasi</th></tr>
+      {% for c in domain.certificates.all %}
+      <tr class="row-link" onclick="location.href='{% url 'infrastructure:ssl_detail' c.pk %}'">
+        <td>{{ c.issuer|default:"—" }}</td>
+        <td>
+          {% if c.is_expired %}<span class="badge expired">{{ c.expiration_date }}</span>
+          {% elif c.is_expiring_soon %}<span class="badge expiring">{{ c.expiration_date }}</span>
+          {% else %}{{ c.expiration_date }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">SSL sertifikatlar yo'q.</div>
+    {% endif %}
+    {% if domain.notes %}
+    <h2 class="section-title">Izoh</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ domain.notes }}</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Registrator</span><span>{{ domain.registrar|default:"—" }}</span></li>
+      <li><span class="k">Tugash sanasi</span>
+        <span>
+          {% if domain.is_expired %}<span class="badge expired">{{ domain.expiration_date }}</span>
+          {% elif domain.is_expiring_soon %}<span class="badge expiring">{{ domain.expiration_date }}</span>
+          {% else %}{{ domain.expiration_date }}{% endif %}
+        </span>
+      </li>
+      <li><span class="k">Avtomatik uzaytirish</span><span>{% if domain.auto_renew %}Ha{% else %}Yo'q{% endif %}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

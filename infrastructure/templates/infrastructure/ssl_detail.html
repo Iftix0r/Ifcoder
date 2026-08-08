@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ certificate }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ certificate }}</h1>
+    <div class="sub">Qo'shilgan: {{ certificate.created_at|date:"d.m.Y" }}</div>
+  </div>
+  <a class="btn" href="{% url 'infrastructure:ssl_edit' certificate.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if certificate.notes %}
+    <h2 class="section-title">Izoh</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ certificate.notes }}</div>
+    {% else %}
+    <div class="empty">Izoh kiritilmagan.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Domen</span><span>{% if certificate.domain %}<a href="{% url 'infrastructure:domain_detail' certificate.domain.pk %}">{{ certificate.domain }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Beruvchi</span><span>{{ certificate.issuer|default:"—" }}</span></li>
+      <li><span class="k">Tugash sanasi</span>
+        <span>
+          {% if certificate.is_expired %}<span class="badge expired">{{ certificate.expiration_date }}</span>
+          {% elif certificate.is_expiring_soon %}<span class="badge expiring">{{ certificate.expiration_date }}</span>
+          {% else %}{{ certificate.expiration_date }}{% endif %}
+        </span>
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

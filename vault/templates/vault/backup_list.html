@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Backup'lar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Backup'lar</h1>
+    <div class="sub">Ma'lumotlar bazasining zaxira nusxalari (oxirgi {{ backups|length }} ta saqlanadi)</div>
+  </div>
+  <form method="post" action="{% url 'vault:backup_create' %}">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit">Hozir backup olish</button>
+  </form>
+</div>
+
+<div class="card" style="margin-bottom:20px;font-size:13px;color:var(--muted);">
+  Diqqat: shifrlash kaliti (<code>IFCODER_FERNET_KEY</code>) backup fayli ichida saqlanmaydi.
+  Uni alohida xavfsiz joyda zaxiralang — aks holda tiklangan backup'dagi API kalitlar va 2FA
+  ma'lumotlari o'qib bo'lmaydigan holga keladi.
+</div>
+
+{% if backups %}
+<div class="table-wrap">
+<table>
+  <tr><th>Fayl</th><th>Hajmi</th><th>Sana</th><th></th></tr>
+  {% for b in backups %}
+  <tr>
+    <td>{{ b.name }}</td>
+    <td>{{ b.size_kb }} KB</td>
+    <td>{{ b.mtime|date:"d.m.Y H:i" }}</td>
+    <td><a class="btn btn-sm" href="{% url 'vault:backup_download' b.name %}">Yuklab olish</a></td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty">Hozircha backup yo'q.</div>
+{% endif %}
+{% endblock %}

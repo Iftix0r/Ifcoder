@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ idea.title }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ idea.title }}</h1>
+    <div class="sub">Yaratilgan: {{ idea.created_at|date:"d.m.Y" }}</div>
+  </div>
+  <a class="btn" href="{% url 'content:idea_edit' idea.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if idea.description %}
+    <h2 class="section-title">Tavsif</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ idea.description }}</div>
+    {% else %}
+    <div class="empty">Tavsif kiritilmagan.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Platforma</span><span>{{ idea.get_platform_display }}</span></li>
+      <li><span class="k">Holati</span><span class="badge {{ idea.status }}">{{ idea.get_status_display }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

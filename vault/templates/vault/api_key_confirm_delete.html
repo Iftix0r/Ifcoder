@@ -1,0 +1,17 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Kalitni o'chirish — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Kalitni o'chirish</h1>
+</div>
+<div class="form-card">
+  <p>“{{ api_key.name }}” kalitini o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Ha, o'chirish</button>
+      <a class="btn" href="{% url 'vault:api_key_list' %}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

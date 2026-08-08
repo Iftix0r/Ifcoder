@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Hisob-fakturalar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Hisob-fakturalar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:invoices|length }} ta hisob-faktura</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'finance:invoice_add' %}">+ Hisob-faktura qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Raqami yoki mijoz bo'yicha qidirish..." value="{{ q }}">
+    <select name="status">
+      <option value="">Barcha holatlar</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q or status %}<a class="btn btn-sm" href="{% url 'finance:invoice_list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if invoices %}
+<div class="table-wrap">
+<table>
+  <tr><th>Raqami</th><th>Mijoz</th><th>Summa</th><th>Muddat</th><th>Holati</th></tr>
+  {% for i in invoices %}
+  <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' i.pk %}'">
+    <td>{{ i.number }}</td>
+    <td>{{ i.client }}</td>
+    <td>{{ i.amount }}</td>
+    <td>{{ i.due_date }}</td>
+    <td><span class="badge {% if i.is_overdue %}overdue{% else %}{{ i.status }}{% endif %}">{% if i.is_overdue %}Muddati o'tgan{% else %}{{ i.get_status_display }}{% endif %}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Daromadlar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Daromadlar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:incomes|length }} ta yozuv — jami {{ total }}</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'finance:income_add' %}">+ Daromad qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Tavsif yoki mijoz bo'yicha qidirish..." value="{{ q }}">
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q %}<a class="btn btn-sm" href="{% url 'finance:income_list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if incomes %}
+<div class="table-wrap">
+<table>
+  <tr><th>Summa</th><th>Usul</th><th>Mijoz</th><th>Loyiha</th><th>Sana</th></tr>
+  {% for inc in incomes %}
+  <tr class="row-link" onclick="location.href='{% url 'finance:income_detail' inc.pk %}'">
+    <td>{{ inc.amount }}</td>
+    <td>{{ inc.get_method_display }}</td>
+    <td>{{ inc.client|default:"—" }}</td>
+    <td>{{ inc.project|default:"—" }}</td>
+    <td>{{ inc.date }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

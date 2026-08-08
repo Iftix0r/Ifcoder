@@ -1,0 +1,42 @@
+{% extends "dashboard/base.html" %}
+{% block title %}SSL sertifikatlar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>SSL sertifikatlar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:certificates|length }} ta sertifikat</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'infrastructure:ssl_add' %}">+ Sertifikat qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Nomi, domen yoki beruvchi bo'yicha qidirish..." value="{{ q }}">
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q %}<a class="btn btn-sm" href="{% url 'infrastructure:ssl_list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if certificates %}
+<div class="table-wrap">
+<table>
+  <tr><th>Nomi</th><th>Domen</th><th>Beruvchi</th><th>Tugash sanasi</th></tr>
+  {% for c in certificates %}
+  <tr class="row-link" onclick="location.href='{% url 'infrastructure:ssl_detail' c.pk %}'">
+    <td>{{ c }}</td>
+    <td>{% if c.domain %}{{ c.domain }}{% else %}—{% endif %}</td>
+    <td>{{ c.issuer|default:"—" }}</td>
+    <td>
+      {% if c.is_expired %}<span class="badge expired">{{ c.expiration_date }}</span>
+      {% elif c.is_expiring_soon %}<span class="badge expiring">{{ c.expiration_date }}</span>
+      {% else %}{{ c.expiration_date }}{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

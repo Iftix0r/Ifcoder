@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Zaxira kodlar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>2FA yoqildi — zaxira kodlaringiz</h1>
+</div>
+<div class="form-card" style="max-width:420px;">
+  <p>Telefoningizni yo'qotib qo'ysangiz, quyidagi kodlardan birini kiritib panelga kirishingiz mumkin. Har bir kod faqat bir marta ishlaydi. Bu kodlar <strong>faqat hozir</strong> ko'rsatiladi — ularni xavfsiz joyga yozib qo'ying.</p>
+  <div class="table-wrap" style="margin:16px 0;">
+    <table>
+      {% for code in codes %}
+      <tr><td style="font-family:monospace;font-size:15px;">{{ code }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <form method="get" action="{% url 'vault:home' %}">
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Saqladim, davom etish</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

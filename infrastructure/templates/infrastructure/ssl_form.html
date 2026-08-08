@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if object %}Sertifikatni tahrirlash{% else %}Yangi sertifikat{% endif %} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{% if object %}Sertifikatni tahrirlash{% else %}Yangi sertifikat{% endif %}</h1>
+</div>
+<div class="form-card">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+    <p>
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {{ field.errors }}
+    </p>
+    {% endfor %}
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Saqlash</button>
+      <a class="btn" href="{% if object %}{% url 'infrastructure:ssl_detail' object.pk %}{% else %}{% url 'infrastructure:ssl_list' %}{% endif %}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

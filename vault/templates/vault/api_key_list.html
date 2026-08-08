@@ -1,0 +1,41 @@
+{% extends "dashboard/base.html" %}
+{% block title %}API kalitlar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>API kalitlar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:api_keys|length }} ta kalit</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'vault:api_key_add' %}">+ Kalit qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Nomi bo'yicha qidirish..." value="{{ q }}">
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q %}<a class="btn btn-sm" href="{% url 'vault:api_key_list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if api_keys %}
+<div class="table-wrap">
+<table>
+  <tr><th>Nomi</th><th>Qiymat</th><th>Yangilangan</th><th></th></tr>
+  {% for k in api_keys %}
+  <tr>
+    <td>{{ k.name }}</td>
+    <td><code>{{ k.masked_value }}</code></td>
+    <td>{{ k.updated_at|date:"d.m.Y H:i" }}</td>
+    <td style="white-space:nowrap;">
+      <a class="btn btn-sm" href="{% url 'vault:api_key_edit' k.pk %}">Tahrirlash</a>
+      <a class="btn btn-sm" href="{% url 'vault:api_key_delete' k.pk %}">O'chirish</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

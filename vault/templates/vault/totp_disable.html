@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}2FA'ni o'chirish — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>2FA'ni o'chirish</h1>
+</div>
+<div class="form-card" style="max-width:360px;">
+  <p>2FA'ni o'chirish uchun joriy parolingizni kiriting.</p>
+  <form method="post">
+    {% csrf_token %}
+    <p>
+      <label for="id_password">Parol</label>
+      <input type="password" id="id_password" name="password" required>
+    </p>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">2FA'ni o'chirish</button>
+      <a class="btn" href="{% url 'vault:home' %}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

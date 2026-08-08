@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Tasdiqlash — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Ikki bosqichli tasdiqlash</h1>
+</div>
+<div class="form-card" style="max-width:360px;">
+  <p>Authenticator ilovadagi 6 xonali kodni yoki zaxira kodni kiriting.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <p>
+      <label for="id_code">Kod</label>
+      <input type="text" id="id_code" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus required>
+    </p>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Tasdiqlash</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "dashboard/base.html" %}
+{% block title %}G'oyalar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>G'oyalar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:ideas|length }} ta g'oya</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'content:idea_add' %}">+ G'oya qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Sarlavha yoki tavsif bo'yicha qidirish..." value="{{ q }}">
+    <select name="platform">
+      <option value="">Barcha platformalar</option>
+      {% for value, label in platform_choices %}
+      <option value="{{ value }}" {% if platform == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="status">
+      <option value="">Barcha holatlar</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q or status or platform %}<a class="btn btn-sm" href="{% url 'content:idea_list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if ideas %}
+<div class="table-wrap">
+<table>
+  <tr><th>Sarlavha</th><th>Platforma</th><th>Holati</th></tr>
+  {% for i in ideas %}
+  <tr class="row-link" onclick="location.href='{% url 'content:idea_detail' i.pk %}'">
+    <td>{{ i.title }}</td>
+    <td>{{ i.get_platform_display }}</td>
+    <td><span class="badge {{ i.status }}">{{ i.get_status_display }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

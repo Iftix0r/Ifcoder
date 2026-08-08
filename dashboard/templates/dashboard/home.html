@@ -36,6 +36,18 @@
     <div class="label">{{ s.label }}</div>
   </a>
   {% endfor %}
+  <a class="card stat-green" href="{% url 'finance:income_list' %}">
+    <div class="value">{{ month_income }}</div>
+    <div class="label">Bu oy daromad</div>
+  </a>
+  <a class="card" href="{% url 'finance:expense_list' %}">
+    <div class="value">{{ month_expense }}</div>
+    <div class="label">Bu oy xarajat</div>
+  </a>
+  <a class="card {% if outstanding_invoices_count %}stat-yellow{% endif %}" href="{% url 'finance:invoice_list' %}">
+    <div class="value">{{ outstanding_invoices_count }}</div>
+    <div class="label">To'lanmagan hisob-fakturalar</div>
+  </a>
 </div>
 
 <h2 class="section-title">So'nggi loyihalar</h2>
@@ -92,6 +104,29 @@
 </div>
 {% else %}
 <div class="empty">Hozircha mijozlar yo'q. <a href="{% url 'clients:add' %}" style="color:var(--accent);">Qo'shish</a></div>
+{% endif %}
+
+{% if expiring_domains or expiring_certificates %}
+<h2 class="section-title">Muddati yaqinlashayotgan domenlar / sertifikatlar</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Turi</th><th>Nomi</th><th>Tugash sanasi</th></tr>
+  {% for d in expiring_domains %}
+  <tr class="row-link" onclick="location.href='{% url 'infrastructure:domain_detail' d.pk %}'">
+    <td>Domen</td>
+    <td>{{ d.name }}</td>
+    <td><span class="badge {% if d.is_expired %}expired{% else %}expiring{% endif %}">{{ d.expiration_date }}</span></td>
+  </tr>
+  {% endfor %}
+  {% for c in expiring_certificates %}
+  <tr class="row-link" onclick="location.href='{% url 'infrastructure:ssl_detail' c.pk %}'">
+    <td>SSL</td>
+    <td>{{ c }}</td>
+    <td><span class="badge {% if c.is_expired %}expired{% else %}expiring{% endif %}">{{ c.expiration_date }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
 {% endif %}
 
 {% endblock %}

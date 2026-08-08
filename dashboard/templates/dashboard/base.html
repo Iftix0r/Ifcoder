@@ -236,9 +236,20 @@
   .empty { color: var(--muted); padding: 24px; font-size: 13px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius); }
 
   .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--accent-dim); color: var(--accent); }
-  .badge.completed { background: var(--green-dim); color: var(--green); }
-  .badge.paused { background: var(--yellow-dim); color: var(--yellow); }
-  .badge.inactive { background: var(--gray-dim); color: var(--gray); }
+  .badge.completed, .badge.paid, .badge.published, .badge.done { background: var(--green-dim); color: var(--green); }
+  .badge.paused, .badge.expiring, .badge.sent { background: var(--yellow-dim); color: var(--yellow); }
+  .badge.inactive, .badge.draft, .badge.new { background: var(--gray-dim); color: var(--gray); }
+  .badge.overdue, .badge.expired { background: var(--red-dim); color: var(--red); }
+
+  .messages { list-style: none; padding: 0; margin: 0 0 18px; display: flex; flex-direction: column; gap: 8px; }
+  .messages li {
+    padding: 10px 14px; border-radius: var(--radius); font-size: 13px;
+    border: 1px solid var(--border); background: var(--panel);
+  }
+  .messages li.success { border-color: var(--green); background: var(--green-dim); color: var(--green); }
+  .messages li.error { border-color: var(--red); background: var(--red-dim); color: var(--red); }
+  .messages li.warning { border-color: var(--yellow); background: var(--yellow-dim); color: var(--yellow); }
+  .messages li.info { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
 
   .pagination { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
   .pagination a, .pagination span { padding: 5px 10px; border-radius: var(--radius); font-size: 12px; text-decoration: none; color: var(--muted); border: 1px solid var(--border); }
@@ -325,6 +336,18 @@
       <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1zM5.75 4.5A1.25 1.25 0 004.5 5.75v6.5a1.25 1.25 0 001.25 1.25h4.5a1.25 1.25 0 001.25-1.25v-6.5A1.25 1.25 0 0010.25 4.5h-4.5zM6 7a1 1 0 112 0 1 1 0 01-2 0zm4 0a1 1 0 11-2 0 1 1 0 012 0zm-5 3.25a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75z"/></svg>
         Botlar</a>
+      <a href="{% url 'finance:home' %}" class="{% if 'finance' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
+        Moliya</a>
+      <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
+        Infratuzilma</a>
+      <a href="{% url 'content:post_list' %}" class="{% if 'content' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M0 1.75A.75.75 0 01.75 1h4.253c1.227 0 2.317.59 3 1.501A3.744 3.744 0 0111.006 1h4.245a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-4.507a2.25 2.25 0 00-1.591.659l-.622.621a.75.75 0 01-1.06 0l-.622-.621A2.25 2.25 0 005.258 13H.75a.75.75 0 01-.75-.75V1.75zm7.251 10.324a3.744 3.744 0 012.255-.75h3.994V2.5h-3.495a2.25 2.25 0 00-2.254 2.25v7.324zm-1.501 0V4.75A2.25 2.25 0 003.496 2.5H1.5v9.5h3.758c.884 0 1.75.284 2.492.75z"/></svg>
+        Kontent</a>
+      <a href="{% url 'vault:home' %}" class="{% if 'vault' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M14.5 4a3.5 3.5 0 11-3.478 3.897L4.9 14.02a1.75 1.75 0 01-1.238.513H2.75a.75.75 0 01-.75-.75v-.913c0-.464.184-.909.513-1.238L8.29 5.478A3.5 3.5 0 0114.5 4zM11 4a.5.5 0 100 1 .5.5 0 000-1z"/></svg>
+        Sozlamalar</a>
       <a href="/admin/" class="admin-link">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a1.5 1.5 0 01.94.328l5.25 4.2A1.5 1.5 0 0115 5.68v.32a1 1 0 01-1 1v6.5a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 01-1-1v-.32a1.5 1.5 0 01.81-1.331l5.25-4.2A1.5 1.5 0 018 0zM6 8.5a.5.5 0 000 1h4a.5.5 0 000-1H6z"/></svg>
         Django admin</a>
@@ -353,9 +376,20 @@
       <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">Mijozlar</a>
       <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}">Loyihalar</a>
       <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">Botlar</a>
+      <a href="{% url 'finance:home' %}" class="{% if 'finance' in request.resolver_match.namespace %}active{% endif %}">Moliya</a>
+      <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">Infratuzilma</a>
+      <a href="{% url 'content:post_list' %}" class="{% if 'content' in request.resolver_match.namespace %}active{% endif %}">Kontent</a>
+      <a href="{% url 'vault:home' %}" class="{% if 'vault' in request.resolver_match.namespace %}active{% endif %}">Sozlamalar</a>
       <a href="/admin/">Admin</a>
     </div>
     <main>
+      {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
       {% block content %}{% endblock %}
     </main>
   </div>

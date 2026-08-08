@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Xarajatlar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Xarajatlar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:expenses|length }} ta yozuv — jami {{ total }}</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'finance:expense_add' %}">+ Xarajat qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Tavsif bo'yicha qidirish..." value="{{ q }}">
+    <select name="category">
+      <option value="">Barcha toifalar</option>
+      {% for value, label in category_choices %}
+      <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q or category %}<a class="btn btn-sm" href="{% url 'finance:expense_list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if expenses %}
+<div class="table-wrap">
+<table>
+  <tr><th>Summa</th><th>Toifa</th><th>Sana</th></tr>
+  {% for exp in expenses %}
+  <tr class="row-link" onclick="location.href='{% url 'finance:expense_detail' exp.pk %}'">
+    <td>{{ exp.amount }}</td>
+    <td>{{ exp.get_category_display }}</td>
+    <td>{{ exp.date }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

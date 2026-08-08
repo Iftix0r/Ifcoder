@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +26,11 @@ SECRET_KEY = 'django-insecure-n#hz%55&8k!y489-_@dq=$6-5ntn)el$-=x8j-q8@%1kjm@x)b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['yoshiqtidorlar.uz', 'www.yoshiqtidorlar.uz', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'iftix0r.uz', 'www.iftix0r.uz',
+    'yoshiqtidorlar.uz', 'www.yoshiqtidorlar.uz',
+    'localhost', '127.0.0.1',
+]
 
 
 # Application definition
@@ -40,6 +45,10 @@ INSTALLED_APPS = [
     'clients',
     'projects',
     'bots',
+    'finance',
+    'infrastructure',
+    'content',
+    'vault',
     'dashboard',
 ]
 
@@ -50,6 +59,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'vault.middleware.TwoFactorMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -127,6 +137,16 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard:home'
+
+# API kalitlar va 2FA maxfiy kodlarini shifrlash uchun (vault app).
+# DIQQAT: bu kalit yo'qolsa yoki almashtirilsa, mavjud vault yozuvlari butunlay
+# o'qib bo'lmaydigan holga keladi. Production'da IFCODER_FERNET_KEY environment
+# variable sifatida (cPanel/Passenger env orqali) o'rnatilishi qattiq tavsiya
+# etiladi — quyidagi qiymat faqat lokal ishlab chiqish uchun fallback.
+VAULT_FERNET_KEY = os.environ.get(
+    'IFCODER_FERNET_KEY',
+    'J_olCMzOvnbqcq4kf533E_qJx6dYSLq-6c_fVv2GPB0=',
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

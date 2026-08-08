@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if object %}Kalitni tahrirlash{% else %}Yangi API kalit{% endif %} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{% if object %}Kalitni tahrirlash{% else %}Yangi API kalit{% endif %}</h1>
+</div>
+<div class="form-card">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+    <p>
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.help_text %}<div class="sub" style="margin-top:4px;">{{ field.help_text }}</div>{% endif %}
+      {{ field.errors }}
+    </p>
+    {% endfor %}
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Saqlash</button>
+      <a class="btn" href="{% url 'vault:api_key_list' %}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

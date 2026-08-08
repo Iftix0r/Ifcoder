@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisob-faktura {{ invoice.number }} — Ifcoder</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1f2328; --muted: #656d76; --border: #d0d7de; --accent: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+  }
+  .sheet { max-width: 720px; margin: 0 auto; padding: 40px 32px; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+  .brand { font-weight: 700; font-size: 20px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  th { color: var(--muted); font-weight: 600; }
+  .amount-row td { font-size: 18px; font-weight: 700; border-bottom: none; padding-top: 16px; }
+  .notes { margin-top: 24px; font-size: 13px; white-space: pre-wrap; }
+  .no-print { margin-top: 32px; }
+  .no-print button {
+    padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; font-size: 14px;
+  }
+  @media print {
+    .no-print { display: none; }
+    .sheet { padding: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="top">
+    <div>
+      <div class="brand">Ifcoder</div>
+      <div class="muted">iftix0r.uz</div>
+    </div>
+    <div style="text-align:right;">
+      <h1>Hisob-faktura {{ invoice.number }}</h1>
+      <div class="muted">Chiqarilgan: {{ invoice.issued_date }}</div>
+      <div class="muted">To'lov muddati: {{ invoice.due_date }}</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="muted">Mijoz</div>
+    <div style="font-size:16px;font-weight:600;">{{ invoice.client }}</div>
+    {% if invoice.project %}<div class="muted">Loyiha: {{ invoice.project }}</div>{% endif %}
+  </div>
+
+  <table>
+    <tr><th>Tavsif</th><th style="text-align:right;">Summa</th></tr>
+    <tr>
+      <td>{{ invoice.notes|default:invoice.number }}</td>
+      <td style="text-align:right;">{{ invoice.amount }}</td>
+    </tr>
+    <tr class="amount-row">
+      <td>Jami</td>
+      <td style="text-align:right;">{{ invoice.amount }}</td>
+    </tr>
+  </table>
+
+  {% if invoice.notes %}
+  <div class="notes">{{ invoice.notes }}</div>
+  {% endif %}
+
+  <div class="no-print">
+    <button onclick="window.print()">Chop etish / PDF sifatida saqlash</button>
+  </div>
+</div>
+</body>
+</html>

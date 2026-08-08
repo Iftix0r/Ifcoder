@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Xarajat — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ expense.amount }}</h1>
+    <div class="sub">Sana: {{ expense.date }}</div>
+  </div>
+  <a class="btn" href="{% url 'finance:expense_edit' expense.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if expense.description %}
+    <h2 class="section-title">Tavsif</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ expense.description }}</div>
+    {% else %}
+    <div class="empty">Tavsif kiritilmagan.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Toifa</span><span>{{ expense.get_category_display }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

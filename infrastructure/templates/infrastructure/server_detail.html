@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ server.name }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ server.name }}</h1>
+    <div class="sub">Qo'shilgan: {{ server.created_at|date:"d.m.Y" }}</div>
+  </div>
+  <a class="btn" href="{% url 'infrastructure:server_edit' server.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if server.specs %}
+    <h2 class="section-title">Xarakteristika / izoh</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ server.specs }}</div>
+    {% else %}
+    <div class="empty">Xarakteristika kiritilmagan.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">IP manzil</span><span>{{ server.ip_address }}</span></li>
+      <li><span class="k">Provayder</span><span>{{ server.provider|default:"—" }}</span></li>
+      <li><span class="k">SSH port</span><span>{{ server.ssh_port }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

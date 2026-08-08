@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}2FA sozlash — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>2FA'ni yoqish</h1>
+</div>
+<div class="form-card" style="max-width:420px;">
+  <p>Google Authenticator yoki shunga o'xshash ilova bilan quyidagi QR kodni skanerlang, so'ng ilovadagi 6 xonali kodni kiriting.</p>
+  <div style="text-align:center;margin:16px 0;">
+    <img src="{{ qr_data_uri }}" alt="2FA QR kod" style="width:200px;height:200px;border:1px solid var(--border);border-radius:6px;">
+  </div>
+  <p class="sub">QR kodni skanerlay olmasangiz, quyidagi kalitni qo'lda kiriting: <code>{{ secret }}</code></p>
+  <form method="post">
+    {% csrf_token %}
+    <p>
+      <label for="id_code">Tasdiqlash kodi</label>
+      <input type="text" id="id_code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+    </p>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Tasdiqlash</button>
+      <a class="btn" href="{% url 'vault:home' %}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

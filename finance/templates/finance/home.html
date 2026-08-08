@@ -1,0 +1,83 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Moliya — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Moliya</h1>
+    <div class="sub">Daromad, xarajat va hisob-fakturalar</div>
+  </div>
+</div>
+
+<div class="grid">
+  <a class="card stat-green" href="{% url 'finance:income_list' %}">
+    <div class="value">{{ month_income }}</div>
+    <div class="label">Bu oy daromad</div>
+  </a>
+  <a class="card" href="{% url 'finance:expense_list' %}">
+    <div class="value">{{ month_expense }}</div>
+    <div class="label">Bu oy xarajat</div>
+  </a>
+  <a class="card stat-yellow" href="{% url 'finance:invoice_list' %}">
+    <div class="value">{{ outstanding_count }}</div>
+    <div class="label">To'lanmagan hisob-fakturalar</div>
+  </a>
+  <a class="card" href="{% url 'finance:invoice_list' %}">
+    <div class="value">{{ outstanding_total }}</div>
+    <div class="label">To'lanishi kerak summa</div>
+  </a>
+</div>
+
+<h2 class="section-title">Oxirgi 6 oy: daromad va xarajat</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Oy</th><th>Daromad</th><th>Xarajat</th><th>Farq</th></tr>
+  {% for row in monthly_summary %}
+  <tr>
+    <td>{{ row.month|date:"F Y" }}</td>
+    <td>{{ row.income }}</td>
+    <td>{{ row.expense }}</td>
+    <td>{{ row.diff }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+
+<h2 class="section-title">To'lanmagan hisob-fakturalar</h2>
+{% if outstanding_invoices %}
+<div class="table-wrap">
+<table>
+  <tr><th>Raqami</th><th>Mijoz</th><th>Summa</th><th>Muddat</th><th>Holati</th></tr>
+  {% for i in outstanding_invoices %}
+  <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' i.pk %}'">
+    <td>{{ i.number }}</td>
+    <td>{{ i.client }}</td>
+    <td>{{ i.amount }}</td>
+    <td>{{ i.due_date }}</td>
+    <td><span class="badge {% if i.is_overdue %}overdue{% else %}{{ i.status }}{% endif %}">{% if i.is_overdue %}Muddati o'tgan{% else %}{{ i.get_status_display }}{% endif %}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty">To'lanmagan hisob-fakturalar yo'q.</div>
+{% endif %}
+
+<h2 class="section-title">So'nggi daromadlar</h2>
+{% if recent_income %}
+<div class="table-wrap">
+<table>
+  <tr><th>Summa</th><th>Usul</th><th>Mijoz</th><th>Sana</th></tr>
+  {% for inc in recent_income %}
+  <tr class="row-link" onclick="location.href='{% url 'finance:income_detail' inc.pk %}'">
+    <td>{{ inc.amount }}</td>
+    <td>{{ inc.get_method_display }}</td>
+    <td>{{ inc.client|default:"—" }}</td>
+    <td>{{ inc.date }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty">Hozircha daromad yo'q. <a href="{% url 'finance:income_add' %}" style="color:var(--accent);">Qo'shish</a></div>
+{% endif %}
+{% endblock %}

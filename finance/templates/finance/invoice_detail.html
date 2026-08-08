@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ invoice.number }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ invoice.number }}</h1>
+    <div class="sub">Chiqarilgan: {{ invoice.issued_date }}</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'finance:invoice_print' invoice.pk %}" target="_blank">Chop etish / PDF</a>
+    <a class="btn" href="{% url 'finance:invoice_edit' invoice.pk %}">Tahrirlash</a>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if invoice.notes %}
+    <h2 class="section-title">Izoh</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ invoice.notes }}</div>
+    {% else %}
+    <div class="empty">Izoh kiritilmagan.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Mijoz</span><span><a href="{% url 'clients:detail' invoice.client.pk %}">{{ invoice.client }}</a></span></li>
+      <li><span class="k">Loyiha</span><span>{% if invoice.project %}<a href="{% url 'projects:detail' invoice.project.pk %}">{{ invoice.project }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Summa</span><span>{{ invoice.amount }}</span></li>
+      <li><span class="k">To'lov muddati</span><span>{{ invoice.due_date }}</span></li>
+      <li><span class="k">Holati</span><span class="badge {% if invoice.is_overdue %}overdue{% else %}{{ invoice.status }}{% endif %}">{% if invoice.is_overdue %}Muddati o'tgan{% else %}{{ invoice.get_status_display }}{% endif %}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

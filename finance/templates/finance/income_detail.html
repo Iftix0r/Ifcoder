@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Daromad — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ income.amount }}</h1>
+    <div class="sub">Sana: {{ income.date }}</div>
+  </div>
+  <a class="btn" href="{% url 'finance:income_edit' income.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if income.description %}
+    <h2 class="section-title">Tavsif</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ income.description }}</div>
+    {% else %}
+    <div class="empty">Tavsif kiritilmagan.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Usul</span><span>{{ income.get_method_display }}</span></li>
+      <li><span class="k">Mijoz</span><span>{% if income.client %}<a href="{% url 'clients:detail' income.client.pk %}">{{ income.client }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Loyiha</span><span>{% if income.project %}<a href="{% url 'projects:detail' income.project.pk %}">{{ income.project }}</a>{% else %}—{% endif %}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
