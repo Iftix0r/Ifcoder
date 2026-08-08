@@ -1,0 +1,134 @@
+:root {
+  --primary: #0969da;
+  --primary-fg: #fff;
+  --body-fg: #1f2328;
+  --body-bg: #ffffff;
+  --body-quiet-color: #656d76;
+  --body-loud-color: #1f2328;
+  --header-color: #fff;
+  --header-branding-color: #fff;
+  --header-bg: #0969da;
+  --header-link-color: #fff;
+  --breadcrumbs-fg: #d6e6fb;
+  --breadcrumbs-link-fg: #fff;
+  --breadcrumbs-bg: #0860c9;
+  --link-fg: #0969da;
+  --link-hover-color: #0860c9;
+  --link-selected-fg: #0969da;
+  --hairline-color: #d0d7de;
+  --border-color: #d0d7de;
+  --error-fg: #cf222e;
+  --message-success-bg: #dafbe1;
+  --message-warning-bg: #fff8c5;
+  --message-error-bg: #ffebe9;
+  --darkened-bg: #f6f8fa;
+  --selected-bg: #eef1f4;
+  --selected-row: #fff8c5;
+  --button-fg: #fff;
+  --button-bg: #0969da;
+  --button-hover-bg: #0860c9;
+  --default-button-bg: #1f2328;
+  --default-button-hover-bg: #32383f;
+  --close-button-bg: #6e7781;
+  --close-button-hover-bg: #57606a;
+  --delete-button-bg: #cf222e;
+  --delete-button-hover-bg: #a40e26;
+  --object-tools-bg: #6e7781;
+  --object-tools-hover-bg: #57606a;
+  --font-family-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #58a6ff;
+    --primary-fg: #0d1117;
+    --body-fg: #c9d1d9;
+    --body-bg: #0d1117;
+    --body-quiet-color: #8b949e;
+    --body-loud-color: #c9d1d9;
+    --header-color: #c9d1d9;
+    --header-branding-color: #fff;
+    --header-bg: #161b22;
+    --header-link-color: #fff;
+    --breadcrumbs-fg: #8b949e;
+    --breadcrumbs-link-fg: #58a6ff;
+    --breadcrumbs-bg: #161b22;
+    --link-fg: #58a6ff;
+    --link-hover-color: #79c0ff;
+    --link-selected-fg: #58a6ff;
+    --hairline-color: #30363d;
+    --border-color: #30363d;
+    --darkened-bg: #161b22;
+    --selected-bg: #1c2128;
+    --selected-row: #2d2a1a;
+    --button-bg: #1f6feb;
+    --button-hover-bg: #388bfd;
+  }
+}
+
+body { font-size: 14px; }
+
+#header {
+  padding: 14px 24px;
+  box-shadow: none;
+}
+#branding h1, #branding h1 a:link, #branding h1 a:visited {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+div.breadcrumbs {
+  padding: 10px 24px;
+  font-size: 13px;
+}
+
+.module {
+  border-radius: 6px;
+  overflow: hidden;
+}
+.module h2, .module caption, .inline-group h2 {
+  border-radius: 0;
+}
+
+#content { padding: 24px; }
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+  border-radius: 6px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.object-tools a.addlink {
+  border-radius: 6px;
+}
+
+#changelist-filter {
+  border-radius: 6px;
+}
+
+.results {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+table thead th {
+  text-transform: none;
+  font-weight: 600;
+}
+
+.paginator {
+  border-radius: 6px;
+}
+
+.login #container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.login .form-row input {
+  border-radius: 6px;
+}
+.login .submit-row input {
+  border-radius: 6px;
+}

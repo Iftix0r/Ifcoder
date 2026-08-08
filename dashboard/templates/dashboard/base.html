@@ -285,7 +285,7 @@
       <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}"><span class="dot"></span>Mijozlar</a>
       <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}"><span class="dot"></span>Loyihalar</a>
       <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}"><span class="dot"></span>Botlar</a>
-      <a href="/admin/" class="admin-link">Admin panel</a>
+      <a href="/panel/" class="admin-link">Admin panel</a>
     </nav>
     <div class="footer">
       <div class="user-row">
@@ -311,7 +311,7 @@
       <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">Mijozlar</a>
       <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}">Loyihalar</a>
       <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">Botlar</a>
-      <a href="/admin/">Admin</a>
+      <a href="/panel/">Admin</a>
     </div>
     <main>
       {% block content %}{% endblock %}
