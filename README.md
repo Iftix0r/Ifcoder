@@ -69,6 +69,18 @@ subdomenlar/preload). Bular sayt Let's Encrypt SSL bilan ishlagani uchun xavfsiz
 SSL sertifikat ulanmagan bo'lsa, avval uni yoqing, aks holda saytga HTTP orqali kirib bo'lmay
 qoladi.
 
+cPanel/Passenger SSL'ni tashqarida (Apache/LiteSpeed) tugatib, ilovaga oddiy HTTP orqali
+uzatadi — shu sababli `SECURE_PROXY_SSL_HEADER` va `CSRF_TRUSTED_ORIGINS` ham `DEBUG=False`
+bilan birga avtomatik sozlanadi (aks holda cheksiz redirect yoki CSRF xatoligi chiqishi mumkin).
+Yangi domen qo'shsangiz, uni `ALLOWED_HOSTS`ga (`config/settings.py`) va `CSRF_TRUSTED_ORIGINS`
+ro'yxatiga ham qo'shishni unutmang.
+
+Qo'shimcha production tafsilotlari:
+- `/robots.txt` butun saytni qidiruv tizimlaridan yashiradi (`Disallow: /`) — bu shaxsiy CRM,
+  ommaviy indekslanishi kerak emas.
+- `DEBUG=False` bo'lganda `templates/404.html` va `templates/500.html` ishlatiladi (Django
+  standart oq sahifasi o'rniga).
+
 ## 2FA (ikki bosqichli tasdiqlash)
 
 `/panel/vault/2fa/setup/` orqali yoqiladi: Google Authenticator (yoki shunga o'xshash ilova)

@@ -158,12 +158,21 @@ VAULT_FERNET_KEY = os.environ.get(
 # iftix0r.uz Let's Encrypt SSL bilan xizmat qilgani uchun HTTPS majburlanadi.
 # Lokal (DEBUG=True) rivojlantirishga ta'sir qilmaydi.
 if not DEBUG:
+    # cPanel/Passenger'da Apache/LiteSpeed SSL'ni tashqarida tugatib, ilovaga
+    # HTTP orqali uzatadi (reverse proxy). Shu header bo'lmasa, Django har doim
+    # so'rovni "insecure" deb hisoblab, SECURE_SSL_REDIRECT bilan cheksiz
+    # redirect halqasi hosil qiladi.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    CSRF_TRUSTED_ORIGINS = [
+        'https://iftix0r.uz', 'https://www.iftix0r.uz',
+        'https://yoshiqtidorlar.uz', 'https://www.yoshiqtidorlar.uz',
+    ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
