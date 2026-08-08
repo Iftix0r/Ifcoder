@@ -4,5 +4,6 @@ __pycache__/
 db.sqlite3
 .env
 staticfiles/
+public/
 media/
 *.sqlite3-journal
