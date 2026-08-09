@@ -40,6 +40,7 @@ urlpatterns = [
     path('panel/infrastructure/', include('infrastructure.urls')),
     path('panel/content/', include('content.urls')),
     path('panel/vault/', include('vault.urls')),
+    path('panel/tasks/', include('tasks.urls')),
     path('panel/', include('dashboard.urls')),
     path('', RedirectView.as_view(url='panel/', permanent=False)),
 ]

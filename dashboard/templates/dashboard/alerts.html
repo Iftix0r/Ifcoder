@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Bildirishnomalar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Bildirishnomalar</h1>
+    <div class="sub">{{ alerts|length }} ta e'tibor talab qiladigan holat</div>
+  </div>
+</div>
+
+{% if alerts %}
+<div class="table-wrap">
+<table>
+  <tr><th>Holat</th><th>Sarlavha</th><th>Tafsilot</th></tr>
+  {% for a in alerts %}
+  <tr class="row-link" onclick="location.href='{{ a.link }}'">
+    <td><span class="badge {% if a.level == 'critical' %}overdue{% else %}expiring{% endif %}">{% if a.level == 'critical' %}Muhim{% else %}Ogohlantirish{% endif %}</span></td>
+    <td>{{ a.title }}</td>
+    <td>{{ a.detail }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty">Hozircha e'tibor talab qiladigan holatlar yo'q.</div>
+{% endif %}
+{% endblock %}

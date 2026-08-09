@@ -251,6 +251,17 @@
   .messages li.warning { border-color: var(--yellow); background: var(--yellow-dim); color: var(--yellow); }
   .messages li.info { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
 
+  .chart-block { margin-bottom: 28px; }
+  .chart-legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
+  .chart-legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .chart-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 12px; }
+  .chart-row .chart-label { width: 74px; flex: 0 0 auto; color: var(--muted); }
+  .chart-row .chart-track { flex: 1; background: var(--panel-2); border-radius: 4px; height: 10px; overflow: hidden; }
+  .chart-row .chart-fill { height: 100%; border-radius: 4px; }
+  .chart-row .chart-value { width: 100px; flex: 0 0 auto; text-align: right; color: var(--text); }
+  .chart-group { margin-bottom: 14px; }
+  .chart-group .chart-month { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+
   .pagination { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
   .pagination a, .pagination span { padding: 5px 10px; border-radius: var(--radius); font-size: 12px; text-decoration: none; color: var(--muted); border: 1px solid var(--border); }
   .pagination .current { color: var(--text); background: var(--panel); font-weight: 600; }
@@ -327,18 +338,27 @@
       <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.75 1.75 0 012.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0113.25 15h-3.5a.75.75 0 01-.75-.75V9.5a.25.25 0 00-.25-.25h-1.5a.25.25 0 00-.25.25v4.75a.75.75 0 01-.75.75h-3.5A1.75 1.75 0 011 13.25V6.23c0-.531.242-1.034.657-1.367l5.25-4.2z"/></svg>
         Bosh sahifa</a>
+      <a href="{% url 'dashboard:alerts' %}" class="{% if request.resolver_match.view_name == 'dashboard:alerts' %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 16a2 2 0 001.985-1.75h-3.97A2 2 0 008 16zM8 1.5A3.5 3.5 0 004.5 5v2.947c0 .346-.102.683-.294.97l-1.703 2.556a.75.75 0 00.624 1.166h9.746a.75.75 0 00.624-1.166l-1.703-2.556a1.75 1.75 0 01-.294-.97V5A3.5 3.5 0 008 1.5z"/></svg>
+        Bildirishnomalar{% if nav_alerts_count %} <span class="badge overdue" style="margin-left:auto;">{{ nav_alerts_count }}</span>{% endif %}</a>
       <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5zM11 4a.75.75 0 100 1.5 1.5 1.5 0 01.666 2.844.75.75 0 00-.416.672v.352a.75.75 0 00.574.73c1.2.289 2.162 1.2 2.522 2.372a.75.75 0 101.434-.44 5.01 5.01 0 00-2.56-3.012A3 3 0 0011 4z"/></svg>
         Mijozlar</a>
       <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM2 6.75a.75.75 0 01.75-.75h1.5a.75.75 0 01.75.75v1.5a.75.75 0 01-.75.75h-1.5a.75.75 0 01-.75-.75v-1.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM7.75 6a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg>
         Loyihalar</a>
+      <a href="{% url 'tasks:list' %}" class="{% if 'tasks' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v2.5H13V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.5v-1.5h-3.5a.25.25 0 01-.25-.25V1.75zM4.75 4a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM4 7.75A.75.75 0 014.75 7h3a.75.75 0 010 1.5h-3A.75.75 0 014 7.75zM10.5 9a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm-4 2.5a4 4 0 118 0 4 4 0 01-8 0zm5.03-1.03a.75.75 0 00-1.06 0L9 11.94l-.47-.47a.75.75 0 10-1.06 1.06l1 1a.75.75 0 001.06 0l2-2a.75.75 0 000-1.06z"/></svg>
+        Vazifalar</a>
       <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1zM5.75 4.5A1.25 1.25 0 004.5 5.75v6.5a1.25 1.25 0 001.25 1.25h4.5a1.25 1.25 0 001.25-1.25v-6.5A1.25 1.25 0 0010.25 4.5h-4.5zM6 7a1 1 0 112 0 1 1 0 01-2 0zm4 0a1 1 0 11-2 0 1 1 0 012 0zm-5 3.25a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75z"/></svg>
         Botlar</a>
       <a href="{% url 'finance:home' %}" class="{% if 'finance' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
         Moliya</a>
+      <a href="{% url 'dashboard:reports' %}" class="{% if request.resolver_match.view_name == 'dashboard:reports' %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75zm14.28 2.53a.75.75 0 00-1.06-1.06L10 7.94 7.53 5.47a.75.75 0 00-1.06 0L3.22 8.72a.75.75 0 001.06 1.06L7 7.06l2.47 2.47a.75.75 0 001.06 0l5.25-5.25z"/></svg>
+        Hisobotlar</a>
       <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
         Infratuzilma</a>
@@ -373,10 +393,13 @@
     </div>
     <div class="topbar-nav">
       <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}">Bosh sahifa</a>
+      <a href="{% url 'dashboard:alerts' %}" class="{% if request.resolver_match.view_name == 'dashboard:alerts' %}active{% endif %}">Bildirishnomalar{% if nav_alerts_count %} ({{ nav_alerts_count }}){% endif %}</a>
       <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">Mijozlar</a>
       <a href="{% url 'projects:list' %}" class="{% if 'projects' in request.resolver_match.namespace %}active{% endif %}">Loyihalar</a>
+      <a href="{% url 'tasks:list' %}" class="{% if 'tasks' in request.resolver_match.namespace %}active{% endif %}">Vazifalar</a>
       <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">Botlar</a>
       <a href="{% url 'finance:home' %}" class="{% if 'finance' in request.resolver_match.namespace %}active{% endif %}">Moliya</a>
+      <a href="{% url 'dashboard:reports' %}" class="{% if request.resolver_match.view_name == 'dashboard:reports' %}active{% endif %}">Hisobotlar</a>
       <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">Infratuzilma</a>
       <a href="{% url 'content:post_list' %}" class="{% if 'content' in request.resolver_match.namespace %}active{% endif %}">Kontent</a>
       <a href="{% url 'vault:home' %}" class="{% if 'vault' in request.resolver_match.namespace %}active{% endif %}">Sozlamalar</a>

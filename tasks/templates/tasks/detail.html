@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ task.title }} — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ task.title }}</h1>
+    <div class="sub">Yaratilgan: {{ task.created_at|date:"d.m.Y" }}</div>
+  </div>
+  <a class="btn" href="{% url 'tasks:edit' task.pk %}">Tahrirlash</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if task.description %}
+    <h2 class="section-title">Tavsif</h2>
+    <div style="font-size:14px;white-space:pre-wrap;">{{ task.description }}</div>
+    {% else %}
+    <div class="empty">Tavsif yo'q.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <ul class="detail-list">
+      <li><span class="k">Holati</span><span class="badge {{ task.status }}{% if task.is_overdue %} overdue{% endif %}">{% if task.is_overdue %}Muddati o'tgan{% else %}{{ task.get_status_display }}{% endif %}</span></li>
+      <li><span class="k">Muhimlik</span><span>{{ task.get_priority_display }}</span></li>
+      <li><span class="k">Muddat</span><span>{{ task.due_date|default:"—" }}</span></li>
+      <li><span class="k">Loyiha</span><span>{% if task.project %}<a href="{% url 'projects:detail' task.project.pk %}">{{ task.project }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Mijoz</span><span>{% if task.client %}<a href="{% url 'clients:detail' task.client.pk %}">{{ task.client }}</a>{% else %}—{% endif %}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

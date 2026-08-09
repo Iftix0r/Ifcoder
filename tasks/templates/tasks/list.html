@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Vazifalar — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Vazifalar</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:tasks|length }} ta vazifa</div>
+  </div>
+  <a class="btn btn-primary" href="{% url 'tasks:add' %}">+ Vazifa qo'shish</a>
+</div>
+
+<div class="toolbar">
+  <form method="get">
+    <input type="text" name="q" placeholder="Sarlavha, tavsif..." value="{{ q }}">
+    <select name="status" onchange="this.form.submit()">
+      <option value="">Barcha holatlar</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-sm" type="submit">Qidirish</button>
+    {% if q or status %}<a class="btn btn-sm" href="{% url 'tasks:list' %}">Tozalash</a>{% endif %}
+  </form>
+</div>
+
+{% if tasks %}
+<div class="table-wrap">
+<table>
+  <tr><th>Sarlavha</th><th>Loyiha</th><th>Muhimlik</th><th>Holati</th><th>Muddat</th></tr>
+  {% for t in tasks %}
+  <tr class="row-link" onclick="location.href='{% url 'tasks:detail' t.pk %}'">
+    <td>{{ t.title }}</td>
+    <td>{{ t.project|default:"—" }}</td>
+    <td>{{ t.get_priority_display }}</td>
+    <td><span class="badge {{ t.status }}{% if t.is_overdue %} overdue{% endif %}">{% if t.is_overdue %}Muddati o'tgan{% else %}{{ t.get_status_display }}{% endif %}</span></td>
+    <td>{{ t.due_date|default:"—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">Hech narsa topilmadi.</div>
+{% endif %}
+{% endblock %}

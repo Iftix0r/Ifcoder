@@ -25,6 +25,10 @@
     <div class="value">{{ bots_count }}</div>
     <div class="label">Botlar</div>
   </a>
+  <a class="card {% if overdue_tasks_count %}stat-yellow{% endif %}" href="{% url 'tasks:list' %}">
+    <div class="value">{{ open_tasks_count }}</div>
+    <div class="label">Ochiq vazifalar</div>
+  </a>
   <a class="card stat-green" href="{% url 'bots:list' %}?status=active">
     <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 108 0a8 8 0 000 16zm3.78-9.72l-4.25 4.25a.75.75 0 01-1.06 0L4.22 8.28a.75.75 0 011.06-1.06l1.75 1.75 3.72-3.72a.75.75 0 111.06 1.06z"/></svg></div>
     <div class="value">{{ bots_active_count }}</div>
