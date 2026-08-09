@@ -6,7 +6,10 @@
     <h1>Mijozlar</h1>
     <div class="sub">{{ page_obj.paginator.count|default:clients|length }} ta mijoz</div>
   </div>
-  <a class="btn btn-primary" href="{% url 'clients:add' %}">+ Mijoz qo'shish</a>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV yuklab olish</a>
+    <a class="btn btn-primary" href="{% url 'clients:add' %}">+ Mijoz qo'shish</a>
+  </div>
 </div>
 
 <div class="toolbar">

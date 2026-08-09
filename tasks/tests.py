@@ -48,3 +48,16 @@ class TaskViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Task.objects.filter(title="Yangi vazifa").exists())
+
+    def test_csv_export(self):
+        Task.objects.create(title="Eksport vazifasi")
+        response = self.client.get(reverse("tasks:list"), {"export": "csv"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        self.assertIn("Eksport vazifasi", response.content.decode())
+
+    def test_delete_removes_object(self):
+        obj = Task.objects.create(title="O'chiriladigan vazifa")
+        response = self.client.post(reverse("tasks:delete", args=[obj.pk]))
+        self.assertRedirects(response, reverse("tasks:list"), fetch_redirect_response=False)
+        self.assertFalse(Task.objects.filter(pk=obj.pk).exists())

@@ -6,7 +6,10 @@
     <h1>{{ client.name }}</h1>
     <div class="sub">Qo'shilgan: {{ client.created_at|date:"d.m.Y" }}</div>
   </div>
-  <a class="btn" href="{% url 'clients:edit' client.pk %}">Tahrirlash</a>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'clients:edit' client.pk %}">Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'clients:delete' client.pk %}">O'chirish</a>
+  </div>
 </div>
 
 <div class="detail-grid">

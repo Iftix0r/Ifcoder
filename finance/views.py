@@ -5,7 +5,9 @@ from django.db.models.functions import TruncMonth
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+
+from dashboard.mixins import CSVExportMixin
 
 from .forms import ExpenseForm, IncomeForm, InvoiceForm
 from .models import Expense, Income, Invoice
@@ -78,11 +80,16 @@ def home(request):
     return render(request, "finance/home.html", context)
 
 
-class IncomeListView(LoginRequiredMixin, ListView):
+class IncomeListView(LoginRequiredMixin, CSVExportMixin, ListView):
     model = Income
     template_name = "finance/income_list.html"
     context_object_name = "incomes"
     paginate_by = 20
+    csv_filename = "daromadlar.csv"
+    csv_headers = ["Summa", "Usul", "Mijoz", "Loyiha", "Sana"]
+
+    def get_csv_row(self, obj):
+        return [obj.amount, obj.get_method_display(), obj.client, obj.project, obj.date]
 
     def get_queryset(self):
         qs = super().get_queryset().select_related("client", "project")
@@ -120,11 +127,27 @@ class IncomeUpdateView(LoginRequiredMixin, UpdateView):
         return reverse("finance:income_detail", args=[self.object.pk])
 
 
-class ExpenseListView(LoginRequiredMixin, ListView):
+class IncomeDeleteView(LoginRequiredMixin, DeleteView):
+    model = Income
+    template_name = "dashboard/confirm_delete.html"
+    success_url = reverse_lazy("finance:income_list")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["cancel_url"] = self.success_url
+        return ctx
+
+
+class ExpenseListView(LoginRequiredMixin, CSVExportMixin, ListView):
     model = Expense
     template_name = "finance/expense_list.html"
     context_object_name = "expenses"
     paginate_by = 20
+    csv_filename = "xarajatlar.csv"
+    csv_headers = ["Summa", "Toifa", "Sana"]
+
+    def get_csv_row(self, obj):
+        return [obj.amount, obj.get_category_display(), obj.date]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -167,11 +190,34 @@ class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
         return reverse("finance:expense_detail", args=[self.object.pk])
 
 
-class InvoiceListView(LoginRequiredMixin, ListView):
+class ExpenseDeleteView(LoginRequiredMixin, DeleteView):
+    model = Expense
+    template_name = "dashboard/confirm_delete.html"
+    success_url = reverse_lazy("finance:expense_list")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["cancel_url"] = self.success_url
+        return ctx
+
+
+class InvoiceListView(LoginRequiredMixin, CSVExportMixin, ListView):
     model = Invoice
     template_name = "finance/invoice_list.html"
     context_object_name = "invoices"
     paginate_by = 20
+    csv_filename = "hisob-fakturalar.csv"
+    csv_headers = ["Raqami", "Mijoz", "Summa", "Chiqarilgan sana", "Muddat", "Holati"]
+
+    def get_csv_row(self, obj):
+        return [
+            obj.number,
+            obj.client,
+            obj.amount,
+            obj.issued_date,
+            obj.due_date,
+            obj.get_status_display(),
+        ]
 
     def get_queryset(self):
         qs = super().get_queryset().select_related("client", "project")
@@ -211,6 +257,17 @@ class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse("finance:invoice_detail", args=[self.object.pk])
+
+
+class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
+    model = Invoice
+    template_name = "dashboard/confirm_delete.html"
+    success_url = reverse_lazy("finance:invoice_list")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["cancel_url"] = self.success_url
+        return ctx
 
 
 class InvoicePrintView(LoginRequiredMixin, DetailView):

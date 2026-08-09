@@ -9,6 +9,7 @@
   <div style="display:flex;gap:8px;">
     <a class="btn" href="{% url 'finance:invoice_print' invoice.pk %}" target="_blank">Chop etish / PDF</a>
     <a class="btn" href="{% url 'finance:invoice_edit' invoice.pk %}">Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'finance:invoice_delete' invoice.pk %}">O'chirish</a>
   </div>
 </div>
 

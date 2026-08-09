@@ -1,0 +1,17 @@
+{% extends "dashboard/base.html" %}
+{% block title %}O'chirishni tasdiqlash — Ifcoder{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>O'chirishni tasdiqlang</h1>
+</div>
+<div class="form-card">
+  <p>Rostdan ham <strong>{{ object }}</strong> ni o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-actions">
+      <button class="btn btn-danger" type="submit">Ha, o'chirish</button>
+      <a class="btn" href="{{ cancel_url }}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

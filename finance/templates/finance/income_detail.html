@@ -6,7 +6,10 @@
     <h1>{{ income.amount }}</h1>
     <div class="sub">Sana: {{ income.date }}</div>
   </div>
-  <a class="btn" href="{% url 'finance:income_edit' income.pk %}">Tahrirlash</a>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'finance:income_edit' income.pk %}">Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'finance:income_delete' income.pk %}">O'chirish</a>
+  </div>
 </div>
 
 <div class="detail-grid">

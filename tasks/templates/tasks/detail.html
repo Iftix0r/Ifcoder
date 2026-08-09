@@ -6,7 +6,10 @@
     <h1>{{ task.title }}</h1>
     <div class="sub">Yaratilgan: {{ task.created_at|date:"d.m.Y" }}</div>
   </div>
-  <a class="btn" href="{% url 'tasks:edit' task.pk %}">Tahrirlash</a>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'tasks:edit' task.pk %}">Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'tasks:delete' task.pk %}">O'chirish</a>
+  </div>
 </div>
 
 <div class="detail-grid">

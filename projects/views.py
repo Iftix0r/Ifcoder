@@ -1,17 +1,24 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+
+from dashboard.mixins import CSVExportMixin
 
 from .forms import ProjectForm
 from .models import Project
 
 
-class ProjectListView(LoginRequiredMixin, ListView):
+class ProjectListView(LoginRequiredMixin, CSVExportMixin, ListView):
     model = Project
     template_name = "projects/list.html"
     context_object_name = "projects"
     paginate_by = 20
+    csv_filename = "loyihalar.csv"
+    csv_headers = ["Nomi", "Mijoz", "Holati", "Muddat", "Yaratilgan sana"]
+
+    def get_csv_row(self, obj):
+        return [obj.name, obj.client, obj.get_status_display(), obj.deadline, obj.created_at]
 
     def get_queryset(self):
         qs = super().get_queryset().select_related("client")
@@ -51,3 +58,14 @@ class ProjectUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse("projects:detail", args=[self.object.pk])
+
+
+class ProjectDeleteView(LoginRequiredMixin, DeleteView):
+    model = Project
+    template_name = "dashboard/confirm_delete.html"
+    success_url = reverse_lazy("projects:list")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["cancel_url"] = self.success_url
+        return ctx

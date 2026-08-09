@@ -9,4 +9,5 @@ urlpatterns = [
     path("add/", views.BotCreateView.as_view(), name="add"),
     path("<int:pk>/", views.BotDetailView.as_view(), name="detail"),
     path("<int:pk>/edit/", views.BotUpdateView.as_view(), name="edit"),
+    path("<int:pk>/delete/", views.BotDeleteView.as_view(), name="delete"),
 ]

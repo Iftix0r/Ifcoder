@@ -6,7 +6,10 @@
     <h1>{{ project.name }}</h1>
     <div class="sub">Yaratilgan: {{ project.created_at|date:"d.m.Y" }}</div>
   </div>
-  <a class="btn" href="{% url 'projects:edit' project.pk %}">Tahrirlash</a>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'projects:edit' project.pk %}">Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'projects:delete' project.pk %}">O'chirish</a>
+  </div>
 </div>
 
 <div class="detail-grid">
