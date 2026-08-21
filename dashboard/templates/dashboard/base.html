@@ -159,7 +159,7 @@
     background: var(--panel-2);
     color: var(--text);
   }
-  .sidebar nav a:hover svg { opacity: 1; transform: translateX(2px); }
+  .sidebar nav a:hover svg { opacity: 1; }
 
   .sidebar nav a.active {
     background: var(--accent-dim);
@@ -286,7 +286,7 @@
     cursor: pointer; box-shadow: 0 2px 8px var(--accent-glow);
     transition: all 0.15s ease;
   }
-  .quick-add-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .quick-add-btn:hover { background: var(--accent-hover); }
   .quick-add-menu {
     display: none;
     position: absolute;
@@ -327,7 +327,7 @@
     overflow: hidden;
   }
   a.card { display: block; text-decoration: none; color: inherit; }
-  a.card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  a.card:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); }
   
   .card .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .card .icon {
@@ -377,7 +377,7 @@
     cursor: pointer; box-shadow: var(--shadow-sm);
     transition: all 0.15s ease;
   }
-  .btn:hover { background: var(--panel-2); border-color: var(--border-hover); transform: translateY(-1px); }
+  .btn:hover { background: var(--panel-2); border-color: var(--border-hover); }
   .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 2px 8px var(--accent-glow); }
   .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
   .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
@@ -577,7 +577,22 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    // Quick-add: tashqariga click qilganda yopish
+    // row-link: ichidagi a/button bosilganda tr navigatsiyasi ishlamasin
+    document.querySelectorAll('tr.row-link').forEach(function (tr) {
+      tr.addEventListener('click', function (e) {
+        if (e.target.closest('a, button, form')) return;
+        var href = tr.getAttribute('data-href');
+        if (!href) {
+          // onclick="location.href=..." dan href ni olish
+          var m = tr.getAttribute('onclick');
+          if (m) { var match = m.match(/location\.href='([^']+)'/); if (match) href = match[1]; }
+        }
+        if (href) location.href = href;
+      });
+      tr.style.cursor = 'pointer';
+      // onclick atributini olib tashlash (event listener ishlatamiz)
+      tr.removeAttribute('onclick');
+    });
     document.addEventListener('click', function (e) {
       var wrap = document.querySelector('.quick-add-wrap');
       if (wrap && !wrap.contains(e.target)) wrap.classList.remove('show');

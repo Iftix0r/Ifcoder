@@ -17,7 +17,7 @@
 <div class="toolbar">
   <form method="get">
     <input type="text" name="q" placeholder="Vazifa sarlavhasi yoki tavsifi bo'yicha..." value="{{ q }}">
-    <select name="status" onchange="this.form.submit()">
+    <select name="status">
       <option value="">Barcha holatlar</option>
       {% for value, label in status_choices %}
       <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
