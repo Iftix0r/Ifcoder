@@ -7,7 +7,7 @@
     <h1>{{ idea.title }}</h1>
     <div class="sub">Yaratilgan: {{ idea.created_at|date:"d.m.Y" }}</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="{% url 'content:idea_edit' idea.pk %}">Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'content:idea_delete' idea.pk %}">O'chirish</a>
   </div>

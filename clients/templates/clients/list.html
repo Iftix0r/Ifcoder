@@ -8,7 +8,7 @@
     <h1>Mijozlar Ro'yxati</h1>
     <div class="sub">{{ page_obj.paginator.count|default:clients|length }} ta mijoz mavjud</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>
     <a class="btn btn-primary" href="{% url 'clients:add' %}">+ Yangi Mijoz</a>
   </div>

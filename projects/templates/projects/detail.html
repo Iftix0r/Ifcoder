@@ -8,7 +8,7 @@
     <h1>{{ project.name }}</h1>
     <div class="sub">Yaratilgan sana: {{ project.created_at|date:"d.m.Y H:i" }}</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="{% url 'projects:edit' project.pk %}">✏️ Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'projects:delete' project.pk %}">🗑️ O'chirish</a>
   </div>

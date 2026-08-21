@@ -8,7 +8,7 @@
     <h1>Blog Postlar Boshqaruvi</h1>
     <div class="sub">{{ page_obj.paginator.count|default:posts|length }} ta post mavjud</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="{% url 'content:idea_list' %}">G'oyalar</a>
     <a class="btn btn-primary" href="{% url 'content:post_add' %}">+ Yangi Post</a>
   </div>

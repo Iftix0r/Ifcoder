@@ -8,7 +8,7 @@
     <h1>{{ client.name }}</h1>
     <div class="sub">Tizimga qo'shilgan sana: {{ client.created_at|date:"d.m.Y H:i" }}</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="{% url 'clients:edit' client.pk %}">✏️ Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'clients:delete' client.pk %}">🗑️ O'chirish</a>
   </div>

@@ -7,7 +7,7 @@
     <h1>Xarajatlar</h1>
     <div class="sub">{{ page_obj.paginator.count|default:expenses|length }} ta yozuv — jami {{ total }}</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV yuklab olish</a>
     <a class="btn btn-primary" href="{% url 'finance:expense_add' %}">+ Xarajat qo'shish</a>
   </div>

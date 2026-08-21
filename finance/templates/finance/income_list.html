@@ -7,7 +7,7 @@
     <h1>Daromadlar</h1>
     <div class="sub">{{ page_obj.paginator.count|default:incomes|length }} ta yozuv — jami {{ total }}</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV yuklab olish</a>
     <a class="btn btn-primary" href="{% url 'finance:income_add' %}">+ Daromad qo'shish</a>
   </div>

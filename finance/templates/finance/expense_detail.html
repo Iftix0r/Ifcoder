@@ -7,7 +7,7 @@
     <h1>{{ expense.amount }}</h1>
     <div class="sub">Sana: {{ expense.date }}</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="{% url 'finance:expense_edit' expense.pk %}">Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'finance:expense_delete' expense.pk %}">O'chirish</a>
   </div>

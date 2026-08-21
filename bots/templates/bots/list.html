@@ -8,7 +8,7 @@
     <h1>Botlar Boshqaruvi</h1>
     <div class="sub">{{ page_obj.paginator.count|default:bots|length }} ta yaratilgan bot ro'yxati</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>
     <a class="btn btn-primary" href="{% url 'bots:add' %}">+ Yangi Bot</a>
   </div>

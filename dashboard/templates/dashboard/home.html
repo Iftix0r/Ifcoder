@@ -9,7 +9,7 @@
     <h1>Xush kelibsiz, {{ user.username }}! 👋</h1>
     <div class="sub">Bugungi loyihalar, mijozlar va tizim ko'rsatkichlari</div>
   </div>
-  <div style="display:flex;gap:10px;">
+  <div class="btn-row">
     <a href="{% url 'projects:add' %}" class="btn btn-primary">+ Yangi loyiha</a>
     <a href="{% url 'tasks:add' %}" class="btn">+ Yangi vazifa</a>
   </div>

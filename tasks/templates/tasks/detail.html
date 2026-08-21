@@ -8,7 +8,7 @@
     <h1>{{ task.title }}</h1>
     <div class="sub">Yaratilgan sana: {{ task.created_at|date:"d.m.Y H:i" }}</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="{% url 'tasks:edit' task.pk %}">✏️ Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'tasks:delete' task.pk %}">🗑️ O'chirish</a>
   </div>

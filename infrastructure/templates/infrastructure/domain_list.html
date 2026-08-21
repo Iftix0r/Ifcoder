@@ -8,7 +8,7 @@
     <h1>Domenlar Boshqaruvi</h1>
     <div class="sub">{{ page_obj.paginator.count|default:domains|length }} ta ro'yxatdan o'tgan domen</div>
   </div>
-  <div style="display:flex;gap:8px;">
+  <div class="btn-row">
     <a class="btn" href="{% url 'infrastructure:server_list' %}">Serverlar</a>
     <a class="btn" href="{% url 'infrastructure:ssl_list' %}">SSL Sertifikatlar</a>
     <a class="btn btn-primary" href="{% url 'infrastructure:domain_add' %}">+ Yangi Domen</a>

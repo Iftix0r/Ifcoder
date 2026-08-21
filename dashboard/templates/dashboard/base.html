@@ -446,8 +446,6 @@
     gap: 24px;
     align-items: start;
   }
-  @media (max-width: 860px) { .detail-grid { grid-template-columns: 1fr; } }
-
   .detail-list { list-style: none; margin: 0; padding: 0; }
   .detail-list li {
     display: flex;
@@ -510,6 +508,7 @@
   }
   .form-card textarea { min-height: 110px; resize: vertical; }
   .form-card input[type="checkbox"] { width: auto; margin-right: 8px; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .form-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
 
   /* LOGIN PAGE */
@@ -542,11 +541,59 @@
     z-index: 19;
   }
 
+  /* TABLET (≤1024px) */
+  @media (max-width: 1024px) {
+    main { padding: 24px 20px 50px; }
+    .grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  }
+
+  /* MOBILE (≤860px) */
   @media (max-width: 860px) {
     .sidebar { position: fixed; transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
     .mobile-menu-btn { display: flex; }
-    main { padding: 20px 16px 50px; }
+    main { padding: 16px 14px 50px; }
+
+    .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .page-header .btn-row { width: 100%; }
+    .page-header .btn-row .btn { flex: 1; justify-content: center; }
+
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar form { flex-direction: column; }
+    .toolbar input[type="text"] { min-width: 0; width: 100%; }
+    .toolbar select { width: 100%; }
+
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .card .value { font-size: 22px; }
+
+    th, td { padding: 10px 12px; font-size: 13px; }
+
+    .form-card { padding: 20px 16px; max-width: 100%; }
+    .form-actions { flex-direction: column; }
+    .form-actions .btn { width: 100%; justify-content: center; }
+
+    .top-header { padding: 0 14px; }
+    .breadcrumbs { font-size: 12px; }
+
+    .detail-grid { grid-template-columns: 1fr; }
+
+    .quick-add-menu { right: auto; left: 0; width: 180px; }
+  }
+
+  /* SMALL MOBILE (≤480px) */
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .card { padding: 14px 14px; }
+    .card .value { font-size: 20px; }
+    .card .icon { width: 32px; height: 32px; }
+    .card .icon svg { width: 16px; height: 16px; }
+
+    .btn { padding: 7px 12px; font-size: 13px; }
+    .btn-sm { padding: 5px 9px; font-size: 12px; }
+
+    h1 { font-size: 18px !important; }
+    .top-header { height: 54px; }
+    main { padding: 14px 12px 40px; }
   }
 </style>
 <script>
