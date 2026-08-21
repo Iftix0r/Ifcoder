@@ -251,7 +251,15 @@ def search(request):
     return render(request, "dashboard/search.html", {"query": query, "results": results})
 
 
-def _ask_openai(question):
+AI_FOCUSES = {
+    "general": "Umumiy CRM maslahati ber.",
+    "today": "Bugungi ishlarni muhimlik va muddat bo'yicha ustuvorlashtir.",
+    "projects": "Faol loyihalardagi xavflarni top va keyingi amallarni taklif qil.",
+    "finance": "Joriy oy moliyaviy holatini tahlil qil va pul oqimini yaxshilash bo'yicha maslahat ber.",
+}
+
+
+def _ask_openai(question, focus="general"):
     today = timezone.localdate()
     open_tasks = list(
         Task.objects.exclude(status=Task.Status.DONE)
@@ -272,6 +280,10 @@ def _ask_openai(question):
         f"{project.name} ({project.get_status_display()}, muddat: {project.deadline or 'belgilanmagan'})"
         for project in active_projects
     ) or "faol loyiha yo'q"
+    month_start = today.replace(day=1)
+    month_income = Income.objects.filter(date__gte=month_start).aggregate(total=Sum("amount"))["total"] or 0
+    month_expense = Expense.objects.filter(date__gte=month_start).aggregate(total=Sum("amount"))["total"] or 0
+    unpaid_amount = Invoice.objects.exclude(status=Invoice.Status.PAID).aggregate(total=Sum("amount"))["total"] or 0
     prompt = (
         "Sen Ifcoder CRM panelining ichki yordamchisisan. O'zbek tilida, qisqa va amaliy javob ber. "
         "Faqat berilgan CRM ma'lumotlariga tayangan holda javob ber, mavjud bo'lmagan faktni o'ylab topma. "
@@ -280,7 +292,9 @@ def _ask_openai(question):
         f"CRM ko'rsatkichlari: mijozlar={Client.objects.count()}, loyihalar={Project.objects.count()}, "
         f"ochiq vazifalar={Task.objects.exclude(status=Task.Status.DONE).count()}, "
         f"to'lanmagan invoice'lar={Invoice.objects.exclude(status=Invoice.Status.PAID).count()}. "
-        f"Ochiq vazifalar: {task_context}. Faol loyihalar: {project_context}."
+        f"To'lanmagan invoice summasi={unpaid_amount}, joriy oy daromadi={month_income}, "
+        f"joriy oy xarajati={month_expense}. Ochiq vazifalar: {task_context}. "
+        f"Faol loyihalar: {project_context}. Tahlil rejimi: {AI_FOCUSES.get(focus, AI_FOCUSES['general'])}"
     )
     payload = json.dumps(
         {
@@ -317,9 +331,13 @@ def _ask_openai(question):
 def ai_assistant(request):
     answer = ""
     question = ""
+    focus = "general"
     error = ""
     if request.method == "POST":
         question = request.POST.get("question", "").strip()
+        focus = request.POST.get("focus", "general")
+        if focus not in AI_FOCUSES:
+            focus = "general"
         if not settings.OPENAI_API_KEY:
             error = "OPENAI_API_KEY sozlanmagan. Kalitni .env yoki production environment'ga qo'shing."
         elif not question:
@@ -328,7 +346,7 @@ def ai_assistant(request):
             error = "Savol 2000 belgidan oshmasin."
         else:
             try:
-                answer = _ask_openai(question)
+                answer = _ask_openai(question, focus)
             except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError):
                 error = "AI xizmatiga ulanib bo'lmadi. API kaliti va internet ulanishini tekshiring."
     return render(
@@ -337,11 +355,14 @@ def ai_assistant(request):
         {
             "answer": answer,
             "question": question,
+            "focus": focus,
             "error": error,
+            "focuses": AI_FOCUSES,
             "quick_questions": [
                 "Bugun qaysi ishlarni birinchi qilishim kerak?",
                 "Muddati yaqin loyihalar bo'yicha reja tuz.",
                 "Ochiq vazifalarimni ustuvorlik bo'yicha tartibla.",
+                "Bu oy moliyaviy holatim qanday?",
             ],
         },
     )

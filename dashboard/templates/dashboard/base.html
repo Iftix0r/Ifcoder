@@ -513,6 +513,8 @@
   .ai-layout { display: grid; grid-template-columns: minmax(280px, 520px) minmax(280px, 1fr); gap: 20px; align-items: start; }
   .ai-form { max-width: none; }
   .ai-form textarea { min-height: 150px; }
+  .ai-form select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 13px; border-radius: var(--radius-sm); font: inherit; margin-top: 6px; outline: none; }
+  .ai-form select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
   .ai-quick-questions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
   .ai-quick-questions span { width: 100%; color: var(--muted); font-size: 12px; font-weight: 600; }
   .ai-quick-questions button { border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--muted); padding: 6px 9px; cursor: pointer; font: inherit; font-size: 11.5px; text-align: left; }

@@ -15,6 +15,12 @@
     {% csrf_token %}
     <label for="ai-question">Savolingiz</label>
     <textarea id="ai-question" name="question" maxlength="2000" placeholder="Masalan: Bugun qaysi ishlarni birinchi qilishim kerak?" required>{{ question }}</textarea>
+    <label for="ai-focus">Tahlil rejimi</label>
+    <select id="ai-focus" name="focus">
+      {% for value, label in focuses.items %}
+      <option value="{{ value }}" {% if focus == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
     <div class="ai-quick-questions">
       <span>Tezkor savollar</span>
       {% for quick_question in quick_questions %}
