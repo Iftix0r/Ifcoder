@@ -579,19 +579,9 @@
   document.addEventListener('DOMContentLoaded', function () {
     // row-link: ichidagi a/button bosilganda tr navigatsiyasi ishlamasin
     document.querySelectorAll('tr.row-link').forEach(function (tr) {
-      tr.addEventListener('click', function (e) {
-        if (e.target.closest('a, button, form')) return;
-        var href = tr.getAttribute('data-href');
-        if (!href) {
-          // onclick="location.href=..." dan href ni olish
-          var m = tr.getAttribute('onclick');
-          if (m) { var match = m.match(/location\.href='([^']+)'/); if (match) href = match[1]; }
-        }
-        if (href) location.href = href;
+      tr.querySelectorAll('a, button, form').forEach(function (el) {
+        el.addEventListener('click', function (e) { e.stopPropagation(); });
       });
-      tr.style.cursor = 'pointer';
-      // onclick atributini olib tashlash (event listener ishlatamiz)
-      tr.removeAttribute('onclick');
     });
     document.addEventListener('click', function (e) {
       var wrap = document.querySelector('.quick-add-wrap');
