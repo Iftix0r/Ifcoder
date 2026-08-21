@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block title %}Serverlar — Ifcoder{% endblock %}
+{% block page_title %}Serverlar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
@@ -20,15 +21,17 @@
 {% if servers %}
 <div class="table-wrap">
 <table>
-  <tr><th>Nomi</th><th>IP manzil</th><th>Provayder</th><th>SSH port</th></tr>
+  <thead><tr><th>Nomi</th><th>IP manzil</th><th>Provayder</th><th>SSH port</th></tr></thead>
+  <tbody>
   {% for s in servers %}
   <tr class="row-link" onclick="location.href='{% url 'infrastructure:server_detail' s.pk %}'">
-    <td>{{ s.name }}</td>
-    <td>{{ s.ip_address }}</td>
+    <td><strong>{{ s.name }}</strong></td>
+    <td><code>{{ s.ip_address }}</code></td>
     <td>{{ s.provider|default:"—" }}</td>
     <td>{{ s.ssh_port }}</td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}

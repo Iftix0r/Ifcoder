@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block title %}Xarajatlar — Ifcoder{% endblock %}
+{% block page_title %}Xarajatlar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
@@ -29,14 +30,17 @@
 {% if expenses %}
 <div class="table-wrap">
 <table>
-  <tr><th>Summa</th><th>Toifa</th><th>Sana</th></tr>
+  <thead><tr><th>Summa</th><th>Toifa</th><th>Sana</th><th>Tavsif</th></tr></thead>
+  <tbody>
   {% for exp in expenses %}
   <tr class="row-link" onclick="location.href='{% url 'finance:expense_detail' exp.pk %}'">
-    <td>{{ exp.amount }}</td>
+    <td><strong>{{ exp.amount }}</strong></td>
     <td>{{ exp.get_category_display }}</td>
     <td>{{ exp.date }}</td>
+    <td style="white-space:normal;max-width:300px;color:var(--muted);">{{ exp.description|default:"—"|truncatechars:60 }}</td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}

@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block title %}Xarajat — Ifcoder{% endblock %}
+{% block page_title %}Xarajat{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
@@ -16,15 +17,18 @@
   <div>
     {% if expense.description %}
     <h2 class="section-title">Tavsif</h2>
-    <div style="font-size:14px;white-space:pre-wrap;">{{ expense.description }}</div>
+    <div class="card" style="white-space:pre-wrap;font-size:14px;line-height:1.7;">{{ expense.description }}</div>
     {% else %}
     <div class="empty">Tavsif kiritilmagan.</div>
     {% endif %}
   </div>
 
   <div class="card">
+    <h2 class="section-title" style="margin-bottom:16px;">Ma'lumotlar</h2>
     <ul class="detail-list">
       <li><span class="k">Toifa</span><span>{{ expense.get_category_display }}</span></li>
+      <li><span class="k">Summa</span><span><strong>{{ expense.amount }}</strong></span></li>
+      <li><span class="k">Sana</span><span>{{ expense.date }}</span></li>
     </ul>
   </div>
 </div>

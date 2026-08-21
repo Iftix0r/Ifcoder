@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block title %}Backup'lar — Ifcoder{% endblock %}
+{% block page_title %}Backup'lar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
@@ -12,24 +13,28 @@
   </form>
 </div>
 
-<div class="card" style="margin-bottom:20px;font-size:13px;color:var(--muted);">
-  Diqqat: shifrlash kaliti (<code>IFCODER_FERNET_KEY</code>) backup fayli ichida saqlanmaydi.
-  Uni alohida xavfsiz joyda zaxiralang — aks holda tiklangan backup'dagi API kalitlar va 2FA
-  ma'lumotlari o'qib bo'lmaydigan holga keladi.
+<div class="card" style="margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;">
+  <svg viewBox="0 0 16 16" fill="currentColor" style="width:18px;height:18px;color:var(--yellow);flex:0 0 auto;margin-top:2px;"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575l6.082-11.378zm-.99 5.204a.75.75 0 001.5 0V7.5a.75.75 0 00-1.5 0v-.75zm.745 5.032a1 1 0 110-2 1 1 0 010 2z"/></svg>
+  <div style="font-size:13px;color:var(--muted);">
+    <strong style="color:var(--text);">Diqqat:</strong> shifrlash kaliti (<code>IFCODER_FERNET_KEY</code>) backup fayli ichida saqlanmaydi.
+    Uni alohida xavfsiz joyda zaxiralang — aks holda tiklangan backup'dagi API kalitlar va 2FA ma'lumotlari o'qib bo'lmaydigan holga keladi.
+  </div>
 </div>
 
 {% if backups %}
 <div class="table-wrap">
 <table>
-  <tr><th>Fayl</th><th>Hajmi</th><th>Sana</th><th></th></tr>
+  <thead><tr><th>Fayl</th><th>Hajmi</th><th>Sana</th><th></th></tr></thead>
+  <tbody>
   {% for b in backups %}
   <tr>
-    <td>{{ b.name }}</td>
+    <td><code>{{ b.name }}</code></td>
     <td>{{ b.size_kb }} KB</td>
     <td>{{ b.mtime|date:"d.m.Y H:i" }}</td>
     <td><a class="btn btn-sm" href="{% url 'vault:backup_download' b.name %}">Yuklab olish</a></td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 </div>
 {% else %}

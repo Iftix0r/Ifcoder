@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block title %}Daromadlar — Ifcoder{% endblock %}
+{% block page_title %}Daromadlar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
@@ -23,16 +24,18 @@
 {% if incomes %}
 <div class="table-wrap">
 <table>
-  <tr><th>Summa</th><th>Usul</th><th>Mijoz</th><th>Loyiha</th><th>Sana</th></tr>
+  <thead><tr><th>Summa</th><th>Usul</th><th>Mijoz</th><th>Loyiha</th><th>Sana</th></tr></thead>
+  <tbody>
   {% for inc in incomes %}
   <tr class="row-link" onclick="location.href='{% url 'finance:income_detail' inc.pk %}'">
-    <td>{{ inc.amount }}</td>
+    <td><strong>{{ inc.amount }}</strong></td>
     <td>{{ inc.get_method_display }}</td>
     <td>{{ inc.client|default:"—" }}</td>
     <td>{{ inc.project|default:"—" }}</td>
     <td>{{ inc.date }}</td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}

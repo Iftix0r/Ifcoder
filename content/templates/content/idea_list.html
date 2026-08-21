@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block title %}G'oyalar — Ifcoder{% endblock %}
+{% block page_title %}G'oyalar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
@@ -32,7 +33,8 @@
 {% if ideas %}
 <div class="table-wrap">
 <table>
-  <tr><th>Sarlavha</th><th>Platforma</th><th>Holati</th></tr>
+  <thead><tr><th>Sarlavha</th><th>Platforma</th><th>Holati</th></tr></thead>
+  <tbody>
   {% for i in ideas %}
   <tr class="row-link" onclick="location.href='{% url 'content:idea_detail' i.pk %}'">
     <td>{{ i.title }}</td>
@@ -40,6 +42,7 @@
     <td><span class="badge {{ i.status }}">{{ i.get_status_display }}</span></td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}

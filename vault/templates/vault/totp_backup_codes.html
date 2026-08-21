@@ -1,18 +1,27 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Zaxira kodlar — Ifcoder{% endblock %}
+{% block title %}2FA zaxira kodlar — Ifcoder{% endblock %}
+{% block page_title %}2FA zaxira kodlar{% endblock %}
 {% block content %}
 <div class="page-header">
   <h1>2FA yoqildi — zaxira kodlaringiz</h1>
 </div>
-<div class="form-card" style="max-width:420px;">
-  <p>Telefoningizni yo'qotib qo'ysangiz, quyidagi kodlardan birini kiritib panelga kirishingiz mumkin. Har bir kod faqat bir marta ishlaydi. Bu kodlar <strong>faqat hozir</strong> ko'rsatiladi — ularni xavfsiz joyga yozib qo'ying.</p>
-  <div class="table-wrap" style="margin:16px 0;">
+<div class="form-card" style="max-width:460px;">
+  <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;padding:14px 16px;background:var(--yellow-dim);border:1px solid var(--yellow);border-radius:var(--radius-sm);">
+    <svg viewBox="0 0 16 16" fill="currentColor" style="width:18px;height:18px;color:var(--yellow);flex:0 0 auto;margin-top:2px;"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575l6.082-11.378zm-.99 5.204a.75.75 0 001.5 0V7.5a.75.75 0 00-1.5 0v-.75zm.745 5.032a1 1 0 110-2 1 1 0 010 2z"/></svg>
+    <p style="margin:0;font-size:13px;color:var(--yellow);">Telefoningizni yo'qotib qo'ysangiz, quyidagi kodlardan birini kiritib panelga kirishingiz mumkin. Har bir kod faqat <strong>bir marta</strong> ishlaydi. Bu kodlar <strong>faqat hozir</strong> ko'rsatiladi — ularni xavfsiz joyga yozib qo'ying.</p>
+  </div>
+
+  <div class="table-wrap" style="margin:0 0 20px;">
     <table>
+      <thead><tr><th>#</th><th>Zaxira kod</th></tr></thead>
+      <tbody>
       {% for code in codes %}
-      <tr><td style="font-family:monospace;font-size:15px;">{{ code }}</td></tr>
+      <tr><td style="color:var(--muted);font-size:12px;">{{ forloop.counter }}</td><td><code>{{ code }}</code></td></tr>
       {% endfor %}
+      </tbody>
     </table>
   </div>
+
   <form method="get" action="{% url 'vault:home' %}">
     <div class="form-actions">
       <button class="btn btn-primary" type="submit">Saqladim, davom etish</button>

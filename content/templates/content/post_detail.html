@@ -1,28 +1,33 @@
 {% extends "dashboard/base.html" %}
 {% block title %}{{ post.title }} — Ifcoder{% endblock %}
+{% block page_title %}{{ post.title }}{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
     <h1>{{ post.title }}</h1>
     <div class="sub">Yaratilgan: {{ post.created_at|date:"d.m.Y" }}</div>
   </div>
-  <a class="btn" href="{% url 'content:post_edit' post.pk %}">Tahrirlash</a>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'content:post_edit' post.pk %}">Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'content:post_delete' post.pk %}">O'chirish</a>
+  </div>
 </div>
 
 <div class="detail-grid">
   <div>
     {% if post.body %}
     <h2 class="section-title">Matn</h2>
-    <div style="font-size:14px;white-space:pre-wrap;">{{ post.body }}</div>
+    <div class="card" style="white-space:pre-wrap;font-size:14px;line-height:1.7;">{{ post.body }}</div>
     {% else %}
     <div class="empty">Matn kiritilmagan.</div>
     {% endif %}
   </div>
 
   <div class="card">
+    <h2 class="section-title" style="margin-bottom:16px;">Ma'lumotlar</h2>
     <ul class="detail-list">
-      <li><span class="k">Slug</span><span>{{ post.slug }}</span></li>
-      <li><span class="k">Holati</span><span class="badge {{ post.status }}">{{ post.get_status_display }}</span></li>
+      <li><span class="k">Slug</span><span><code>{{ post.slug }}</code></span></li>
+      <li><span class="k">Holati</span><span><span class="badge {{ post.status }}">{{ post.get_status_display }}</span></span></li>
       <li><span class="k">Nashr sanasi</span><span>{{ post.published_at|date:"d.m.Y H:i"|default:"—" }}</span></li>
     </ul>
   </div>

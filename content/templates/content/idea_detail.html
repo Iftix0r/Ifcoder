@@ -1,28 +1,33 @@
 {% extends "dashboard/base.html" %}
-{% block title %}{{ idea.title }} — Ifcoder{% endblock %}
+{% block title %}G'oya — Ifcoder{% endblock %}
+{% block page_title %}{{ idea.title }}{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
     <h1>{{ idea.title }}</h1>
     <div class="sub">Yaratilgan: {{ idea.created_at|date:"d.m.Y" }}</div>
   </div>
-  <a class="btn" href="{% url 'content:idea_edit' idea.pk %}">Tahrirlash</a>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'content:idea_edit' idea.pk %}">Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'content:idea_delete' idea.pk %}">O'chirish</a>
+  </div>
 </div>
 
 <div class="detail-grid">
   <div>
     {% if idea.description %}
     <h2 class="section-title">Tavsif</h2>
-    <div style="font-size:14px;white-space:pre-wrap;">{{ idea.description }}</div>
+    <div class="card" style="white-space:pre-wrap;font-size:14px;line-height:1.7;">{{ idea.description }}</div>
     {% else %}
     <div class="empty">Tavsif kiritilmagan.</div>
     {% endif %}
   </div>
 
   <div class="card">
+    <h2 class="section-title" style="margin-bottom:16px;">Ma'lumotlar</h2>
     <ul class="detail-list">
       <li><span class="k">Platforma</span><span>{{ idea.get_platform_display }}</span></li>
-      <li><span class="k">Holati</span><span class="badge {{ idea.status }}">{{ idea.get_status_display }}</span></li>
+      <li><span class="k">Holati</span><span><span class="badge {{ idea.status }}">{{ idea.get_status_display }}</span></span></li>
     </ul>
   </div>
 </div>

@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block title %}Hisob-fakturalar — Ifcoder{% endblock %}
+{% block page_title %}Hisob-fakturalar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
@@ -29,16 +30,18 @@
 {% if invoices %}
 <div class="table-wrap">
 <table>
-  <tr><th>Raqami</th><th>Mijoz</th><th>Summa</th><th>Muddat</th><th>Holati</th></tr>
+  <thead><tr><th>Raqami</th><th>Mijoz</th><th>Summa</th><th>Muddat</th><th>Holati</th></tr></thead>
+  <tbody>
   {% for i in invoices %}
   <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' i.pk %}'">
-    <td>{{ i.number }}</td>
+    <td><strong>{{ i.number }}</strong></td>
     <td>{{ i.client }}</td>
     <td>{{ i.amount }}</td>
     <td>{{ i.due_date }}</td>
     <td><span class="badge {% if i.is_overdue %}overdue{% else %}{{ i.status }}{% endif %}">{% if i.is_overdue %}Muddati o'tgan{% else %}{{ i.get_status_display }}{% endif %}</span></td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}

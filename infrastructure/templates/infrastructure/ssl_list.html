@@ -1,5 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block title %}SSL sertifikatlar — Ifcoder{% endblock %}
+{% block page_title %}SSL sertifikatlar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
@@ -20,19 +21,21 @@
 {% if certificates %}
 <div class="table-wrap">
 <table>
-  <tr><th>Nomi</th><th>Domen</th><th>Beruvchi</th><th>Tugash sanasi</th></tr>
+  <thead><tr><th>Nomi</th><th>Domen</th><th>Beruvchi</th><th>Tugash sanasi</th></tr></thead>
+  <tbody>
   {% for c in certificates %}
   <tr class="row-link" onclick="location.href='{% url 'infrastructure:ssl_detail' c.pk %}'">
-    <td>{{ c }}</td>
+    <td><strong>{{ c }}</strong></td>
     <td>{% if c.domain %}{{ c.domain }}{% else %}—{% endif %}</td>
     <td>{{ c.issuer|default:"—" }}</td>
     <td>
       {% if c.is_expired %}<span class="badge expired">{{ c.expiration_date }}</span>
-      {% elif c.is_expiring_soon %}<span class="badge expiring">{{ c.expiration_date }}</span>
-      {% else %}{{ c.expiration_date }}{% endif %}
+      {% elif c.is_expiring_soon %}<span class="badge expiring">⚠ {{ c.expiration_date }}</span>
+      {% else %}<span class="badge active">{{ c.expiration_date }}</span>{% endif %}
     </td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}

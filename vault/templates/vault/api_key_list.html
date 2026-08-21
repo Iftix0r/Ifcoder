@@ -1,10 +1,11 @@
 {% extends "dashboard/base.html" %}
 {% block title %}API kalitlar — Ifcoder{% endblock %}
+{% block page_title %}API kalitlar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
     <h1>API kalitlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:api_keys|length }} ta kalit</div>
+    <div class="sub">{{ page_obj.paginator.count|default:api_keys|length }} ta kalit — shifrlangan saqlash</div>
   </div>
   <a class="btn btn-primary" href="{% url 'vault:api_key_add' %}">+ Kalit qo'shish</a>
 </div>
@@ -20,22 +21,24 @@
 {% if api_keys %}
 <div class="table-wrap">
 <table>
-  <tr><th>Nomi</th><th>Qiymat</th><th>Yangilangan</th><th></th></tr>
+  <thead><tr><th>Nomi</th><th>Qiymat (yashirin)</th><th>Yangilangan</th><th></th></tr></thead>
+  <tbody>
   {% for k in api_keys %}
   <tr>
-    <td>{{ k.name }}</td>
+    <td><strong>{{ k.name }}</strong></td>
     <td><code>{{ k.masked_value }}</code></td>
-    <td>{{ k.updated_at|date:"d.m.Y H:i" }}</td>
+    <td style="color:var(--muted);">{{ k.updated_at|date:"d.m.Y H:i" }}</td>
     <td style="white-space:nowrap;">
       <a class="btn btn-sm" href="{% url 'vault:api_key_edit' k.pk %}">Tahrirlash</a>
-      <a class="btn btn-sm" href="{% url 'vault:api_key_delete' k.pk %}">O'chirish</a>
+      <a class="btn btn-sm btn-danger" href="{% url 'vault:api_key_delete' k.pk %}" onclick="return confirm('Rostdan ham o\'chirmoqchimisiz?')">O'chirish</a>
     </td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}
 {% else %}
-<div class="empty">Hech narsa topilmadi.</div>
+<div class="empty">Hech qanday API kalit qo'shilmagan.</div>
 {% endif %}
 {% endblock %}
