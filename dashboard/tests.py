@@ -81,6 +81,20 @@ class AlertsAndReportsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Hozircha e'tibor talab qiladigan holatlar yo'q.")
 
+    def test_dashboard_task_can_be_completed_quickly(self):
+        task = Task.objects.create(title="Dashboarddan bajarish")
+
+        response = self.client.get("/panel/")
+        self.assertContains(response, "Dashboarddan bajarish")
+
+        status_response = self.client.post(
+            f"/panel/tasks/{task.pk}/set-status/", {"status": Task.Status.DONE}
+        )
+
+        self.assertEqual(status_response.status_code, 200)
+        task.refresh_from_db()
+        self.assertEqual(task.status, Task.Status.DONE)
+
     def test_reports_page_loads(self):
         response = self.client.get("/panel/reports/")
         self.assertEqual(response.status_code, 200)

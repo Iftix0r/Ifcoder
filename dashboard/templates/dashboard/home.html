@@ -72,6 +72,37 @@
 </div>
 
 <h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v2.5H13V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.5v-1.5h-3.5a.25.25 0 01-.25-.25V1.75z"/></svg>
+  Yaqin Vazifalar
+</h2>
+{% if upcoming_tasks %}
+<div class="table-wrap">
+<table id="dashboard-tasks">
+  <thead><tr><th>Vazifa</th><th>Loyiha</th><th>Muhimlik</th><th>Muddat</th><th></th></tr></thead>
+  <tbody>
+    {% for task in upcoming_tasks %}
+    <tr class="row-link" data-task-row="{{ task.pk }}" onclick="location.href='{% url 'tasks:detail' task.pk %}'">
+      <td><strong>{{ task.title }}</strong></td>
+      <td>{{ task.project|default:"—" }}</td>
+      <td><span class="badge {% if task.priority == 'high' %}overdue{% elif task.priority == 'medium' %}expiring{% endif %}">{{ task.get_priority_display }}</span></td>
+      <td>{% if task.is_overdue %}<span class="badge overdue">Muddati o'tgan</span>{% else %}{{ task.due_date|default:"Belgilanmagan" }}{% endif %}</td>
+      <td>
+        <form class="task-complete-form" action="{% url 'tasks:set_status' task.pk %}" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="status" value="done">
+          <button class="task-action" type="submit" title="Bajarildi" aria-label="{{ task.title }} bajarildi">&#10003;</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">Ochiq vazifalar yo'q. <a href="{% url 'tasks:add' %}">Yangi vazifa yarating</a></div>
+{% endif %}
+
+<h2 class="section-title">
   <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg>
   So'nggi Loyihalar
 </h2>
@@ -178,4 +209,29 @@
 </div>
 {% endif %}
 
+<script>
+  document.querySelectorAll('.task-complete-form').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var button = form.querySelector('button');
+      button.disabled = true;
+      fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      }).then(function (response) {
+        if (!response.ok) throw new Error('status update failed');
+        return response.json();
+      }).then(function () {
+        var row = form.closest('[data-task-row]');
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(8px)';
+        setTimeout(function () { row.remove(); }, 180);
+      }).catch(function () {
+        button.disabled = false;
+        button.title = 'Qayta urinib ko\'ring';
+      });
+    });
+  });
+</script>
 {% endblock %}

@@ -99,6 +99,7 @@ def home(request):
         "recent_projects": Project.objects.select_related("client").order_by("-created_at")[:5],
         "recent_bots": Bot.objects.select_related("project", "client").order_by("-created_at")[:5],
         "recent_clients": Client.objects.order_by("-created_at")[:5],
+        "upcoming_tasks": open_tasks.select_related("project").order_by("due_date", "priority")[:6],
         "month_income": month_income,
         "month_expense": month_expense,
         "outstanding_invoices_count": invoice_counts["total"],
