@@ -94,15 +94,6 @@ class AlertsAndReportsTests(TestCase):
         self.assertContains(response, "Acme Studio")
         self.assertContains(response, "Mijoz")
 
-    def test_developer_center_shows_repository_projects(self):
-        Project.objects.create(name="CRM Core", repo_url="https://github.com/example/crm")
-
-        response = self.client.get("/panel/developer/")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "CRM Core")
-        self.assertContains(response, "Dasturchi markazi")
-
     @override_settings(OPENAI_API_KEY="")
     def test_ai_assistant_explains_missing_api_key(self):
         response = self.client.post("/panel/ai/", {"question": "Bugungi rejam qanday?"})

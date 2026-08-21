@@ -369,44 +369,6 @@ def ai_assistant(request):
 
 
 @login_required
-def developer_center(request):
-    today = timezone.localdate()
-    soon = today + timedelta(days=14)
-    open_tasks = Task.objects.exclude(status=Task.Status.DONE)
-    deadline_projects = Project.objects.exclude(
-        status__in=[Project.Status.COMPLETED, Project.Status.PAUSED]
-    ).filter(deadline__isnull=False, deadline__lte=soon).select_related("client").order_by("deadline")[:8]
-    infrastructure_alerts = [
-        *[
-            {"kind": "Domen", "name": domain.name, "date": domain.expiration_date,
-             "expired": domain.is_expired,
-             "url": reverse("infrastructure:domain_detail", args=[domain.pk])}
-            for domain in Domain.objects.filter(expiration_date__lte=soon).order_by("expiration_date")[:6]
-        ],
-        *[
-            {"kind": "SSL", "name": str(cert), "date": cert.expiration_date,
-             "expired": cert.is_expired,
-             "url": reverse("infrastructure:ssl_detail", args=[cert.pk])}
-            for cert in SSLCertificate.objects.filter(expiration_date__lte=soon)
-            .select_related("domain").order_by("expiration_date")[:6]
-        ],
-    ]
-    infrastructure_alerts.sort(key=lambda item: item["date"])
-    return render(
-        request,
-        "dashboard/developer_center.html",
-        {
-            "repo_projects": Project.objects.exclude(repo_url="").select_related("client").order_by("name")[:10],
-            "priority_tasks": open_tasks.select_related("project").order_by("due_date", "priority")[:10],
-            "deadline_projects": deadline_projects,
-            "infrastructure_alerts": infrastructure_alerts[:10],
-            "open_tasks_count": open_tasks.count(),
-            "today": today,
-        },
-    )
-
-
-@login_required
 def reports(request):
     today = timezone.localdate()
     # Build the last 6 calendar months (oldest first) without relying on
