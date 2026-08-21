@@ -56,6 +56,19 @@ class TaskViewTests(TestCase):
         self.assertEqual(response["Content-Type"], "text/csv")
         self.assertIn("Eksport vazifasi", response.content.decode())
 
+    def test_list_filters_by_priority_and_due_date(self):
+        past = datetime.date.today() - datetime.timedelta(days=1)
+        future = datetime.date.today() + datetime.timedelta(days=2)
+        Task.objects.create(title="Shoshilinch", priority=Task.Priority.HIGH, due_date=past)
+        Task.objects.create(title="Keyinroq", priority=Task.Priority.LOW, due_date=future)
+
+        response = self.client.get(
+            reverse("tasks:list"), {"priority": "high", "due": "overdue"}
+        )
+
+        self.assertContains(response, "Shoshilinch")
+        self.assertNotContains(response, "Keyinroq")
+
     def test_delete_removes_object(self):
         obj = Task.objects.create(title="O'chiriladigan vazifa")
         response = self.client.post(reverse("tasks:delete", args=[obj.pk]))
