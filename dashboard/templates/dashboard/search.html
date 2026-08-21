@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Qidiruv — Ifcoder{% endblock %}
+{% block page_title %}Qidiruv{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Panel bo'ylab qidiruv</h1>
+    <div class="sub">Mijozlar, loyihalar, vazifalar va botlarni tez toping</div>
+  </div>
+</div>
+
+<form class="global-search-form" method="get" action="{% url 'dashboard:search' %}">
+  <label class="sr-only" for="search-query">Qidiruv</label>
+  <input id="search-query" type="search" name="q" value="{{ query }}" placeholder="Nom, email, Telegram username..." autofocus>
+  <button class="btn btn-primary" type="submit">Qidirish</button>
+</form>
+
+{% if query %}
+  <h2 class="section-title">“{{ query }}” bo'yicha {{ results|length }} ta natija</h2>
+  {% if results %}
+  <div class="search-results">
+    {% for result in results %}
+    <a class="search-result" href="{{ result.url }}">
+      <span class="search-result-type">{{ result.type }}</span>
+      <span class="search-result-main"><strong>{{ result.title }}</strong><small>{{ result.detail|default:"Qo'shimcha ma'lumot yo'q" }}</small></span>
+      <span aria-hidden="true">&#8594;</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">Mos natija topilmadi.</div>
+  {% endif %}
+{% else %}
+<div class="empty">Qidiruv so'zini kiriting.</div>
+{% endif %}
+{% endblock %}

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
-from django.db.models import Sum
+from django.db.models import Count, Q, Sum
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
@@ -56,8 +56,13 @@ class ThrottledLoginView(LoginView):
 
 @login_required
 def home(request):
+    project_status_counts = dict(
+        Project.objects.values_list("status")
+        .annotate(count=Count("id"))
+        .values_list("status", "count")
+    )
     projects_by_status = [
-        {"label": label, "value": value, "count": Project.objects.filter(status=value).count()}
+        {"label": label, "value": value, "count": project_status_counts.get(value, 0)}
         for value, label in Project.Status.choices
     ]
 
@@ -71,26 +76,34 @@ def home(request):
     outstanding_invoices = Invoice.objects.exclude(status=Invoice.Status.PAID)
     today = timezone.localdate()
     open_tasks = Task.objects.exclude(status=Task.Status.DONE)
-    overdue_tasks_count = open_tasks.filter(due_date__lt=today).count()
+    client_count = Client.objects.aggregate(total=Count("id"))["total"]
+    project_count = Project.objects.aggregate(total=Count("id"))["total"]
+    bot_counts = Bot.objects.aggregate(
+        total=Count("id"), active=Count("id", filter=Q(status=Bot.Status.ACTIVE))
+    )
+    task_counts = open_tasks.aggregate(
+        open=Count("id"), overdue=Count("id", filter=Q(due_date__lt=today))
+    )
+    invoice_counts = outstanding_invoices.aggregate(total=Count("id"))
 
     context = {
-        "clients_count": Client.objects.count(),
-        "projects_count": Project.objects.count(),
-        "bots_count": Bot.objects.count(),
-        "bots_active_count": Bot.objects.filter(status=Bot.Status.ACTIVE).count(),
+        "clients_count": client_count,
+        "projects_count": project_count,
+        "bots_count": bot_counts["total"],
+        "bots_active_count": bot_counts["active"],
         "projects_by_status": projects_by_status,
         "recent_projects": Project.objects.select_related("client").order_by("-created_at")[:5],
         "recent_bots": Bot.objects.select_related("project", "client").order_by("-created_at")[:5],
         "recent_clients": Client.objects.order_by("-created_at")[:5],
         "month_income": month_income,
         "month_expense": month_expense,
-        "outstanding_invoices_count": outstanding_invoices.count(),
+        "outstanding_invoices_count": invoice_counts["total"],
         "expiring_domains": Domain.objects.expiring_soon().order_by("expiration_date")[:5],
         "expiring_certificates": SSLCertificate.objects.expiring_soon()
         .select_related("domain")
         .order_by("expiration_date")[:5],
-        "open_tasks_count": open_tasks.count(),
-        "overdue_tasks_count": overdue_tasks_count,
+        "open_tasks_count": task_counts["open"],
+        "overdue_tasks_count": task_counts["overdue"],
     }
     return render(request, "dashboard/home.html", context)
 
@@ -196,6 +209,42 @@ def _collect_alerts():
 @login_required
 def alerts(request):
     return render(request, "dashboard/alerts.html", {"alerts": _collect_alerts()})
+
+
+@login_required
+def search(request):
+    query = request.GET.get("q", "").strip()
+    results = []
+
+    if query:
+        lookup = Q(name__icontains=query)
+        for client in Client.objects.filter(
+            lookup | Q(email__icontains=query) | Q(telegram__icontains=query)
+        ).order_by("name")[:10]:
+            results.append(
+                {"type": "Mijoz", "title": client.name, "detail": client.email or client.phone,
+                 "url": reverse("clients:detail", args=[client.pk])}
+            )
+
+        for project in Project.objects.filter(name__icontains=query).select_related("client").order_by("name")[:10]:
+            results.append(
+                {"type": "Loyiha", "title": project.name, "detail": str(project.client or ""),
+                 "url": reverse("projects:detail", args=[project.pk])}
+            )
+
+        for task in Task.objects.filter(title__icontains=query).order_by("title")[:10]:
+            results.append(
+                {"type": "Vazifa", "title": task.title, "detail": task.get_status_display(),
+                 "url": reverse("tasks:detail", args=[task.pk])}
+            )
+
+        for bot in Bot.objects.filter(name__icontains=query).order_by("name")[:10]:
+            results.append(
+                {"type": "Bot", "title": bot.name, "detail": bot.get_status_display(),
+                 "url": reverse("bots:detail", args=[bot.pk])}
+            )
+
+    return render(request, "dashboard/search.html", {"query": query, "results": results})
 
 
 @login_required
