@@ -30,12 +30,49 @@
   <div class="card">
     <h3 style="margin-top:0;font-size:16px;font-weight:700;margin-bottom:14px;">Holat & Parametrlar</h3>
     <ul class="detail-list">
-      <li><span class="k">Holati</span><span class="badge {{ task.status }}{% if task.is_overdue %} overdue{% endif %}">{% if task.is_overdue %}Muddati o'tgan{% else %}{{ task.get_status_display }}{% endif %}</span></li>
+      <li>
+        <span class="k">Holati</span>
+        <span id="task-status-badge" class="badge {{ task.status }}{% if task.is_overdue %} overdue{% endif %}">
+          {% if task.is_overdue %}Muddati o'tgan{% else %}{{ task.get_status_display }}{% endif %}
+        </span>
+      </li>
       <li><span class="k">Muhimlik</span><span><strong style="color:var(--accent);">{{ task.get_priority_display }}</strong></span></li>
       <li><span class="k">Bajarish Muddati</span><span><strong>{{ task.due_date|default:"—" }}</strong></span></li>
       <li><span class="k">Tegishli Loyiha</span><span>{% if task.project %}<a href="{% url 'projects:detail' task.project.pk %}"><strong>{{ task.project }}</strong></a>{% else %}—{% endif %}</span></li>
       <li><span class="k">Tegishli Mijoz</span><span>{% if task.client %}<a href="{% url 'clients:detail' task.client.pk %}"><strong>{{ task.client }}</strong></a>{% else %}—{% endif %}</span></li>
     </ul>
+
+    <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:6px;">
+      {% for value, label in status_choices %}
+      <button class="btn btn-sm status-btn {% if task.status == value %}btn-primary{% endif %}"
+              data-status="{{ value }}"
+              data-url="{% url 'tasks:set_status' task.pk %}">
+        {{ label }}
+      </button>
+      {% endfor %}
+    </div>
   </div>
 </div>
+
+<script>
+document.querySelectorAll('.status-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var status = btn.dataset.status;
+    var url = btn.dataset.url;
+    fetch(url, {
+      method: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'status=' + status,
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.ok) return;
+      document.querySelectorAll('.status-btn').forEach(function(b) {
+        b.classList.toggle('btn-primary', b.dataset.status === status);
+      });
+      var badge = document.getElementById('task-status-badge');
+      badge.className = 'badge ' + data.status;
+      badge.textContent = data.label;
+    });
+  });
+});
+</script>
 {% endblock %}

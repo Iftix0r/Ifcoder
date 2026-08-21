@@ -2,9 +2,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q, Sum
 from django.db.models.functions import TruncMonth
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from dashboard.mixins import CSVExportMixin
@@ -274,3 +276,12 @@ class InvoicePrintView(LoginRequiredMixin, DetailView):
     model = Invoice
     template_name = "finance/invoice_print.html"
     context_object_name = "invoice"
+
+
+@login_required
+@require_POST
+def invoice_mark_paid(request, pk):
+    invoice = Invoice.objects.get(pk=pk)
+    invoice.status = Invoice.Status.PAID
+    invoice.save(update_fields=["status"])
+    return JsonResponse({"ok": True, "label": invoice.get_status_display()})

@@ -541,6 +541,30 @@
     z-index: 19;
   }
 
+  /* DELETE MODAL */
+  .delete-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .delete-modal-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: var(--shadow);
+  }
+  .delete-modal-box h3 { margin: 0 0 8px; font-size: 17px; }
+  .delete-modal-box p { margin: 0 0 20px; color: var(--muted); font-size: 13.5px; }
+  .delete-modal-box .btn-row { justify-content: flex-end; }
+
   /* TABLET (≤1024px) */
   @media (max-width: 1024px) {
     main { padding: 24px 20px 50px; }
@@ -655,11 +679,72 @@
         setTimeout(function () { li.remove(); }, 400);
       }, 4000);
     });
+
+    // Form dirty check — o'zgartirilgan formdan chiqishda ogohlantirish
+    var forms = document.querySelectorAll('.form-card form, form.login');
+    forms.forEach(function(form) {
+      var dirty = false;
+      form.addEventListener('input', function() { dirty = true; });
+      form.addEventListener('submit', function() { dirty = false; });
+      window.addEventListener('beforeunload', function(e) {
+        if (dirty) { e.preventDefault(); e.returnValue = ''; }
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      var tag = document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // '/' — qidiruv inputga focus
+      if (e.key === '/') {
+        var inp = document.querySelector('.toolbar input[type="text"]');
+        if (inp) { e.preventDefault(); inp.focus(); inp.select(); }
+      }
+      // 'Escape' — quick-add yopish, sidebar yopish
+      if (e.key === 'Escape') {
+        document.querySelector('.quick-add-wrap')?.classList.remove('show');
+        var sb = document.querySelector('.sidebar');
+        var ov = document.getElementById('sidebar-overlay');
+        if (sb?.classList.contains('open')) {
+          sb.classList.remove('open');
+          if (ov) ov.style.display = 'none';
+        }
+      }
+    });
+
+    // Delete modal — confirm o'rniga
+    document.querySelectorAll('a.btn-danger[href*="delete"]').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        var modal = document.getElementById('delete-modal');
+        var confirmBtn = document.getElementById('delete-confirm-btn');
+        if (!modal) return;
+        confirmBtn.href = link.href;
+        modal.style.display = 'flex';
+      });
+    });
+    document.getElementById('delete-modal-cancel')?.addEventListener('click', function() {
+      document.getElementById('delete-modal').style.display = 'none';
+    });
+    document.getElementById('delete-modal')?.addEventListener('click', function(e) {
+      if (e.target === this) this.style.display = 'none';
+    });
   });
 </script>
 </head>
 <body>
 <div id="sidebar-overlay"></div>
+
+<div class="delete-modal" id="delete-modal">
+  <div class="delete-modal-box">
+    <h3>O'chirishni tasdiqlang</h3>
+    <p>Bu amalni ortga qaytarib bo'lmaydi. Davom etasizmi?</p>
+    <div class="btn-row">
+      <button class="btn" id="delete-modal-cancel">Bekor qilish</button>
+      <a class="btn btn-danger" id="delete-confirm-btn" href="#">Ha, o'chirish</a>
+    </div>
+  </div>
+</div>
 {% if user.is_authenticated %}
 <div class="layout">
   <aside class="sidebar">

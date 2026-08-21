@@ -1,6 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.http import JsonResponse
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from dashboard.mixins import CSVExportMixin
@@ -50,6 +53,11 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
     template_name = "tasks/detail.html"
     context_object_name = "task"
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["status_choices"] = Task.Status.choices
+        return ctx
+
 
 class TaskCreateView(LoginRequiredMixin, CreateView):
     model = Task
@@ -76,3 +84,15 @@ class TaskDeleteView(LoginRequiredMixin, DeleteView):
         ctx = super().get_context_data(**kwargs)
         ctx["cancel_url"] = self.success_url
         return ctx
+
+
+@login_required
+@require_POST
+def task_set_status(request, pk):
+    task = Task.objects.get(pk=pk)
+    status = request.POST.get("status")
+    if status in Task.Status.values:
+        task.status = status
+        task.save(update_fields=["status"])
+        return JsonResponse({"ok": True, "status": task.status, "label": task.get_status_display()})
+    return JsonResponse({"ok": False}, status=400)

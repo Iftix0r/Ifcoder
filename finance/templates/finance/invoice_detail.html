@@ -7,6 +7,9 @@
     <div class="sub">Chiqarilgan: {{ invoice.issued_date }}</div>
   </div>
   <div class="btn-row">
+    {% if invoice.status != 'paid' %}
+    <button class="btn btn-primary" id="mark-paid-btn">✓ To'landi deb belgilash</button>
+    {% endif %}
     <a class="btn" href="{% url 'finance:invoice_print' invoice.pk %}" target="_blank">Chop etish / PDF</a>
     <a class="btn" href="{% url 'finance:invoice_edit' invoice.pk %}">Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'finance:invoice_delete' invoice.pk %}">O'chirish</a>
@@ -29,8 +32,29 @@
       <li><span class="k">Loyiha</span><span>{% if invoice.project %}<a href="{% url 'projects:detail' invoice.project.pk %}">{{ invoice.project }}</a>{% else %}—{% endif %}</span></li>
       <li><span class="k">Summa</span><span>{{ invoice.amount }}</span></li>
       <li><span class="k">To'lov muddati</span><span>{{ invoice.due_date }}</span></li>
-      <li><span class="k">Holati</span><span class="badge {% if invoice.is_overdue %}overdue{% else %}{{ invoice.status }}{% endif %}">{% if invoice.is_overdue %}Muddati o'tgan{% else %}{{ invoice.get_status_display }}{% endif %}</span></li>
+      <li><span class="k">Holati</span><span id="invoice-status-badge" class="badge {% if invoice.is_overdue %}overdue{% else %}{{ invoice.status }}{% endif %}">{% if invoice.is_overdue %}Muddati o'tgan{% else %}{{ invoice.get_status_display }}{% endif %}</span></li>
     </ul>
   </div>
 </div>
+
+<script>
+var markPaidBtn = document.getElementById('mark-paid-btn');
+if (markPaidBtn) {
+  markPaidBtn.addEventListener('click', function() {
+    markPaidBtn.disabled = true;
+    markPaidBtn.textContent = '...';
+    fetch('{% url "finance:invoice_mark_paid" invoice.pk %}', {
+      method: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}'},
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data.ok) {
+        markPaidBtn.remove();
+        var badge = document.getElementById('invoice-status-badge');
+        badge.className = 'badge paid';
+        badge.textContent = data.label;
+      }
+    });
+  });
+}
+</script>
 {% endblock %}

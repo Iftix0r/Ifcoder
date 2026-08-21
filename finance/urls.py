@@ -22,4 +22,5 @@ urlpatterns = [
     path("invoices/<int:pk>/edit/", views.InvoiceUpdateView.as_view(), name="invoice_edit"),
     path("invoices/<int:pk>/print/", views.InvoicePrintView.as_view(), name="invoice_print"),
     path("invoices/<int:pk>/delete/", views.InvoiceDeleteView.as_view(), name="invoice_delete"),
+    path("invoices/<int:pk>/mark-paid/", views.invoice_mark_paid, name="invoice_mark_paid"),
 ]
