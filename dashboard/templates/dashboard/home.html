@@ -1,134 +1,179 @@
 {% extends "dashboard/base.html" %}
 {% block title %}Dashboard — Ifcoder{% endblock %}
+{% block page_title %}Umumiy Boshqaruv{% endblock %}
+
 {% block content %}
 
 <div class="page-header">
   <div>
-    <h1>Xush kelibsiz, {{ user.username }}</h1>
-    <div class="sub">Umumiy ko'rinish</div>
+    <h1>Xush kelibsiz, {{ user.username }}! 👋</h1>
+    <div class="sub">Bugungi loyihalar, mijozlar va tizim ko'rsatkichlari</div>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <a href="{% url 'projects:add' %}" class="btn btn-primary">+ Yangi loyiha</a>
+    <a href="{% url 'tasks:add' %}" class="btn">+ Yangi vazifa</a>
   </div>
 </div>
 
 <div class="grid">
   <a class="card" href="{% url 'clients:list' %}">
-    <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5z"/></svg></div>
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5z"/></svg></div>
+      <span class="trend up">Faol</span>
+    </div>
     <div class="value">{{ clients_count }}</div>
-    <div class="label">Mijozlar</div>
+    <div class="label">Jami Mijozlar</div>
   </a>
+
   <a class="card" href="{% url 'projects:list' %}">
-    <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg></div>
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg></div>
+      <span class="trend up">Loyihalar</span>
+    </div>
     <div class="value">{{ projects_count }}</div>
-    <div class="label">Loyihalar</div>
+    <div class="label">Jami Loyihalar</div>
   </a>
-  <a class="card" href="{% url 'bots:list' %}">
-    <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.75 4.5A1.25 1.25 0 004.5 5.75v6.5a1.25 1.25 0 001.25 1.25h4.5a1.25 1.25 0 001.25-1.25v-6.5A1.25 1.25 0 0010.25 4.5h-4.5zM6 7a1 1 0 112 0 1 1 0 01-2 0zm4 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg></div>
-    <div class="value">{{ bots_count }}</div>
-    <div class="label">Botlar</div>
-  </a>
-  <a class="card {% if overdue_tasks_count %}stat-yellow{% endif %}" href="{% url 'tasks:list' %}">
-    <div class="value">{{ open_tasks_count }}</div>
-    <div class="label">Ochiq vazifalar</div>
-  </a>
+
   <a class="card stat-green" href="{% url 'bots:list' %}?status=active">
-    <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 108 0a8 8 0 000 16zm3.78-9.72l-4.25 4.25a.75.75 0 01-1.06 0L4.22 8.28a.75.75 0 011.06-1.06l1.75 1.75 3.72-3.72a.75.75 0 111.06 1.06z"/></svg></div>
-    <div class="value">{{ bots_active_count }}</div>
-    <div class="label">Faol botlar</div>
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1z"/></svg></div>
+      <span class="trend up">Online</span>
+    </div>
+    <div class="value">{{ bots_active_count }} / {{ bots_count }}</div>
+    <div class="label">Faol Botlar</div>
   </a>
-  {% for s in projects_by_status %}
-  <a class="card {% if s.value == 'completed' %}stat-green{% elif s.value == 'paused' %}stat-yellow{% endif %}" href="{% url 'projects:list' %}?status={{ s.value }}">
-    <div class="value">{{ s.count }}</div>
-    <div class="label">{{ s.label }}</div>
+
+  <a class="card {% if overdue_tasks_count %}stat-yellow{% endif %}" href="{% url 'tasks:list' %}">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v2.5H13V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.5v-1.5h-3.5a.25.25 0 01-.25-.25V1.75z"/></svg></div>
+      {% if overdue_tasks_count %}<span class="trend down">{{ overdue_tasks_count }} muddati o'tgan</span>{% endif %}
+    </div>
+    <div class="value">{{ open_tasks_count }}</div>
+    <div class="label">Ochiq Vazifalar</div>
   </a>
-  {% endfor %}
+
   <a class="card stat-green" href="{% url 'finance:income_list' %}">
-    <div class="value">{{ month_income }}</div>
-    <div class="label">Bu oy daromad</div>
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg></div>
+      <span class="trend up">Daromad</span>
+    </div>
+    <div class="value">${{ month_income|default:"0" }}</div>
+    <div class="label">Bu Oy Daromad</div>
   </a>
-  <a class="card" href="{% url 'finance:expense_list' %}">
-    <div class="value">{{ month_expense }}</div>
-    <div class="label">Bu oy xarajat</div>
-  </a>
-  <a class="card {% if outstanding_invoices_count %}stat-yellow{% endif %}" href="{% url 'finance:invoice_list' %}">
+
+  <a class="card {% if outstanding_invoices_count %}stat-yellow{% else %}stat-gray{% endif %}" href="{% url 'finance:invoice_list' %}">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75z"/></svg></div>
+      {% if outstanding_invoices_count %}<span class="trend down">Kutilmoqda</span>{% endif %}
+    </div>
     <div class="value">{{ outstanding_invoices_count }}</div>
-    <div class="label">To'lanmagan hisob-fakturalar</div>
+    <div class="label">To'lanmagan Invoyslar</div>
   </a>
 </div>
 
-<h2 class="section-title">So'nggi loyihalar</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg>
+  So'nggi Loyihalar
+</h2>
 {% if recent_projects %}
 <div class="table-wrap">
 <table>
-  <tr><th>Nomi</th><th>Mijoz</th><th>Holati</th><th>Muddat</th></tr>
-  {% for p in recent_projects %}
-  <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
-    <td>{{ p.name }}</td>
-    <td>{{ p.client|default:"—" }}</td>
-    <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
-    <td>{{ p.deadline|default:"—" }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Loyiha Nomi</th><th>Mijoz</th><th>Holati</th><th>Topshirish Muddati</th></tr>
+  </thead>
+  <tbody>
+    {% for p in recent_projects %}
+    <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
+      <td><strong>{{ p.name }}</strong></td>
+      <td>{{ p.client|default:"—" }}</td>
+      <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+      <td>{{ p.deadline|default:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% else %}
-<div class="empty">Hozircha loyihalar yo'q. <a href="{% url 'projects:add' %}" style="color:var(--accent);">Qo'shish</a></div>
+<div class="empty">Hozircha loyihalar yo'q. <a href="{% url 'projects:add' %}">Yangi loyiha qo'shing</a></div>
 {% endif %}
 
-<h2 class="section-title">So'nggi botlar</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1z"/></svg>
+  So'nggi Botlar
+</h2>
 {% if recent_bots %}
 <div class="table-wrap">
 <table>
-  <tr><th>Nomi</th><th>Platforma</th><th>Holati</th><th>Loyiha</th></tr>
-  {% for b in recent_bots %}
-  <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
-    <td>{{ b.name }}</td>
-    <td>{{ b.get_platform_display }}</td>
-    <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
-    <td>{{ b.project|default:"—" }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Bot Nomi</th><th>Platforma</th><th>Holati</th><th>Tegishli Loyiha</th></tr>
+  </thead>
+  <tbody>
+    {% for b in recent_bots %}
+    <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+      <td><strong>{{ b.name }}</strong></td>
+      <td>{{ b.get_platform_display }}</td>
+      <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+      <td>{{ b.project|default:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% else %}
-<div class="empty">Hozircha botlar yo'q. <a href="{% url 'bots:add' %}" style="color:var(--accent);">Qo'shish</a></div>
+<div class="empty">Hozircha botlar yo'q. <a href="{% url 'bots:add' %}">Bot qo'shing</a></div>
 {% endif %}
 
-<h2 class="section-title">So'nggi mijozlar</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5z"/></svg>
+  So'nggi Mijozlar
+</h2>
 {% if recent_clients %}
 <div class="table-wrap">
 <table>
-  <tr><th>Ism</th><th>Telefon</th><th>Telegram</th></tr>
-  {% for c in recent_clients %}
-  <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
-    <td>{{ c.name }}</td>
-    <td>{{ c.phone|default:"—" }}</td>
-    <td>{{ c.telegram|default:"—" }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Mijoz Ismi</th><th>Telefon</th><th>Telegram User</th></tr>
+  </thead>
+  <tbody>
+    {% for c in recent_clients %}
+    <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
+      <td><strong>{{ c.name }}</strong></td>
+      <td>{{ c.phone|default:"—" }}</td>
+      <td>{{ c.telegram|default:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% else %}
-<div class="empty">Hozircha mijozlar yo'q. <a href="{% url 'clients:add' %}" style="color:var(--accent);">Qo'shish</a></div>
+<div class="empty">Hozircha mijozlar yo'q. <a href="{% url 'clients:add' %}">Mijoz qo'shing</a></div>
 {% endif %}
 
 {% if expiring_domains or expiring_certificates %}
-<h2 class="section-title">Muddati yaqinlashayotgan domenlar / sertifikatlar</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M8 16a2 2 0 001.985-1.75h-3.97A2 2 0 008 16zM8 1.5A3.5 3.5 0 004.5 5v2.947c0 .346-.102.683-.294.97l-1.703 2.556a.75.75 0 00.624 1.166h9.746a.75.75 0 00.624-1.166l-1.703-2.556a1.75 1.75 0 01-.294-.97V5A3.5 3.5 0 008 1.5z"/></svg>
+  Muddati Yaqinlashayotgan Domen & SSL Sertifikatlar
+</h2>
 <div class="table-wrap">
 <table>
-  <tr><th>Turi</th><th>Nomi</th><th>Tugash sanasi</th></tr>
-  {% for d in expiring_domains %}
-  <tr class="row-link" onclick="location.href='{% url 'infrastructure:domain_detail' d.pk %}'">
-    <td>Domen</td>
-    <td>{{ d.name }}</td>
-    <td><span class="badge {% if d.is_expired %}expired{% else %}expiring{% endif %}">{{ d.expiration_date }}</span></td>
-  </tr>
-  {% endfor %}
-  {% for c in expiring_certificates %}
-  <tr class="row-link" onclick="location.href='{% url 'infrastructure:ssl_detail' c.pk %}'">
-    <td>SSL</td>
-    <td>{{ c }}</td>
-    <td><span class="badge {% if c.is_expired %}expired{% else %}expiring{% endif %}">{{ c.expiration_date }}</span></td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Turi</th><th>Resurs Nomi</th><th>Tugash Sanasi</th></tr>
+  </thead>
+  <tbody>
+    {% for d in expiring_domains %}
+    <tr class="row-link" onclick="location.href='{% url 'infrastructure:domain_detail' d.pk %}'">
+      <td><span class="badge pending">Domen</span></td>
+      <td><strong>{{ d.name }}</strong></td>
+      <td><span class="badge {% if d.is_expired %}expired{% else %}expiring{% endif %}">{{ d.expiration_date }}</span></td>
+    </tr>
+    {% endfor %}
+    {% for c in expiring_certificates %}
+    <tr class="row-link" onclick="location.href='{% url 'infrastructure:ssl_detail' c.pk %}'">
+      <td><span class="badge pending">SSL Sertifikat</span></td>
+      <td><strong>{{ c }}</strong></td>
+      <td><span class="badge {% if c.is_expired %}expired{% else %}expiring{% endif %}">{{ c.expiration_date }}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% endif %}

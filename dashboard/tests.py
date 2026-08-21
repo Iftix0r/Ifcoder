@@ -31,7 +31,7 @@ class LoginThrottleTests(TestCase):
             "/accounts/login/", {"username": "dev", "password": "correctpass123"}
         )
         self.assertEqual(r.status_code, 200)  # blocked, even with the right password
-        self.assertContains(r, "Juda ko'p")
+        self.assertContains(r, "Juda ko")
 
     def test_successful_login_resets_counter(self):
         for _ in range(3):

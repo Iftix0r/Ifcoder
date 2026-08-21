@@ -1,83 +1,130 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Moliya — Ifcoder{% endblock %}
+{% block title %}Moliya — Ifcoder Panel{% endblock %}
+{% block page_title %}Moliya{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Moliya</h1>
-    <div class="sub">Daromad, xarajat va hisob-fakturalar</div>
+    <h1>Moliyaviy Boshqaruv</h1>
+    <div class="sub">Daromad, xarajat va hisob-fakturalar umumiy balansi</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'finance:income_add' %}">+ Daromad</a>
+    <a class="btn" href="{% url 'finance:expense_add' %}">+ Xarajat</a>
+    <a class="btn btn-primary" href="{% url 'finance:invoice_add' %}">+ Invoys yaratish</a>
   </div>
 </div>
 
 <div class="grid">
   <a class="card stat-green" href="{% url 'finance:income_list' %}">
-    <div class="value">{{ month_income }}</div>
-    <div class="label">Bu oy daromad</div>
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg></div>
+      <span class="trend up">Daromad</span>
+    </div>
+    <div class="value">${{ month_income|default:"0" }}</div>
+    <div class="label">Bu Oy Daromad</div>
   </a>
-  <a class="card" href="{% url 'finance:expense_list' %}">
-    <div class="value">{{ month_expense }}</div>
-    <div class="label">Bu oy xarajat</div>
+
+  <a class="card stat-red" href="{% url 'finance:expense_list' %}">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75z"/></svg></div>
+      <span class="trend down">Xarajat</span>
+    </div>
+    <div class="value">${{ month_expense|default:"0" }}</div>
+    <div class="label">Bu Oy Xarajat</div>
   </a>
+
   <a class="card stat-yellow" href="{% url 'finance:invoice_list' %}">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 16a2 2 0 001.985-1.75h-3.97A2 2 0 008 16zM8 1.5A3.5 3.5 0 004.5 5v2.947c0 .346-.102.683-.294.97l-1.703 2.556a.75.75 0 00.624 1.166h9.746a.75.75 0 00.624-1.166l-1.703-2.556a1.75 1.75 0 01-.294-.97V5A3.5 3.5 0 008 1.5z"/></svg></div>
+      <span class="trend down">Kutilmoqda</span>
+    </div>
     <div class="value">{{ outstanding_count }}</div>
-    <div class="label">To'lanmagan hisob-fakturalar</div>
+    <div class="label">To'lanmagan Invoyslar</div>
   </a>
+
   <a class="card" href="{% url 'finance:invoice_list' %}">
-    <div class="value">{{ outstanding_total }}</div>
-    <div class="label">To'lanishi kerak summa</div>
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5z"/></svg></div>
+      <span class="trend up">Kutilayotgan</span>
+    </div>
+    <div class="value">${{ outstanding_total|default:"0" }}</div>
+    <div class="label">Kutilayotgan Summa</div>
   </a>
 </div>
 
-<h2 class="section-title">Oxirgi 6 oy: daromad va xarajat</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75zm14.28 2.53a.75.75 0 00-1.06-1.06L10 7.94 7.53 5.47a.75.75 0 00-1.06 0L3.22 8.72a.75.75 0 001.06 1.06L7 7.06l2.47 2.47a.75.75 0 001.06 0l5.25-5.25z"/></svg>
+  Oxirgi 6 Oy: Daromad va Xarajat
+</h2>
 <div class="table-wrap">
 <table>
-  <tr><th>Oy</th><th>Daromad</th><th>Xarajat</th><th>Farq</th></tr>
-  {% for row in monthly_summary %}
-  <tr>
-    <td>{{ row.month|date:"F Y" }}</td>
-    <td>{{ row.income }}</td>
-    <td>{{ row.expense }}</td>
-    <td>{{ row.diff }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Oy</th><th>Daromad</th><th>Xarajat</th><th>Sof Foyda</th></tr>
+  </thead>
+  <tbody>
+    {% for row in monthly_summary %}
+    <tr>
+      <td><strong>{{ row.month|date:"F Y" }}</strong></td>
+      <td><span style="color:var(--green);font-weight:600;">+${{ row.income }}</span></td>
+      <td><span style="color:var(--red);font-weight:600;">-${{ row.expense }}</span></td>
+      <td><strong>${{ row.diff }}</strong></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 
-<h2 class="section-title">To'lanmagan hisob-fakturalar</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M8 16a2 2 0 001.985-1.75h-3.97A2 2 0 008 16zM8 1.5A3.5 3.5 0 004.5 5v2.947c0 .346-.102.683-.294.97l-1.703 2.556a.75.75 0 00.624 1.166h9.746a.75.75 0 00.624-1.166l-1.703-2.556a1.75 1.75 0 01-.294-.97V5A3.5 3.5 0 008 1.5z"/></svg>
+  To'lanmagan Hisob-Fakturalar
+</h2>
 {% if outstanding_invoices %}
 <div class="table-wrap">
 <table>
-  <tr><th>Raqami</th><th>Mijoz</th><th>Summa</th><th>Muddat</th><th>Holati</th></tr>
-  {% for i in outstanding_invoices %}
-  <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' i.pk %}'">
-    <td>{{ i.number }}</td>
-    <td>{{ i.client }}</td>
-    <td>{{ i.amount }}</td>
-    <td>{{ i.due_date }}</td>
-    <td><span class="badge {% if i.is_overdue %}overdue{% else %}{{ i.status }}{% endif %}">{% if i.is_overdue %}Muddati o'tgan{% else %}{{ i.get_status_display }}{% endif %}</span></td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Invoys №</th><th>Mijoz</th><th>Summa</th><th>To'lash Muddati</th><th>Holati</th></tr>
+  </thead>
+  <tbody>
+    {% for i in outstanding_invoices %}
+    <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' i.pk %}'">
+      <td><strong>{{ i.number }}</strong></td>
+      <td>{{ i.client }}</td>
+      <td><strong>${{ i.amount }}</strong></td>
+      <td>{{ i.due_date }}</td>
+      <td><span class="badge {% if i.is_overdue %}overdue{% else %}{{ i.status }}{% endif %}">{% if i.is_overdue %}Muddati o'tgan{% else %}{{ i.get_status_display }}{% endif %}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% else %}
 <div class="empty">To'lanmagan hisob-fakturalar yo'q.</div>
 {% endif %}
 
-<h2 class="section-title">So'nggi daromadlar</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
+  So'nggi Daromadlar
+</h2>
 {% if recent_income %}
 <div class="table-wrap">
 <table>
-  <tr><th>Summa</th><th>Usul</th><th>Mijoz</th><th>Sana</th></tr>
-  {% for inc in recent_income %}
-  <tr class="row-link" onclick="location.href='{% url 'finance:income_detail' inc.pk %}'">
-    <td>{{ inc.amount }}</td>
-    <td>{{ inc.get_method_display }}</td>
-    <td>{{ inc.client|default:"—" }}</td>
-    <td>{{ inc.date }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Summa</th><th>To'lov Usuli</th><th>Mijoz</th><th>Sana</th></tr>
+  </thead>
+  <tbody>
+    {% for inc in recent_income %}
+    <tr class="row-link" onclick="location.href='{% url 'finance:income_detail' inc.pk %}'">
+      <td><strong style="color:var(--green);">+${{ inc.amount }}</strong></td>
+      <td>{{ inc.get_method_display }}</td>
+      <td>{{ inc.client|default:"—" }}</td>
+      <td>{{ inc.date }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% else %}
-<div class="empty">Hozircha daromad yo'q. <a href="{% url 'finance:income_add' %}" style="color:var(--accent);">Qo'shish</a></div>
+<div class="empty">Hozircha daromad yo'q. <a href="{% url 'finance:income_add' %}">Daromad qo'shing</a></div>
 {% endif %}
 {% endblock %}

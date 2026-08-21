@@ -1,20 +1,22 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Loyihalar — Ifcoder{% endblock %}
+{% block title %}Loyihalar — Ifcoder Panel{% endblock %}
+{% block page_title %}Loyihalar{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Loyihalar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:projects|length }} ta loyiha</div>
+    <h1>Loyihalar Boshqaruvi</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:projects|length }} ta loyiha ro'yxati</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV yuklab olish</a>
-    <a class="btn btn-primary" href="{% url 'projects:add' %}">+ Loyiha qo'shish</a>
+    <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>
+    <a class="btn btn-primary" href="{% url 'projects:add' %}">+ Yangi Loyiha</a>
   </div>
 </div>
 
 <div class="toolbar">
   <form method="get">
-    <input type="text" name="q" placeholder="Nomi yoki tavsifi bo'yicha qidirish..." value="{{ q }}">
+    <input type="text" name="q" placeholder="Nomi yoki tavsifi bo'yicha qidiruv..." value="{{ q }}">
     <select name="status">
       <option value="">Barcha holatlar</option>
       {% for value, label in status_choices %}
@@ -29,20 +31,25 @@
 {% if projects %}
 <div class="table-wrap">
 <table>
-  <tr><th>Nomi</th><th>Mijoz</th><th>Holati</th><th>Muddat</th><th>Botlar</th></tr>
-  {% for p in projects %}
-  <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
-    <td>{{ p.name }}</td>
-    <td>{{ p.client|default:"—" }}</td>
-    <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
-    <td>{{ p.deadline|default:"—" }}</td>
-    <td>{{ p.bots.count }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Loyiha Nomi</th><th>Mijoz</th><th>Holati</th><th>Topshirish Muddati</th><th>Botlar</th><th>Amallar</th></tr>
+  </thead>
+  <tbody>
+    {% for p in projects %}
+    <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
+      <td><strong>{{ p.name }}</strong></td>
+      <td>{{ p.client|default:"—" }}</td>
+      <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+      <td>{{ p.deadline|default:"—" }}</td>
+      <td><span class="badge active">{{ p.bots.count }} ta</span></td>
+      <td><a href="{% url 'projects:detail' p.pk %}" class="btn btn-sm">Ko'rish &rarr;</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}
 {% else %}
-<div class="empty">Hech narsa topilmadi.</div>
+<div class="empty">Loyihalar topilmadi. <a href="{% url 'projects:add' %}">Yangi loyiha yaratishingiz mumkin</a></div>
 {% endif %}
 {% endblock %}

@@ -1,20 +1,22 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Mijozlar — Ifcoder{% endblock %}
+{% block title %}Mijozlar — Ifcoder Panel{% endblock %}
+{% block page_title %}Mijozlar{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Mijozlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:clients|length }} ta mijoz</div>
+    <h1>Mijozlar Ro'yxati</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:clients|length }} ta mijoz mavjud</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV yuklab olish</a>
-    <a class="btn btn-primary" href="{% url 'clients:add' %}">+ Mijoz qo'shish</a>
+    <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>
+    <a class="btn btn-primary" href="{% url 'clients:add' %}">+ Yangi Mijoz</a>
   </div>
 </div>
 
 <div class="toolbar">
   <form method="get">
-    <input type="text" name="q" placeholder="Ism, telefon, telegram, email..." value="{{ q }}">
+    <input type="text" name="q" placeholder="Ism, telefon, telegram, email bo'yicha qidiruv..." value="{{ q }}">
     <button class="btn btn-sm" type="submit">Qidirish</button>
     {% if q %}<a class="btn btn-sm" href="{% url 'clients:list' %}">Tozalash</a>{% endif %}
   </form>
@@ -23,20 +25,25 @@
 {% if clients %}
 <div class="table-wrap">
 <table>
-  <tr><th>Ism</th><th>Telefon</th><th>Telegram</th><th>Loyihalar</th><th>Botlar</th></tr>
-  {% for c in clients %}
-  <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
-    <td>{{ c.name }}</td>
-    <td>{{ c.phone|default:"—" }}</td>
-    <td>{{ c.telegram|default:"—" }}</td>
-    <td>{{ c.projects.count }}</td>
-    <td>{{ c.bots.count }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Mijoz Ismi</th><th>Telefon</th><th>Telegram</th><th>Loyihalar</th><th>Botlar</th><th>Amallar</th></tr>
+  </thead>
+  <tbody>
+    {% for c in clients %}
+    <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
+      <td><strong>{{ c.name }}</strong></td>
+      <td>{{ c.phone|default:"—" }}</td>
+      <td>{{ c.telegram|default:"—" }}</td>
+      <td><span class="badge">{{ c.projects.count }} ta</span></td>
+      <td><span class="badge active">{{ c.bots.count }} ta</span></td>
+      <td><a href="{% url 'clients:detail' c.pk %}" class="btn btn-sm">Batafsil &rarr;</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}
 {% else %}
-<div class="empty">Hech narsa topilmadi.</div>
+<div class="empty">Mijozlar topilmadi. <a href="{% url 'clients:add' %}">Yangi mijoz qo'shing</a></div>
 {% endif %}
 {% endblock %}

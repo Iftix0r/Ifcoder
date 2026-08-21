@@ -7,6 +7,16 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+    if sys.version_info >= (3, 14):
+        from django.template.context import BaseContext
+        def _context_copy(self):
+            duplicate = self.__class__.__new__(self.__class__)
+            duplicate.__dict__.update(self.__dict__)
+            if hasattr(self, 'dicts'):
+                duplicate.dicts = [d.copy() for d in self.dicts]
+            return duplicate
+        BaseContext.__copy__ = _context_copy
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

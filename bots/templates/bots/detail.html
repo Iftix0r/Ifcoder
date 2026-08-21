@@ -1,34 +1,40 @@
 {% extends "dashboard/base.html" %}
-{% block title %}{{ bot.name }} — Ifcoder{% endblock %}
+{% block title %}{{ bot.name }} — Ifcoder Panel{% endblock %}
+{% block page_title %}Bot Tafsiloti{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
     <h1>{{ bot.name }}</h1>
-    <div class="sub">Qo'shilgan: {{ bot.created_at|date:"d.m.Y" }}</div>
+    <div class="sub">Yaratilgan sana: {{ bot.created_at|date:"d.m.Y H:i" }}</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <a class="btn" href="{% url 'bots:edit' bot.pk %}">Tahrirlash</a>
-    <a class="btn btn-danger" href="{% url 'bots:delete' bot.pk %}">O'chirish</a>
+    <a class="btn" href="{% url 'bots:edit' bot.pk %}">✏️ Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'bots:delete' bot.pk %}">🗑️ O'chirish</a>
   </div>
 </div>
 
 <div class="detail-grid">
   <div>
+    <h2 class="section-title">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M0 1.75A.75.75 0 01.75 1h4.253c1.227 0 2.317.59 3 1.501A3.744 3.744 0 0111.006 1h4.245a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-4.507a2.25 2.25 0 00-1.591.659l-.622.621a.75.75 0 01-1.06 0l-.622-.621A2.25 2.25 0 005.258 13H.75a.75.75 0 01-.75-.75V1.75z"/></svg>
+      Qo'shimcha Izoh & Eslatmalar
+    </h2>
     {% if bot.notes %}
-    <h2 class="section-title">Izoh</h2>
-    <div style="font-size:14px;white-space:pre-wrap;">{{ bot.notes }}</div>
+    <div style="font-size:14px;white-space:pre-wrap;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;color:var(--text);">{{ bot.notes }}</div>
     {% else %}
-    <div class="empty">Izoh yo'q.</div>
+    <div class="empty">Izoh kiritilmagan.</div>
     {% endif %}
   </div>
 
   <div class="card">
+    <h3 style="margin-top:0;font-size:16px;font-weight:700;margin-bottom:14px;">Bot Konfiguratsiyasi</h3>
     <ul class="detail-list">
-      <li><span class="k">Username</span><span>{{ bot.username|default:"—" }}</span></li>
-      <li><span class="k">Platforma</span><span>{{ bot.get_platform_display }}</span></li>
+      <li><span class="k">Username</span><span><strong>{{ bot.username|default:"—" }}</strong></span></li>
+      <li><span class="k">Platforma</span><span><strong style="color:var(--accent);">{{ bot.get_platform_display }}</strong></span></li>
       <li><span class="k">Holati</span><span class="badge {{ bot.status }}">{{ bot.get_status_display }}</span></li>
-      <li><span class="k">Loyiha</span><span>{% if bot.project %}<a href="{% url 'projects:detail' bot.project.pk %}">{{ bot.project }}</a>{% else %}—{% endif %}</span></li>
-      <li><span class="k">Mijoz</span><span>{% if bot.client %}<a href="{% url 'clients:detail' bot.client.pk %}">{{ bot.client }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Tegishli Loyiha</span><span>{% if bot.project %}<a href="{% url 'projects:detail' bot.project.pk %}"><strong>{{ bot.project }}</strong></a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Tegishli Mijoz</span><span>{% if bot.client %}<a href="{% url 'clients:detail' bot.client.pk %}"><strong>{{ bot.client }}</strong></a>{% else %}—{% endif %}</span></li>
     </ul>
   </div>
 </div>

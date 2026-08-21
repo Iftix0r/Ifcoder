@@ -1,9 +1,15 @@
 {% extends "dashboard/base.html" %}
-{% block title %}{% if object %}Mijozni tahrirlash{% else %}Yangi mijoz{% endif %} — Ifcoder{% endblock %}
+{% block title %}{% if object %}Mijozni tahrirlash{% else %}Yangi mijoz{% endif %} — Ifcoder Panel{% endblock %}
+{% block page_title %}{% if object %}Mijozni tahrirlash{% else %}Yangi mijoz{% endif %}{% endblock %}
+
 {% block content %}
 <div class="page-header">
-  <h1>{% if object %}Mijozni tahrirlash{% else %}Yangi mijoz{% endif %}</h1>
+  <div>
+    <h1>{% if object %}{{ object.name }}ni tahrirlash{% else %}Yangi Mijoz Qo'shish{% endif %}</h1>
+    <div class="sub">Mijozning aloqa va umumiy ma'lumotlarini kiriting</div>
+  </div>
 </div>
+
 <div class="form-card">
   <form method="post">
     {% csrf_token %}
@@ -15,7 +21,7 @@
     </p>
     {% endfor %}
     <div class="form-actions">
-      <button class="btn btn-primary" type="submit">Saqlash</button>
+      <button class="btn btn-primary" type="submit">💾 Saqlash</button>
       <a class="btn" href="{% if object %}{% url 'clients:detail' object.pk %}{% else %}{% url 'clients:list' %}{% endif %}">Bekor qilish</a>
     </div>
   </form>

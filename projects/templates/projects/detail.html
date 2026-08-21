@@ -1,49 +1,62 @@
 {% extends "dashboard/base.html" %}
-{% block title %}{{ project.name }} — Ifcoder{% endblock %}
+{% block title %}{{ project.name }} — Ifcoder Panel{% endblock %}
+{% block page_title %}Loyiha Tafsiloti{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
     <h1>{{ project.name }}</h1>
-    <div class="sub">Yaratilgan: {{ project.created_at|date:"d.m.Y" }}</div>
+    <div class="sub">Yaratilgan sana: {{ project.created_at|date:"d.m.Y H:i" }}</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <a class="btn" href="{% url 'projects:edit' project.pk %}">Tahrirlash</a>
-    <a class="btn btn-danger" href="{% url 'projects:delete' project.pk %}">O'chirish</a>
+    <a class="btn" href="{% url 'projects:edit' project.pk %}">✏️ Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'projects:delete' project.pk %}">🗑️ O'chirish</a>
   </div>
 </div>
 
 <div class="detail-grid">
   <div>
     {% if project.description %}
-    <h2 class="section-title">Tavsif</h2>
-    <div style="font-size:14px;white-space:pre-wrap;margin-bottom:20px;">{{ project.description }}</div>
+    <h2 class="section-title">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M0 1.75A.75.75 0 01.75 1h4.253c1.227 0 2.317.59 3 1.501A3.744 3.744 0 0111.006 1h4.245a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-4.507a2.25 2.25 0 00-1.591.659l-.622.621a.75.75 0 01-1.06 0l-.622-.621A2.25 2.25 0 005.258 13H.75a.75.75 0 01-.75-.75V1.75z"/></svg>
+      Loyiha Tavsifi
+    </h2>
+    <div style="font-size:14px;white-space:pre-wrap;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;color:var(--text);">{{ project.description }}</div>
     {% endif %}
 
-    <h2 class="section-title">Botlar</h2>
+    <h2 class="section-title">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1z"/></svg>
+      Biriktirilgan Botlar
+    </h2>
     {% if project.bots.all %}
     <div class="table-wrap">
     <table>
-      <tr><th>Nomi</th><th>Platforma</th><th>Holati</th></tr>
-      {% for b in project.bots.all %}
-      <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
-        <td>{{ b.name }}</td>
-        <td>{{ b.get_platform_display }}</td>
-        <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
-      </tr>
-      {% endfor %}
+      <thead>
+        <tr><th>Bot Nomi</th><th>Platforma</th><th>Holati</th></tr>
+      </thead>
+      <tbody>
+        {% for b in project.bots.all %}
+        <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+          <td><strong>{{ b.name }}</strong></td>
+          <td>{{ b.get_platform_display }}</td>
+          <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
     </div>
     {% else %}
-    <div class="empty">Botlar yo'q.</div>
+    <div class="empty">Hozircha botlar biriktirilmagan.</div>
     {% endif %}
   </div>
 
   <div class="card">
+    <h3 style="margin-top:0;font-size:16px;font-weight:700;margin-bottom:14px;">Loyiha Ma'lumotlari</h3>
     <ul class="detail-list">
-      <li><span class="k">Mijoz</span><span>{% if project.client %}<a href="{% url 'clients:detail' project.client.pk %}">{{ project.client }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Mijoz</span><span>{% if project.client %}<a href="{% url 'clients:detail' project.client.pk %}"><strong>{{ project.client }}</strong></a>{% else %}—{% endif %}</span></li>
       <li><span class="k">Holati</span><span class="badge {{ project.status }}">{{ project.get_status_display }}</span></li>
-      <li><span class="k">Muddat</span><span>{{ project.deadline|default:"—" }}</span></li>
-      <li><span class="k">Repo</span><span>{% if project.repo_url %}<a href="{{ project.repo_url }}" target="_blank" rel="noopener">havola</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Topshirish Muddati</span><span><strong>{{ project.deadline|default:"—" }}</strong></span></li>
+      <li><span class="k">Repository</span><span>{% if project.repo_url %}<a href="{{ project.repo_url }}" target="_blank" rel="noopener">GitHub &rarr;</a>{% else %}—{% endif %}</span></li>
     </ul>
   </div>
 </div>

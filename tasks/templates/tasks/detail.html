@@ -1,34 +1,40 @@
 {% extends "dashboard/base.html" %}
-{% block title %}{{ task.title }} — Ifcoder{% endblock %}
+{% block title %}{{ task.title }} — Ifcoder Panel{% endblock %}
+{% block page_title %}Vazifa Tafsiloti{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
     <h1>{{ task.title }}</h1>
-    <div class="sub">Yaratilgan: {{ task.created_at|date:"d.m.Y" }}</div>
+    <div class="sub">Yaratilgan sana: {{ task.created_at|date:"d.m.Y H:i" }}</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <a class="btn" href="{% url 'tasks:edit' task.pk %}">Tahrirlash</a>
-    <a class="btn btn-danger" href="{% url 'tasks:delete' task.pk %}">O'chirish</a>
+    <a class="btn" href="{% url 'tasks:edit' task.pk %}">✏️ Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'tasks:delete' task.pk %}">🗑️ O'chirish</a>
   </div>
 </div>
 
 <div class="detail-grid">
   <div>
+    <h2 class="section-title">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M0 1.75A.75.75 0 01.75 1h4.253c1.227 0 2.317.59 3 1.501A3.744 3.744 0 0111.006 1h4.245a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-4.507a2.25 2.25 0 00-1.591.659l-.622.621a.75.75 0 01-1.06 0l-.622-.621A2.25 2.25 0 005.258 13H.75a.75.75 0 01-.75-.75V1.75z"/></svg>
+      Vazifa Tavsifi
+    </h2>
     {% if task.description %}
-    <h2 class="section-title">Tavsif</h2>
-    <div style="font-size:14px;white-space:pre-wrap;">{{ task.description }}</div>
+    <div style="font-size:14px;white-space:pre-wrap;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;color:var(--text);">{{ task.description }}</div>
     {% else %}
-    <div class="empty">Tavsif yo'q.</div>
+    <div class="empty">Tavsif kiritilmagan.</div>
     {% endif %}
   </div>
 
   <div class="card">
+    <h3 style="margin-top:0;font-size:16px;font-weight:700;margin-bottom:14px;">Holat & Parametrlar</h3>
     <ul class="detail-list">
       <li><span class="k">Holati</span><span class="badge {{ task.status }}{% if task.is_overdue %} overdue{% endif %}">{% if task.is_overdue %}Muddati o'tgan{% else %}{{ task.get_status_display }}{% endif %}</span></li>
-      <li><span class="k">Muhimlik</span><span>{{ task.get_priority_display }}</span></li>
-      <li><span class="k">Muddat</span><span>{{ task.due_date|default:"—" }}</span></li>
-      <li><span class="k">Loyiha</span><span>{% if task.project %}<a href="{% url 'projects:detail' task.project.pk %}">{{ task.project }}</a>{% else %}—{% endif %}</span></li>
-      <li><span class="k">Mijoz</span><span>{% if task.client %}<a href="{% url 'clients:detail' task.client.pk %}">{{ task.client }}</a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Muhimlik</span><span><strong style="color:var(--accent);">{{ task.get_priority_display }}</strong></span></li>
+      <li><span class="k">Bajarish Muddati</span><span><strong>{{ task.due_date|default:"—" }}</strong></span></li>
+      <li><span class="k">Tegishli Loyiha</span><span>{% if task.project %}<a href="{% url 'projects:detail' task.project.pk %}"><strong>{{ task.project }}</strong></a>{% else %}—{% endif %}</span></li>
+      <li><span class="k">Tegishli Mijoz</span><span>{% if task.client %}<a href="{% url 'clients:detail' task.client.pk %}"><strong>{{ task.client }}</strong></a>{% else %}—{% endif %}</span></li>
     </ul>
   </div>
 </div>

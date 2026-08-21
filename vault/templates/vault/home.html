@@ -1,34 +1,76 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Sozlamalar — Ifcoder{% endblock %}
+{% block title %}Sozlamalar — Ifcoder Panel{% endblock %}
+{% block page_title %}Vault & Sozlamalar{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Sozlamalar</h1>
-    <div class="sub">API kalitlar, xavfsizlik va backup'lar</div>
+    <h1>Xavfsizlik va Sozlamalar</h1>
+    <div class="sub">Shifrlangan API kalitlar, 2FA va ma'lumotlar bazasi zaxira nusxalari</div>
   </div>
 </div>
 
 <div class="grid">
   <a class="card" href="{% url 'vault:api_key_list' %}">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M14.5 4a3.5 3.5 0 11-3.478 3.897L4.9 14.02a1.75 1.75 0 01-1.238.513H2.75a.75.75 0 01-.75-.75v-.913c0-.464.184-.909.513-1.238L8.29 5.478A3.5 3.5 0 0114.5 4zM11 4a.5.5 0 100 1 .5.5 0 000-1z"/></svg></div>
+      <span class="trend up">Shifrlangan</span>
+    </div>
     <div class="value">{{ api_key_count }}</div>
-    <div class="label">API kalitlar</div>
+    <div class="label">API Kalitlar</div>
   </a>
+
   <a class="card {% if has_2fa %}stat-green{% else %}stat-yellow{% endif %}" href="{% if has_2fa %}{% url 'vault:totp_disable' %}{% else %}{% url 'vault:totp_setup' %}{% endif %}">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a1.5 1.5 0 01.94.328l5.25 4.2A1.5 1.5 0 0115 5.68v.32a1 1 0 01-1 1v6.5a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 01-1-1v-.32a1.5 1.5 0 01.81-1.331l5.25-4.2A1.5 1.5 0 018 0z"/></svg></div>
+      <span class="trend {% if has_2fa %}up{% else %}down{% endif %}">{% if has_2fa %}Faol{% else %}Yoqilmagan{% endif %}</span>
+    </div>
     <div class="value">{% if has_2fa %}Yoqilgan{% else %}O'chirilgan{% endif %}</div>
-    <div class="label">2FA (ikki bosqichli tasdiqlash)</div>
+    <div class="label">2FA Tasdiqlash</div>
   </a>
+
   <a class="card" href="{% url 'vault:backup_list' %}">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1z"/></svg></div>
+      <span class="trend up">Baza</span>
+    </div>
     <div class="value">{{ backup_count }}</div>
-    <div class="label">Backup fayllari</div>
+    <div class="label">Zaxira Fayllari</div>
   </a>
 </div>
 
-<h2 class="section-title">Bo'limlar</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M14.5 4a3.5 3.5 0 11-3.478 3.897L4.9 14.02a1.75 1.75 0 01-1.238.513H2.75a.75.75 0 01-.75-.75v-.913c0-.464.184-.909.513-1.238L8.29 5.478A3.5 3.5 0 0114.5 4zM11 4a.5.5 0 100 1 .5.5 0 000-1z"/></svg>
+  Sozlamalar Bo'limlari
+</h2>
 <div class="table-wrap">
 <table>
-  <tr><td><a href="{% url 'vault:api_key_list' %}">API kalitlar</a></td><td>Telegram bot, Click/Payme va boshqa xizmatlar kalitlarini shifrlangan holda saqlash.</td></tr>
-  <tr><td>{% if has_2fa %}<a href="{% url 'vault:totp_disable' %}">2FA'ni o'chirish</a>{% else %}<a href="{% url 'vault:totp_setup' %}">2FA'ni yoqish</a>{% endif %}</td><td>Login uchun ikki bosqichli tasdiqlash (Google Authenticator va shunga o'xshash ilovalar).</td></tr>
-  <tr><td><a href="{% url 'vault:backup_list' %}">Backup'lar</a></td><td>Ma'lumotlar bazasidan zaxira nusxa olish va yuklab olish.</td></tr>
+  <thead>
+    <tr><th>Bo'lim</th><th>Tavsifi</th><th>Harakat</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>API Kalitlar</strong></td>
+      <td>Telegram bot, Click/Payme va boshqa tashqi xizmatlar kalitlarini shifrlangan holda saqlash.</td>
+      <td><a href="{% url 'vault:api_key_list' %}" class="btn btn-sm">Boshqarish &rarr;</a></td>
+    </tr>
+    <tr>
+      <td><strong>2FA (Ikki bosqichli tasdiqlash)</strong></td>
+      <td>Tizimga kirishda Google Authenticator yoki boshqa TOTP ilovalar orqali xavfsizlikni ta'minlash.</td>
+      <td>
+        {% if has_2fa %}
+        <a href="{% url 'vault:totp_disable' %}" class="btn btn-sm btn-danger">2FA'ni O'chirish</a>
+        {% else %}
+        <a href="{% url 'vault:totp_setup' %}" class="btn btn-sm btn-primary">2FA'ni Yoqish</a>
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Database Backup'lar</strong></td>
+      <td>Ma'lumotlar bazasidan zaxira nusxalarini qo'lda yaratish va kompyuterga yuklab olish.</td>
+      <td><a href="{% url 'vault:backup_list' %}" class="btn btn-sm">Backup'larni ko'rish &rarr;</a></td>
+    </tr>
+  </tbody>
 </table>
 </div>
 {% endblock %}

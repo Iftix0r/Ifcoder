@@ -1,14 +1,27 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Kirish — Ifcoder{% endblock %}
+{% block title %}Kirish — Ifcoder Panel{% endblock %}
+
 {% block login_content %}
 <form class="login" method="post">
   {% csrf_token %}
-  <h2 style="margin-top:0;color:var(--text);text-transform:none;letter-spacing:normal;">Ifcoder ga kirish</h2>
-  {% if form.errors %}<ul class="errorlist"><li>Login yoki parol noto'g'ri.</li></ul>{% endif %}
-  {{ form.username.label_tag }}
+  <div style="display:flex;justify-content:center;margin-bottom:16px;">
+    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg, var(--accent), #818cf8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;box-shadow:0 6px 16px var(--accent-glow);">I</div>
+  </div>
+  <h2>Ifcoder Panel</h2>
+  <p class="sub">Tizimga kirish uchun malumotlaringizni kiriting</p>
+  
+  {% if form.errors %}
+  <ul class="errorlist" style="margin-bottom:16px;">
+    <li>Login yoki parol noto'g'ri. Qayta urinib ko'ring.</li>
+  </ul>
+  {% endif %}
+
+  <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:4px;">Foydalanuvchi nomi</label>
   {{ form.username }}
-  {{ form.password.label_tag }}
+  
+  <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:4px;">Parol</label>
   {{ form.password }}
-  <button type="submit">Kirish</button>
+  
+  <button type="submit" style="margin-top:8px;">Tizimga Kirish</button>
 </form>
 {% endblock %}

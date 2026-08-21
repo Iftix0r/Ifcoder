@@ -1,14 +1,16 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Botlar — Ifcoder{% endblock %}
+{% block title %}Botlar — Ifcoder Panel{% endblock %}
+{% block page_title %}Botlar{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Botlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:bots|length }} ta bot</div>
+    <h1>Botlar Boshqaruvi</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:bots|length }} ta yaratilgan bot ro'yxati</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV yuklab olish</a>
-    <a class="btn btn-primary" href="{% url 'bots:add' %}">+ Bot qo'shish</a>
+    <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>
+    <a class="btn btn-primary" href="{% url 'bots:add' %}">+ Yangi Bot</a>
   </div>
 </div>
 
@@ -35,20 +37,25 @@
 {% if bots %}
 <div class="table-wrap">
 <table>
-  <tr><th>Nomi</th><th>Platforma</th><th>Holati</th><th>Loyiha</th><th>Mijoz</th></tr>
-  {% for b in bots %}
-  <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
-    <td>{{ b.name }}</td>
-    <td>{{ b.get_platform_display }}</td>
-    <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
-    <td>{{ b.project|default:"—" }}</td>
-    <td>{{ b.client|default:"—" }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Bot Nomi</th><th>Platforma</th><th>Holati</th><th>Tegishli Loyiha</th><th>Mijoz</th><th>Amallar</th></tr>
+  </thead>
+  <tbody>
+    {% for b in bots %}
+    <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+      <td><strong>{{ b.name }}</strong></td>
+      <td><span class="badge">{{ b.get_platform_display }}</span></td>
+      <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+      <td>{{ b.project|default:"—" }}</td>
+      <td>{{ b.client|default:"—" }}</td>
+      <td><a href="{% url 'bots:detail' b.pk %}" class="btn btn-sm">Ko'rish &rarr;</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}
 {% else %}
-<div class="empty">Hech narsa topilmadi.</div>
+<div class="empty">Botlar topilmadi. <a href="{% url 'bots:add' %}">Yangi bot qo'shishingiz mumkin</a></div>
 {% endif %}
 {% endblock %}

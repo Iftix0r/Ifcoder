@@ -1,14 +1,19 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Hisobotlar — Ifcoder{% endblock %}
+{% block title %}Hisobotlar — Ifcoder Panel{% endblock %}
+{% block page_title %}Hisobotlar{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Hisobotlar</h1>
-    <div class="sub">So'nggi 6 oy va umumiy ko'rsatkichlar</div>
+    <h1>Moliyaviy va Tizim Hisobotlari</h1>
+    <div class="sub">So'nggi 6 oy hamda umumiy faoliyat ko'rsatkichlari</div>
   </div>
 </div>
 
-<h2 class="section-title">Daromad va xarajat (so'nggi 6 oy)</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75zm14.28 2.53a.75.75 0 00-1.06-1.06L10 7.94 7.53 5.47a.75.75 0 00-1.06 0L3.22 8.72a.75.75 0 001.06 1.06L7 7.06l2.47 2.47a.75.75 0 001.06 0l5.25-5.25z"/></svg>
+  Daromad va Xarajat (So'nggi 6 oy)
+</h2>
 <div class="chart-block">
   <div class="chart-legend">
     <span><span class="dot" style="background:var(--green);"></span>Daromad</span>
@@ -18,29 +23,37 @@
   <div class="chart-group">
     <div class="chart-month">{{ row.label }}</div>
     <div class="chart-row">
+      <div class="chart-label" style="color:var(--green);">Daromad</div>
       <div class="chart-track"><div class="chart-fill" style="width:{{ row.income_pct }}%;background:var(--green);"></div></div>
-      <div class="chart-value">{{ row.income }}</div>
+      <div class="chart-value">${{ row.income }}</div>
     </div>
     <div class="chart-row">
+      <div class="chart-label" style="color:var(--red);">Xarajat</div>
       <div class="chart-track"><div class="chart-fill" style="width:{{ row.expense_pct }}%;background:var(--red);"></div></div>
-      <div class="chart-value">{{ row.expense }}</div>
+      <div class="chart-value">${{ row.expense }}</div>
     </div>
   </div>
   {% endfor %}
 </div>
 
-<h2 class="section-title">Loyihalar holati bo'yicha</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg>
+  Loyihalar Holati Bo'yicha
+</h2>
 <div class="chart-block">
   {% for s in projects_by_status %}
   <div class="chart-row">
     <div class="chart-label">{{ s.label }}</div>
     <div class="chart-track"><div class="chart-fill" style="width:{{ s.pct }}%;background:var(--accent);"></div></div>
-    <div class="chart-value">{{ s.count }}</div>
+    <div class="chart-value">{{ s.count }} ta loyiha</div>
   </div>
   {% endfor %}
 </div>
 
-<h2 class="section-title">Hisob-fakturalar holati</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
+  Hisob-fakturalar Holati
+</h2>
 <div class="grid">
   {% for s in invoices_by_status %}
   <div class="card {% if s.value == 'paid' %}stat-green{% elif s.value == 'overdue' %}stat-yellow{% endif %}">
@@ -50,17 +63,24 @@
   {% endfor %}
 </div>
 
-<h2 class="section-title">Eng ko'p daromad keltirgan mijozlar</h2>
+<h2 class="section-title">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5z"/></svg>
+  Eng Ko'p Daromad Keltirgan Mijozlar
+</h2>
 {% if top_clients %}
 <div class="table-wrap">
 <table>
-  <tr><th>Mijoz</th><th>Umumiy daromad</th></tr>
-  {% for c in top_clients %}
-  <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
-    <td>{{ c.name }}</td>
-    <td>{{ c.total_income }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Mijoz Ismi</th><th>Umumiy Daromad</th></tr>
+  </thead>
+  <tbody>
+    {% for c in top_clients %}
+    <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
+      <td><strong>{{ c.name }}</strong></td>
+      <td><span class="badge paid">${{ c.total_income }}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% else %}

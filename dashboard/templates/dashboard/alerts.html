@@ -1,5 +1,7 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Bildirishnomalar — Ifcoder{% endblock %}
+{% block title %}Bildirishnomalar — Ifcoder Panel{% endblock %}
+{% block page_title %}Bildirishnomalar{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
@@ -11,17 +13,22 @@
 {% if alerts %}
 <div class="table-wrap">
 <table>
-  <tr><th>Holat</th><th>Sarlavha</th><th>Tafsilot</th></tr>
-  {% for a in alerts %}
-  <tr class="row-link" onclick="location.href='{{ a.link }}'">
-    <td><span class="badge {% if a.level == 'critical' %}overdue{% else %}expiring{% endif %}">{% if a.level == 'critical' %}Muhim{% else %}Ogohlantirish{% endif %}</span></td>
-    <td>{{ a.title }}</td>
-    <td>{{ a.detail }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Daraja</th><th>Sarlavha</th><th>Tafsilotlar</th><th>Harakat</th></tr>
+  </thead>
+  <tbody>
+    {% for a in alerts %}
+    <tr class="row-link" onclick="location.href='{{ a.link }}'">
+      <td><span class="badge {% if a.level == 'critical' %}overdue{% else %}expiring{% endif %}">{% if a.level == 'critical' %}Muhim{% else %}Ogohlantirish{% endif %}</span></td>
+      <td><strong>{{ a.title }}</strong></td>
+      <td>{{ a.detail }}</td>
+      <td><a href="{{ a.link }}" class="btn btn-sm">Ko'rish &rarr;</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% else %}
-<div class="empty">Hozircha e'tibor talab qiladigan holatlar yo'q.</div>
+<div class="empty">Hozircha e'tibor talab qiladigan holatlar yo'q. Barcha tizimlar joyida!</div>
 {% endif %}
 {% endblock %}

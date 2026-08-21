@@ -43,7 +43,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = [
     'iftix0r.uz', 'www.iftix0r.uz',
     'yoshiqtidorlar.uz', 'www.yoshiqtidorlar.uz',
-    'localhost', '127.0.0.1',
+    'localhost', '127.0.0.1', 'testserver',
 ]
 
 

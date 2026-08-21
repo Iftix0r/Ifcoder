@@ -1,17 +1,22 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Blog postlar — Ifcoder{% endblock %}
+{% block title %}Blog Postlar — Ifcoder Panel{% endblock %}
+{% block page_title %}Kontent{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Blog postlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:posts|length }} ta post</div>
+    <h1>Blog Postlar Boshqaruvi</h1>
+    <div class="sub">{{ page_obj.paginator.count|default:posts|length }} ta post mavjud</div>
   </div>
-  <a class="btn btn-primary" href="{% url 'content:post_add' %}">+ Post qo'shish</a>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="{% url 'content:idea_list' %}">G'oyalar</a>
+    <a class="btn btn-primary" href="{% url 'content:post_add' %}">+ Yangi Post</a>
+  </div>
 </div>
 
 <div class="toolbar">
   <form method="get">
-    <input type="text" name="q" placeholder="Sarlavha yoki matn bo'yicha qidirish..." value="{{ q }}">
+    <input type="text" name="q" placeholder="Sarlavha yoki matn bo'yicha qidiruv..." value="{{ q }}">
     <select name="status">
       <option value="">Barcha holatlar</option>
       {% for value, label in status_choices %}
@@ -26,18 +31,23 @@
 {% if posts %}
 <div class="table-wrap">
 <table>
-  <tr><th>Sarlavha</th><th>Holati</th><th>Nashr sanasi</th></tr>
-  {% for p in posts %}
-  <tr class="row-link" onclick="location.href='{% url 'content:post_detail' p.pk %}'">
-    <td>{{ p.title }}</td>
-    <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
-    <td>{{ p.published_at|date:"d.m.Y H:i"|default:"—" }}</td>
-  </tr>
-  {% endfor %}
+  <thead>
+    <tr><th>Post Sarlavhasi</th><th>Holati</th><th>Nashr Qilingan Sana</th><th>Amallar</th></tr>
+  </thead>
+  <tbody>
+    {% for p in posts %}
+    <tr class="row-link" onclick="location.href='{% url 'content:post_detail' p.pk %}'">
+      <td><strong>{{ p.title }}</strong></td>
+      <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+      <td>{{ p.published_at|date:"d.m.Y H:i"|default:"—" }}</td>
+      <td><a href="{% url 'content:post_detail' p.pk %}" class="btn btn-sm">Ko'rish &rarr;</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 </div>
 {% include "dashboard/_pagination.html" %}
 {% else %}
-<div class="empty">Hech narsa topilmadi.</div>
+<div class="empty">Postlar topilmadi. <a href="{% url 'content:post_add' %}">Yangi post yaratishingiz mumkin</a></div>
 {% endif %}
 {% endblock %}

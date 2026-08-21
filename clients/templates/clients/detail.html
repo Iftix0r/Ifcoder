@@ -1,65 +1,82 @@
 {% extends "dashboard/base.html" %}
-{% block title %}{{ client.name }} — Ifcoder{% endblock %}
+{% block title %}{{ client.name }} — Ifcoder Panel{% endblock %}
+{% block page_title %}Mijoz Tafsiloti{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
     <h1>{{ client.name }}</h1>
-    <div class="sub">Qo'shilgan: {{ client.created_at|date:"d.m.Y" }}</div>
+    <div class="sub">Tizimga qo'shilgan sana: {{ client.created_at|date:"d.m.Y H:i" }}</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <a class="btn" href="{% url 'clients:edit' client.pk %}">Tahrirlash</a>
-    <a class="btn btn-danger" href="{% url 'clients:delete' client.pk %}">O'chirish</a>
+    <a class="btn" href="{% url 'clients:edit' client.pk %}">✏️ Tahrirlash</a>
+    <a class="btn btn-danger" href="{% url 'clients:delete' client.pk %}">🗑️ O'chirish</a>
   </div>
 </div>
 
 <div class="detail-grid">
   <div>
-    <h2 class="section-title">Loyihalar</h2>
+    <h2 class="section-title">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg>
+      Tegishli Loyihalar
+    </h2>
     {% if client.projects.all %}
     <div class="table-wrap">
     <table>
-      <tr><th>Nomi</th><th>Holati</th><th>Muddat</th></tr>
-      {% for p in client.projects.all %}
-      <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
-        <td>{{ p.name }}</td>
-        <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
-        <td>{{ p.deadline|default:"—" }}</td>
-      </tr>
-      {% endfor %}
+      <thead>
+        <tr><th>Loyiha Nomi</th><th>Holati</th><th>Topshirish Muddati</th></tr>
+      </thead>
+      <tbody>
+        {% for p in client.projects.all %}
+        <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
+          <td><strong>{{ p.name }}</strong></td>
+          <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+          <td>{{ p.deadline|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
     </div>
     {% else %}
-    <div class="empty">Loyihalar yo'q.</div>
+    <div class="empty">Hozircha loyihalar yo'q.</div>
     {% endif %}
 
-    <h2 class="section-title">Botlar</h2>
+    <h2 class="section-title">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1z"/></svg>
+      Tegishli Botlar
+    </h2>
     {% if client.bots.all %}
     <div class="table-wrap">
     <table>
-      <tr><th>Nomi</th><th>Platforma</th><th>Holati</th></tr>
-      {% for b in client.bots.all %}
-      <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
-        <td>{{ b.name }}</td>
-        <td>{{ b.get_platform_display }}</td>
-        <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
-      </tr>
-      {% endfor %}
+      <thead>
+        <tr><th>Bot Nomi</th><th>Platforma</th><th>Holati</th></tr>
+      </thead>
+      <tbody>
+        {% for b in client.bots.all %}
+        <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+          <td><strong>{{ b.name }}</strong></td>
+          <td>{{ b.get_platform_display }}</td>
+          <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
     </div>
     {% else %}
-    <div class="empty">Botlar yo'q.</div>
+    <div class="empty">Hozircha botlar yo'q.</div>
     {% endif %}
   </div>
 
   <div class="card">
+    <h3 style="margin-top:0;font-size:16px;font-weight:700;margin-bottom:14px;">Aloqa Ma'lumotlari</h3>
     <ul class="detail-list">
-      <li><span class="k">Telefon</span><span>{{ client.phone|default:"—" }}</span></li>
-      <li><span class="k">Telegram</span><span>{{ client.telegram|default:"—" }}</span></li>
-      <li><span class="k">Email</span><span>{{ client.email|default:"—" }}</span></li>
+      <li><span class="k">Telefon</span><span><strong>{{ client.phone|default:"—" }}</strong></span></li>
+      <li><span class="k">Telegram</span><span><strong>{{ client.telegram|default:"—" }}</strong></span></li>
+      <li><span class="k">Email</span><span><strong>{{ client.email|default:"—" }}</strong></span></li>
     </ul>
     {% if client.notes %}
-    <h2 class="section-title">Izoh</h2>
-    <div style="font-size:14px;white-space:pre-wrap;">{{ client.notes }}</div>
+    <h4 class="section-title" style="margin-top:20px;">Qo'shimcha izoh:</h4>
+    <div style="font-size:13.5px;white-space:pre-wrap;background:var(--panel-2);padding:12px;border-radius:8px;color:var(--text);">{{ client.notes }}</div>
     {% endif %}
   </div>
 </div>
