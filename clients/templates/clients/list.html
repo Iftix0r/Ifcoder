@@ -34,8 +34,8 @@
       <td><strong>{{ c.name }}</strong></td>
       <td>{{ c.phone|default:"—" }}</td>
       <td>{{ c.telegram|default:"—" }}</td>
-      <td><span class="badge">{{ c.projects.count }} ta</span></td>
-      <td><span class="badge active">{{ c.bots.count }} ta</span></td>
+      <td><span class="badge">{{ c.project_count }} ta</span></td>
+      <td><span class="badge active">{{ c.bot_count }} ta</span></td>
       <td><a href="{% url 'clients:detail' c.pk %}" class="btn btn-sm">Batafsil &rarr;</a></td>
     </tr>
     {% endfor %}

@@ -1,5 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
@@ -21,7 +21,10 @@ class ClientListView(LoginRequiredMixin, CSVExportMixin, ListView):
         return [obj.name, obj.phone, obj.telegram, obj.email, obj.created_at]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().annotate(
+            project_count=Count("projects", distinct=True),
+            bot_count=Count("bots", distinct=True),
+        )
         q = self.request.GET.get("q")
         if q:
             qs = qs.filter(
@@ -42,6 +45,15 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
     model = Client
     template_name = "clients/detail.html"
     context_object_name = "client"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["projects"] = self.object.projects.select_related("client").all()
+        ctx["bots"] = self.object.bots.select_related("project").all()
+        ctx["tasks"] = self.object.tasks.select_related("project").exclude(
+            status="done"
+        )[:10]
+        return ctx
 
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
