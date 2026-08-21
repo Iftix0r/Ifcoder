@@ -69,6 +69,15 @@ class TaskViewTests(TestCase):
         self.assertContains(response, "Shoshilinch")
         self.assertNotContains(response, "Keyinroq")
 
+    def test_add_time_entry(self):
+        task = Task.objects.create(title="Vaqt yoziladigan vazifa")
+        response = self.client.post(
+            reverse("tasks:add_time", args=[task.pk]),
+            {"date": datetime.date.today(), "hours": "2.5", "note": "API"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(task.time_entries.filter(hours="2.50", user=self.user).exists())
+
     def test_delete_removes_object(self):
         obj = Task.objects.create(title="O'chiriladigan vazifa")
         response = self.client.post(reverse("tasks:delete", args=[obj.pk]))

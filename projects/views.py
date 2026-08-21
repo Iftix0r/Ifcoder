@@ -4,6 +4,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from dashboard.mixins import CSVExportMixin
+from tasks.models import Task
 
 from .forms import ProjectForm
 from .models import Project
@@ -42,6 +43,18 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     model = Project
     template_name = "projects/detail.html"
     context_object_name = "project"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["tasks_by_status"] = [
+            (
+                status,
+                label,
+                self.object.tasks.filter(status=status).select_related("assigned_to"),
+            )
+            for status, label in Task.Status.choices
+        ]
+        return ctx
 
 
 class ProjectCreateView(LoginRequiredMixin, CreateView):

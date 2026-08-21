@@ -17,8 +17,14 @@
 <div class="toolbar">
   <form method="get">
     <input type="text" name="q" placeholder="Ism, telefon, telegram, email bo'yicha qidiruv..." value="{{ q }}">
+    <select name="lead_status">
+      <option value="">Barcha lead holatlari</option>
+      {% for value, label in lead_status_choices %}
+      <option value="{{ value }}" {% if lead_status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
     <button class="btn btn-sm" type="submit">Qidirish</button>
-    {% if q %}<a class="btn btn-sm" href="{% url 'clients:list' %}">Tozalash</a>{% endif %}
+    {% if q or lead_status %}<a class="btn btn-sm" href="{% url 'clients:list' %}">Tozalash</a>{% endif %}
   </form>
 </div>
 
@@ -26,12 +32,14 @@
 <div class="table-wrap">
 <table>
   <thead>
-    <tr><th>Mijoz Ismi</th><th>Telefon</th><th>Telegram</th><th>Loyihalar</th><th>Botlar</th><th>Amallar</th></tr>
+    <tr><th>Mijoz Ismi</th><th>Lead holati</th><th>Keyingi aloqa</th><th>Telefon</th><th>Loyihalar</th><th>Botlar</th><th>Amallar</th></tr>
   </thead>
   <tbody>
     {% for c in clients %}
     <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
       <td><strong>{{ c.name }}</strong></td>
+      <td><span class="badge">{{ c.get_lead_status_display }}</span></td>
+      <td>{{ c.follow_up_date|default:"—" }}</td>
       <td>{{ c.phone|default:"—" }}</td>
       <td>{{ c.telegram|default:"—" }}</td>
       <td><span class="badge">{{ c.project_count }} ta</span></td>

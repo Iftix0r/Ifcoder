@@ -56,6 +56,14 @@ class Expense(models.Model):
         "Toifa", max_length=20, choices=Category.choices, default=Category.OTHER
     )
     description = models.TextField("Tavsif", blank=True)
+    project = models.ForeignKey(
+        Project,
+        verbose_name="Loyiha",
+        related_name="expenses",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     date = models.DateField("Sana", default=timezone.localdate)
     created_at = models.DateTimeField("Yaratilgan sana", auto_now_add=True)
 

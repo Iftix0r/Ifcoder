@@ -25,6 +25,21 @@
     {% else %}
     <div class="empty">Tavsif kiritilmagan.</div>
     {% endif %}
+
+    <h2 class="section-title">Ishlangan vaqt</h2>
+    <form method="post" action="{% url 'tasks:add_time' task.pk %}" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      {% csrf_token %}
+      {{ time_entry_form.date }}
+      {{ time_entry_form.hours }}
+      {{ time_entry_form.note }}
+      <button class="btn btn-primary" type="submit">Vaqt qo'shish</button>
+    </form>
+    {% if time_entries %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Sana</th><th>Soat</th><th>Dasturchi</th><th>Izoh</th></tr></thead>
+      <tbody>{% for entry in time_entries %}<tr><td>{{ entry.date }}</td><td>{{ entry.hours }}</td><td>{{ entry.user }}</td><td>{{ entry.note|default:"—" }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty">Hali ish vaqti yozilmagan.</div>{% endif %}
   </div>
 
   <div class="card">

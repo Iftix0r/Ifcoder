@@ -33,11 +33,16 @@ class ClientListView(LoginRequiredMixin, CSVExportMixin, ListView):
                 | Q(telegram__icontains=q)
                 | Q(email__icontains=q)
             )
+        lead_status = self.request.GET.get("lead_status")
+        if lead_status:
+            qs = qs.filter(lead_status=lead_status)
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["q"] = self.request.GET.get("q", "")
+        ctx["lead_status"] = self.request.GET.get("lead_status", "")
+        ctx["lead_status_choices"] = Client.LeadStatus.choices
         return ctx
 
 

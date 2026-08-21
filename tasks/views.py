@@ -9,8 +9,8 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from dashboard.mixins import CSVExportMixin
 
-from .forms import TaskForm
-from .models import Task
+from .forms import TaskForm, TimeEntryForm
+from .models import Task, TimeEntry
 
 
 class TaskListView(LoginRequiredMixin, CSVExportMixin, ListView):
@@ -71,6 +71,8 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["status_choices"] = Task.Status.choices
+        ctx["time_entries"] = self.object.time_entries.select_related("user")
+        ctx["time_entry_form"] = TimeEntryForm()
         return ctx
 
 
@@ -111,3 +113,17 @@ def task_set_status(request, pk):
         task.save(update_fields=["status"])
         return JsonResponse({"ok": True, "status": task.status, "label": task.get_status_display()})
     return JsonResponse({"ok": False}, status=400)
+
+
+@login_required
+@require_POST
+def task_add_time(request, pk):
+    task = Task.objects.get(pk=pk)
+    form = TimeEntryForm(request.POST)
+    if form.is_valid():
+        entry = form.save(commit=False)
+        entry.task = task
+        entry.user = request.user
+        entry.save()
+        return JsonResponse({"ok": True, "hours": str(entry.hours)})
+    return JsonResponse({"ok": False, "errors": form.errors}, status=400)
