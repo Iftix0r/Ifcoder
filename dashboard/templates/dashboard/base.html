@@ -522,6 +522,20 @@
   .ai-answer { background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); min-height: 150px; }
   .ai-answer-label { color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
   .ai-answer-text { color: var(--text); line-height: 1.7; white-space: normal; }
+  .developer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .developer-panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); min-width: 0; }
+  .developer-wide { grid-column: span 2; }
+  .developer-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .developer-panel-head .section-title { margin: 0; }
+  .developer-panel-head > span, .developer-panel-head > strong { color: var(--muted); font-size: 12px; }
+  .repo-list, .dev-task-list { display: grid; gap: 7px; }
+  .repo-item, .dev-task { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); min-width: 0; }
+  .repo-item small, .dev-task small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .repo-item > div, .dev-task > span:first-child { min-width: 0; overflow: hidden; }
+  .repo-item strong, .dev-task strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dev-task:hover, .repo-item:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .dev-task.is-overdue { border-color: var(--red); }
+  .date-label { color: var(--muted); font-size: 12px; white-space: nowrap; }
 
   /* CODE ELEMENT */
   code {
@@ -655,6 +669,8 @@
 
     .detail-grid { grid-template-columns: 1fr; }
     .ai-layout { grid-template-columns: 1fr; }
+    .developer-grid { grid-template-columns: 1fr; }
+    .developer-wide { grid-column: auto; }
 
     .quick-add-menu { right: auto; left: 0; width: 180px; }
     .global-search-form { flex-direction: column; }
@@ -851,6 +867,9 @@
       <a href="{% url 'dashboard:ai_assistant' %}" class="{% if request.resolver_match.view_name == 'dashboard:ai_assistant' %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a1 1 0 011 1v1.05a6.01 6.01 0 014.95 4.95H15a1 1 0 110 2h-1.05A6.01 6.01 0 019 13.95V15a1 1 0 11-2 0v-1.05A6.01 6.01 0 012.05 9H1a1 1 0 110-2h1.05A6.01 6.01 0 017 2.05V1a1 1 0 011-1zm0 4a4 4 0 100 8 4 4 0 000-8z"/></svg>
         AI Yordamchi</a>
+      <a href="{% url 'dashboard:developer_center' %}" class="{% if request.resolver_match.view_name == 'dashboard:developer_center' %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.854 3.146a.5.5 0 010 .708L2.707 7l3.147 3.146a.5.5 0 01-.708.708l-3.5-3.5a.5.5 0 010-.708l3.5-3.5a.5.5 0 01.708 0zm4.292 0a.5.5 0 00-.708.708L12.293 7l-3.147 3.146a.5.5 0 00.708.708l3.5-3.5a.5.5 0 000-.708l-3.5-3.5z"/></svg>
+        Dasturchi markazi</a>
       <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
         Infratuzilma</a>
