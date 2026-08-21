@@ -534,6 +534,14 @@
   }
   form.login button:hover { background: var(--accent-hover); }
 
+  #sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 19;
+  }
+
   @media (max-width: 860px) {
     .sidebar { position: fixed; transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
@@ -547,22 +555,59 @@
     var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', theme);
   })();
+
   function toggleTheme() {
     var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('ifcoder-theme', next);
   }
+
   function toggleQuickAdd() {
     var wrap = document.querySelector('.quick-add-wrap');
     if (wrap) wrap.classList.toggle('show');
   }
+
   function toggleMobileSidebar() {
     var sb = document.querySelector('.sidebar');
-    if (sb) sb.classList.toggle('open');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (!sb) return;
+    var opening = !sb.classList.contains('open');
+    sb.classList.toggle('open');
+    if (overlay) overlay.style.display = opening ? 'block' : 'none';
   }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Quick-add: tashqariga click qilganda yopish
+    document.addEventListener('click', function (e) {
+      var wrap = document.querySelector('.quick-add-wrap');
+      if (wrap && !wrap.contains(e.target)) wrap.classList.remove('show');
+    });
+
+    // Mobile sidebar overlay yopish
+    var overlay = document.getElementById('sidebar-overlay');
+    if (overlay) {
+      overlay.addEventListener('click', function () {
+        var sb = document.querySelector('.sidebar');
+        if (sb) sb.classList.remove('open');
+        overlay.style.display = 'none';
+      });
+    }
+
+    // Messages: 4 soniyadan keyin avtomatik yo'qolish
+    var msgs = document.querySelectorAll('.messages li');
+    msgs.forEach(function (li) {
+      setTimeout(function () {
+        li.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        li.style.opacity = '0';
+        li.style.transform = 'translateY(-6px)';
+        setTimeout(function () { li.remove(); }, 400);
+      }, 4000);
+    });
+  });
 </script>
 </head>
 <body>
+<div id="sidebar-overlay"></div>
 {% if user.is_authenticated %}
 <div class="layout">
   <aside class="sidebar">
