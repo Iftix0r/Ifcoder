@@ -398,11 +398,21 @@ def reports(request):
             total=Sum("amount")
         )["total"] or 0
         max_amount = max(max_amount, float(income), float(expense))
-        monthly.append({"label": start.strftime("%b"), "income": income, "expense": expense})
+        monthly.append(
+            {
+                "label": start.strftime("%b"),
+                "income": income,
+                "expense": expense,
+                "net": income - expense,
+            }
+        )
 
     for row in monthly:
         row["income_pct"] = round(float(row["income"]) / max_amount * 100) if max_amount else 0
         row["expense_pct"] = round(float(row["expense"]) / max_amount * 100) if max_amount else 0
+
+    total_income = sum((row["income"] for row in monthly), 0)
+    total_expense = sum((row["expense"] for row in monthly), 0)
 
     projects_by_status = [
         {"label": label, "value": value, "count": Project.objects.filter(status=value).count()}
@@ -425,6 +435,9 @@ def reports(request):
 
     context = {
         "monthly": monthly,
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "net_income": total_income - total_expense,
         "projects_by_status": projects_by_status,
         "invoices_by_status": invoices_by_status,
         "top_clients": top_clients,

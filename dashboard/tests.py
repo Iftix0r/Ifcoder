@@ -84,6 +84,7 @@ class AlertsAndReportsTests(TestCase):
     def test_reports_page_loads(self):
         response = self.client.get("/panel/reports/")
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Sof Natija")
 
     def test_global_search_finds_client(self):
         Client.objects.create(name="Acme Studio", email="hello@acme.test")
