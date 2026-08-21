@@ -164,6 +164,9 @@ VAULT_FERNET_KEY = os.environ.get(
     'J_olCMzOvnbqcq4kf533E_qJx6dYSLq-6c_fVv2GPB0=',
 )
 
+# OpenAI yordamchisi uchun kalit. Uni .env yoki production environment'da bering.
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
 # Production (DEBUG=False) uchun xavfsizlik sozlamalari — cPanel'dagi
 # iftix0r.uz Let's Encrypt SSL bilan xizmat qilgani uchun HTTPS majburlanadi.
 # Lokal (DEBUG=True) rivojlantirishga ta'sir qilmaydi.

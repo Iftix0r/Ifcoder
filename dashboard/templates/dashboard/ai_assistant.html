@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}AI Yordamchi — Ifcoder{% endblock %}
+{% block page_title %}AI Yordamchi{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>AI Yordamchi</h1>
+    <div class="sub">CRM ko'rsatkichlari asosida reja, tahlil va amaliy tavsiyalar oling</div>
+  </div>
+</div>
+
+<div class="ai-layout">
+  <form class="form-card ai-form" method="post">
+    {% csrf_token %}
+    <label for="ai-question">Savolingiz</label>
+    <textarea id="ai-question" name="question" maxlength="2000" placeholder="Masalan: Bugun qaysi ishlarni birinchi qilishim kerak?" required>{{ question }}</textarea>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">AI'dan so'rash</button></div>
+  </form>
+
+  {% if error %}<div class="messages"><li class="error">{{ error }}</li></div>{% endif %}
+  {% if answer %}
+  <section class="ai-answer" aria-live="polite">
+    <div class="ai-answer-label">Javob</div>
+    <div class="ai-answer-text">{{ answer|linebreaksbr }}</div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

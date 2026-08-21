@@ -835,6 +835,9 @@
       <a href="{% url 'dashboard:reports' %}" class="{% if request.resolver_match.view_name == 'dashboard:reports' %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75zm14.28 2.53a.75.75 0 00-1.06-1.06L10 7.94 7.53 5.47a.75.75 0 00-1.06 0L3.22 8.72a.75.75 0 001.06 1.06L7 7.06l2.47 2.47a.75.75 0 001.06 0l5.25-5.25z"/></svg>
         Hisobotlar</a>
+      <a href="{% url 'dashboard:ai_assistant' %}" class="{% if request.resolver_match.view_name == 'dashboard:ai_assistant' %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a1 1 0 011 1v1.05a6.01 6.01 0 014.95 4.95H15a1 1 0 110 2h-1.05A6.01 6.01 0 019 13.95V15a1 1 0 11-2 0v-1.05A6.01 6.01 0 012.05 9H1a1 1 0 110-2h1.05A6.01 6.01 0 017 2.05V1a1 1 0 011-1zm0 4a4 4 0 100 8 4 4 0 000-8z"/></svg>
+        AI Yordamchi</a>
       <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
         Infratuzilma</a>

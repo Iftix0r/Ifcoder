@@ -1,8 +1,12 @@
 from datetime import timedelta
+import json
+import urllib.error
+import urllib.request
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Count, Q, Sum
 from django.shortcuts import render
@@ -245,6 +249,63 @@ def search(request):
             )
 
     return render(request, "dashboard/search.html", {"query": query, "results": results})
+
+
+def _ask_openai(question):
+    prompt = (
+        "Sen Ifcoder CRM panelining ichki yordamchisisan. O'zbek tilida, qisqa va amaliy javob ber. "
+        "Foydalanuvchi savoliga javob berishda faqat berilgan CRM ko'rsatkichlaridan foydalan. "
+        f"CRM ko'rsatkichlari: mijozlar={Client.objects.count()}, loyihalar={Project.objects.count()}, "
+        f"ochiq vazifalar={Task.objects.exclude(status=Task.Status.DONE).count()}, "
+        f"to'lanmagan invoice'lar={Invoice.objects.exclude(status=Invoice.Status.PAID).count()}."
+    )
+    payload = json.dumps(
+        {
+            "model": "gpt-4o-mini",
+            "input": [
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": question},
+            ],
+            "max_output_tokens": 700,
+        }
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        "https://api.openai.com/v1/responses",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        result = json.loads(response.read().decode("utf-8"))
+    return result.get("output", [{}])[0].get("content", [{}])[0].get("text", "")
+
+
+@login_required
+def ai_assistant(request):
+    answer = ""
+    question = ""
+    error = ""
+    if request.method == "POST":
+        question = request.POST.get("question", "").strip()
+        if not settings.OPENAI_API_KEY:
+            error = "OPENAI_API_KEY sozlanmagan. Kalitni .env yoki production environment'ga qo'shing."
+        elif not question:
+            error = "Savol kiriting."
+        elif len(question) > 2000:
+            error = "Savol 2000 belgidan oshmasin."
+        else:
+            try:
+                answer = _ask_openai(question)
+            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+                error = "AI xizmatiga ulanib bo'lmadi. API kaliti va internet ulanishini tekshiring."
+    return render(
+        request,
+        "dashboard/ai_assistant.html",
+        {"answer": answer, "question": question, "error": error},
+    )
 
 
 @login_required

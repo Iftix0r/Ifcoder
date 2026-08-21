@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth.models import User
+from django.test import override_settings
 from django.core.cache import cache
 from django.test import TestCase
 
@@ -88,3 +89,10 @@ class AlertsAndReportsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Acme Studio")
         self.assertContains(response, "Mijoz")
+
+    @override_settings(OPENAI_API_KEY="")
+    def test_ai_assistant_explains_missing_api_key(self):
+        response = self.client.post("/panel/ai/", {"question": "Bugungi rejam qanday?"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "OPENAI_API_KEY sozlanmagan")
