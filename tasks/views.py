@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import JsonResponse
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -38,13 +39,27 @@ class TaskListView(LoginRequiredMixin, CSVExportMixin, ListView):
         status = self.request.GET.get("status")
         if status:
             qs = qs.filter(status=status)
+        priority = self.request.GET.get("priority")
+        if priority:
+            qs = qs.filter(priority=priority)
+        due = self.request.GET.get("due")
+        today = timezone.localdate()
+        if due == "overdue":
+            qs = qs.exclude(status=Task.Status.DONE).filter(due_date__lt=today)
+        elif due == "today":
+            qs = qs.exclude(status=Task.Status.DONE).filter(due_date=today)
+        elif due == "upcoming":
+            qs = qs.exclude(status=Task.Status.DONE).filter(due_date__gt=today)
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["q"] = self.request.GET.get("q", "")
         ctx["status"] = self.request.GET.get("status", "")
+        ctx["priority"] = self.request.GET.get("priority", "")
+        ctx["due"] = self.request.GET.get("due", "")
         ctx["status_choices"] = Task.Status.choices
+        ctx["priority_choices"] = Task.Priority.choices
         return ctx
 
 

@@ -23,8 +23,20 @@
       <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
+    <select name="priority">
+      <option value="">Barcha muhimliklar</option>
+      {% for value, label in priority_choices %}
+      <option value="{{ value }}" {% if priority == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="due">
+      <option value="">Barcha muddatlar</option>
+      <option value="overdue" {% if due == "overdue" %}selected{% endif %}>Muddati o'tgan</option>
+      <option value="today" {% if due == "today" %}selected{% endif %}>Bugun</option>
+      <option value="upcoming" {% if due == "upcoming" %}selected{% endif %}>Kelajakdagi</option>
+    </select>
     <button class="btn btn-sm" type="submit">Qidirish</button>
-    {% if q or status %}<a class="btn btn-sm" href="{% url 'tasks:list' %}">Tozalash</a>{% endif %}
+    {% if q or status or priority or due %}<a class="btn btn-sm" href="{% url 'tasks:list' %}">Tozalash</a>{% endif %}
   </form>
 </div>
 
