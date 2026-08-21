@@ -1,4 +1,6 @@
 import datetime
+import json
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import override_settings
@@ -7,7 +9,9 @@ from django.test import TestCase
 
 from clients.models import Client
 from finance.models import Invoice
+from projects.models import Project
 from tasks.models import Task
+from dashboard.views import _ask_openai
 
 
 class LoginThrottleTests(TestCase):
@@ -96,3 +100,21 @@ class AlertsAndReportsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "OPENAI_API_KEY sozlanmagan")
+
+    @override_settings(OPENAI_API_KEY="test-key")
+    @patch("dashboard.views.urllib.request.urlopen")
+    def test_ai_prompt_contains_actionable_crm_context(self, mock_urlopen):
+        Project.objects.create(name="Yangi sayt")
+        Task.objects.create(title="Landing page tayyorlash", priority=Task.Priority.HIGH)
+
+        response = mock_urlopen.return_value.__enter__.return_value
+        response.read.return_value = json.dumps(
+            {"output_text": "Avval landing page ustida ishlang."}
+        ).encode()
+
+        answer = _ask_openai("Bugun nima qilay?")
+
+        payload = json.loads(mock_urlopen.call_args.args[0].data)
+        self.assertEqual(answer, "Avval landing page ustida ishlang.")
+        self.assertIn("Landing page tayyorlash", payload["input"][0]["content"])
+        self.assertIn("Yangi sayt", payload["input"][0]["content"])

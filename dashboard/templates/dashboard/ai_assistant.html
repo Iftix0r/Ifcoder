@@ -15,6 +15,12 @@
     {% csrf_token %}
     <label for="ai-question">Savolingiz</label>
     <textarea id="ai-question" name="question" maxlength="2000" placeholder="Masalan: Bugun qaysi ishlarni birinchi qilishim kerak?" required>{{ question }}</textarea>
+    <div class="ai-quick-questions">
+      <span>Tezkor savollar</span>
+      {% for quick_question in quick_questions %}
+      <button type="button" data-question="{{ quick_question }}">{{ quick_question }}</button>
+      {% endfor %}
+    </div>
     <div class="form-actions"><button class="btn btn-primary" type="submit">AI'dan so'rash</button></div>
   </form>
 
@@ -26,4 +32,13 @@
   </section>
   {% endif %}
 </div>
+<script>
+  document.querySelectorAll('[data-question]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var input = document.getElementById('ai-question');
+      input.value = button.dataset.question;
+      input.focus();
+    });
+  });
+</script>
 {% endblock %}

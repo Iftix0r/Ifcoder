@@ -510,6 +510,16 @@
   .search-result-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
   .search-result-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .search-result-main small { color: var(--muted); }
+  .ai-layout { display: grid; grid-template-columns: minmax(280px, 520px) minmax(280px, 1fr); gap: 20px; align-items: start; }
+  .ai-form { max-width: none; }
+  .ai-form textarea { min-height: 150px; }
+  .ai-quick-questions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .ai-quick-questions span { width: 100%; color: var(--muted); font-size: 12px; font-weight: 600; }
+  .ai-quick-questions button { border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--muted); padding: 6px 9px; cursor: pointer; font: inherit; font-size: 11.5px; text-align: left; }
+  .ai-quick-questions button:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+  .ai-answer { background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); min-height: 150px; }
+  .ai-answer-label { color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+  .ai-answer-text { color: var(--text); line-height: 1.7; white-space: normal; }
 
   /* CODE ELEMENT */
   code {
@@ -642,6 +652,7 @@
     .global-search { width: min(220px, 38vw); }
 
     .detail-grid { grid-template-columns: 1fr; }
+    .ai-layout { grid-template-columns: 1fr; }
 
     .quick-add-menu { right: auto; left: 0; width: 180px; }
     .global-search-form { flex-direction: column; }

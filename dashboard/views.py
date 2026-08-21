@@ -252,12 +252,35 @@ def search(request):
 
 
 def _ask_openai(question):
+    today = timezone.localdate()
+    open_tasks = list(
+        Task.objects.exclude(status=Task.Status.DONE)
+        .select_related("project")
+        .order_by("due_date", "priority")[:8]
+    )
+    active_projects = list(
+        Project.objects.exclude(
+            status__in=[Project.Status.COMPLETED, Project.Status.PAUSED]
+        )
+        .order_by("deadline", "name")[:8]
+    )
+    task_context = "; ".join(
+        f"{task.title} ({task.get_priority_display()}, muddat: {task.due_date or 'belgilanmagan'})"
+        for task in open_tasks
+    ) or "ochiq vazifa yo'q"
+    project_context = "; ".join(
+        f"{project.name} ({project.get_status_display()}, muddat: {project.deadline or 'belgilanmagan'})"
+        for project in active_projects
+    ) or "faol loyiha yo'q"
     prompt = (
         "Sen Ifcoder CRM panelining ichki yordamchisisan. O'zbek tilida, qisqa va amaliy javob ber. "
-        "Foydalanuvchi savoliga javob berishda faqat berilgan CRM ko'rsatkichlaridan foydalan. "
+        "Faqat berilgan CRM ma'lumotlariga tayangan holda javob ber, mavjud bo'lmagan faktni o'ylab topma. "
+        "Avval xulosani, keyin 3 tagacha aniq amalni yoz. Bugungi sana: "
+        f"{today}. "
         f"CRM ko'rsatkichlari: mijozlar={Client.objects.count()}, loyihalar={Project.objects.count()}, "
         f"ochiq vazifalar={Task.objects.exclude(status=Task.Status.DONE).count()}, "
-        f"to'lanmagan invoice'lar={Invoice.objects.exclude(status=Invoice.Status.PAID).count()}."
+        f"to'lanmagan invoice'lar={Invoice.objects.exclude(status=Invoice.Status.PAID).count()}. "
+        f"Ochiq vazifalar: {task_context}. Faol loyihalar: {project_context}."
     )
     payload = json.dumps(
         {
@@ -280,7 +303,14 @@ def _ask_openai(question):
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         result = json.loads(response.read().decode("utf-8"))
-    return result.get("output", [{}])[0].get("content", [{}])[0].get("text", "")
+    if result.get("output_text"):
+        return result["output_text"]
+    return "\n".join(
+        item.get("text", "")
+        for output in result.get("output", [])
+        for item in output.get("content", [])
+        if item.get("text")
+    )
 
 
 @login_required
@@ -304,7 +334,16 @@ def ai_assistant(request):
     return render(
         request,
         "dashboard/ai_assistant.html",
-        {"answer": answer, "question": question, "error": error},
+        {
+            "answer": answer,
+            "question": question,
+            "error": error,
+            "quick_questions": [
+                "Bugun qaysi ishlarni birinchi qilishim kerak?",
+                "Muddati yaqin loyihalar bo'yicha reja tuz.",
+                "Ochiq vazifalarimni ustuvorlik bo'yicha tartibla.",
+            ],
+        },
     )
 
 
