@@ -1,35 +1,68 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Xarajat — Ifcoder{% endblock %}
-{% block page_title %}Xarajat{% endblock %}
+{% block page_title %}Xarajat — {{ expense.amount }}{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>{{ expense.amount }}</h1>
-    <div class="sub">Sana: {{ expense.date }}</div>
+    <h1>{{ expense.amount }} so'm</h1>
+    <p class="sub">{{ expense.get_category_display }} &middot; {{ expense.date }}</p>
   </div>
-  <div class="btn-row">
-    <a class="btn" href="{% url 'finance:expense_edit' expense.pk %}">Tahrirlash</a>
-    <a class="btn btn-danger" href="{% url 'finance:expense_delete' expense.pk %}">O'chirish</a>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'finance:expense_edit' expense.pk %}" class="btn">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm1.414 1.06a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086zM11.189 6.25L9.75 4.81l-6.286 6.287a.25.25 0 00-.064.108l-.558 1.953 1.953-.558a.251.251 0 00.108-.064L11.19 6.25z"/></svg>
+      Tahrirlash
+    </a>
+    <a href="{% url 'finance:expense_delete' expense.pk %}" class="btn btn-danger btn-sm">O'chirish</a>
   </div>
 </div>
 
 <div class="detail-grid">
+  <!-- Tavsif -->
   <div>
     {% if expense.description %}
-    <h2 class="section-title">Tavsif</h2>
-    <div class="card" style="white-space:pre-wrap;font-size:14px;line-height:1.7;">{{ expense.description }}</div>
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin:0 0 10px;">Tavsif</h3>
+      <p style="font-size:14px;color:var(--text);white-space:pre-wrap;margin:0;line-height:1.7;">{{ expense.description }}</p>
+    </div>
     {% else %}
     <div class="empty">Tavsif kiritilmagan.</div>
     {% endif %}
   </div>
 
-  <div class="card">
-    <h2 class="section-title" style="margin-bottom:16px;">Ma'lumotlar</h2>
-    <ul class="detail-list">
-      <li><span class="k">Toifa</span><span>{{ expense.get_category_display }}</span></li>
-      <li><span class="k">Summa</span><span><strong>{{ expense.amount }}</strong></span></li>
-      <li><span class="k">Sana</span><span>{{ expense.date }}</span></li>
-    </ul>
+  <!-- Meta panel -->
+  <div>
+    <div class="card">
+      <h3 style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 12px;">Tafsilotlar</h3>
+      <ul class="detail-list">
+        <li>
+          <span style="color:var(--muted);">Summa</span>
+          <strong style="font-size:15px;">{{ expense.amount }}</strong>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Toifa</span>
+          <span class="badge">{{ expense.get_category_display }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Sana</span>
+          <span>{{ expense.date }}</span>
+        </li>
+        {% if expense.project %}
+        <li>
+          <span style="color:var(--muted);">Loyiha</span>
+          <a href="{% url 'projects:detail' expense.project.pk %}" style="color:var(--accent);">{{ expense.project.name }}</a>
+        </li>
+        {% endif %}
+        <li>
+          <span style="color:var(--muted);">Yaratilgan</span>
+          <span>{{ expense.created_at|date:"d.m.Y H:i" }}</span>
+        </li>
+      </ul>
+
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+        <a href="{% url 'finance:expense_edit' expense.pk %}" class="btn" style="width:100%;justify-content:center;">Tahrirlash</a>
+        <a href="{% url 'finance:expense_list' %}" class="btn btn-sm" style="width:100%;justify-content:center;">← Xarajatlar ro'yxati</a>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

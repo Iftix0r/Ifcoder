@@ -152,7 +152,7 @@ class ExpenseListView(LoginRequiredMixin, CSVExportMixin, ListView):
         return [obj.amount, obj.get_category_display(), obj.date]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().select_related("project")
         q = self.request.GET.get("q")
         if q:
             qs = qs.filter(Q(description__icontains=q))
@@ -174,6 +174,9 @@ class ExpenseDetailView(LoginRequiredMixin, DetailView):
     model = Expense
     template_name = "finance/expense_detail.html"
     context_object_name = "expense"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("project")
 
 
 class ExpenseCreateView(LoginRequiredMixin, CreateView):

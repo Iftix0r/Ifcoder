@@ -844,9 +844,12 @@
         Botlar</a>
 
       <div class="nav-section">Moliya & Infra</div>
-      <a href="{% url 'finance:home' %}" class="{% if 'finance' in request.resolver_match.namespace %}active{% endif %}">
+      <a href="{% url 'finance:home' %}" class="{% if 'finance' in request.resolver_match.namespace and request.resolver_match.view_name == 'finance:home' %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
         Moliya</a>
+      <a href="{% url 'finance:expense_list' %}" class="{% if 'finance' in request.resolver_match.namespace and 'expense' in request.resolver_match.view_name %}active{% endif %}" style="padding-left:28px;font-size:13px;">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
+        Xarajatlar</a>
       <a href="{% url 'dashboard:reports' %}" class="{% if request.resolver_match.view_name == 'dashboard:reports' %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75zm14.28 2.53a.75.75 0 00-1.06-1.06L10 7.94 7.53 5.47a.75.75 0 00-1.06 0L3.22 8.72a.75.75 0 001.06 1.06L7 7.06l2.47 2.47a.75.75 0 001.06 0l5.25-5.25z"/></svg>
         Hisobotlar</a>
@@ -914,6 +917,7 @@
             <a href="{% url 'tasks:add' %}">+ Vazifa yaratish</a>
             <a href="{% url 'bots:add' %}">+ Bot qo'shish</a>
             <a href="{% url 'finance:invoice_add' %}">+ Hisob-faktura</a>
+            <a href="{% url 'finance:expense_add' %}">+ Xarajat qo'shish</a>
             <a href="{% url 'debts:add' %}">+ Qarz qo'shish</a>
           </div>
         </div>

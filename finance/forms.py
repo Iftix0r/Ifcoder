@@ -15,9 +15,10 @@ class IncomeForm(forms.ModelForm):
 class ExpenseForm(forms.ModelForm):
     class Meta:
         model = Expense
-        fields = ["amount", "category", "description", "date"]
+        fields = ["amount", "category", "project", "description", "date"]
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
+            "description": forms.Textarea(attrs={"rows": 3}),
         }
 
 

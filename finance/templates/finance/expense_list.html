@@ -1,50 +1,95 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Xarajatlar — Ifcoder{% endblock %}
 {% block page_title %}Xarajatlar{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
     <h1>Xarajatlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:expenses|length }} ta yozuv — jami {{ total }}</div>
+    <p class="sub">Jami {{ page_obj.paginator.count|default:expenses|length }} ta yozuv</p>
   </div>
-  <div class="btn-row">
-    <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV yuklab olish</a>
-    <a class="btn btn-primary" href="{% url 'finance:expense_add' %}">+ Xarajat qo'shish</a>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}export=csv" class="btn btn-sm">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6h-2.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.086c.464 0 .909.184 1.237.513l3.414 3.414c.329.328.513.773.513 1.237V13.25A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75zm4.5 7.75a.75.75 0 011.5 0v2.69l.72-.72a.75.75 0 011.06 1.06l-2 2a.75.75 0 01-1.06 0l-2-2a.75.75 0 111.06-1.06l.72.72V9.5z"/></svg>
+      CSV yuklab olish
+    </a>
+    <a href="{% url 'finance:expense_add' %}" class="btn btn-primary">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+      Xarajat qo'shish
+    </a>
   </div>
 </div>
 
+<!-- Jami summa kartasi -->
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:24px;">
+  <div class="card stat-red">
+    <div class="card-top">
+      <div class="icon">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
+      </div>
+    </div>
+    <div class="value">{{ total|floatformat:0 }}</div>
+    <div class="label">Jami xarajat (filtrlangan)</div>
+  </div>
+</div>
+
+<!-- Filtrlar -->
 <div class="toolbar">
-  <form method="get">
-    <input type="text" name="q" placeholder="Tavsif bo'yicha qidirish..." value="{{ q }}">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;flex:1;">
+    <input type="text" name="q" value="{{ q }}" placeholder="Tavsif bo'yicha qidirish…">
     <select name="category">
-      <option value="">Barcha toifalar</option>
+      <option value="">— Barcha toifalar —</option>
       {% for value, label in category_choices %}
-      <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+        <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-    <button class="btn btn-sm" type="submit">Qidirish</button>
-    {% if q or category %}<a class="btn btn-sm" href="{% url 'finance:expense_list' %}">Tozalash</a>{% endif %}
+    <button type="submit" class="btn">Filtrlash</button>
+    {% if q or category %}
+      <a href="{% url 'finance:expense_list' %}" class="btn">✕ Tozalash</a>
+    {% endif %}
   </form>
 </div>
 
 {% if expenses %}
 <div class="table-wrap">
-<table>
-  <thead><tr><th>Summa</th><th>Toifa</th><th>Sana</th><th>Tavsif</th></tr></thead>
-  <tbody>
-  {% for exp in expenses %}
-  <tr class="row-link" onclick="location.href='{% url 'finance:expense_detail' exp.pk %}'">
-    <td><strong>{{ exp.amount }}</strong></td>
-    <td>{{ exp.get_category_display }}</td>
-    <td>{{ exp.date }}</td>
-    <td style="white-space:normal;max-width:300px;color:var(--muted);">{{ exp.description|default:"—"|truncatechars:60 }}</td>
-  </tr>
-  {% endfor %}
-  </tbody>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>Summa</th>
+        <th>Toifa</th>
+        <th>Loyiha</th>
+        <th>Sana</th>
+        <th>Tavsif</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for exp in expenses %}
+      <tr class="row-link" onclick="location.href='{% url 'finance:expense_detail' exp.pk %}'">
+        <td><strong>{{ exp.amount|floatformat:0 }}</strong></td>
+        <td><span class="badge">{{ exp.get_category_display }}</span></td>
+        <td>
+          {% if exp.project %}
+            <span style="color:var(--accent);font-size:13px;">{{ exp.project.name }}</span>
+          {% else %}
+            <span style="color:var(--muted);">—</span>
+          {% endif %}
+        </td>
+        <td>{{ exp.date }}</td>
+        <td style="max-width:260px;white-space:normal;font-size:13px;color:var(--muted);">
+          {{ exp.description|default:"—"|truncatechars:60 }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
+
 {% include "dashboard/_pagination.html" %}
+
 {% else %}
-<div class="empty">Hech narsa topilmadi.</div>
+<div class="empty">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="32" height="32" style="margin-bottom:10px;opacity:.4;"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1z"/></svg>
+  <p>Hali xarajatlar yo'q.</p>
+  <a href="{% url 'finance:expense_add' %}" class="btn btn-primary" style="margin-top:10px;">Birinchi xarajatni qo'shish</a>
+</div>
 {% endif %}
 {% endblock %}
