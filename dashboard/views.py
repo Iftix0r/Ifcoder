@@ -8,15 +8,16 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, DecimalField, Q, Sum, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 
-from bots.models import Bot
 from clients.models import Client
+from debts.models import Debt
 from finance.models import Expense, Income, Invoice
-from infrastructure.models import Domain, SSLCertificate
+from goals.models import Goal, GoalTask
 from projects.models import Project
 from tasks.models import Task
 
@@ -60,55 +61,102 @@ class ThrottledLoginView(LoginView):
 
 @login_required
 def home(request):
-    project_status_counts = dict(
-        Project.objects.values_list("status")
-        .annotate(count=Count("id"))
-        .values_list("status", "count")
-    )
-    projects_by_status = [
-        {"label": label, "value": value, "count": project_status_counts.get(value, 0)}
-        for value, label in Project.Status.choices
-    ]
-
-    month_start = timezone.localdate().replace(day=1)
-    month_income = Income.objects.filter(date__gte=month_start).aggregate(total=Sum("amount"))[
-        "total"
-    ] or 0
-    month_expense = Expense.objects.filter(date__gte=month_start).aggregate(
-        total=Sum("amount")
-    )["total"] or 0
-    outstanding_invoices = Invoice.objects.exclude(status=Invoice.Status.PAID)
     today = timezone.localdate()
-    open_tasks = Task.objects.exclude(status=Task.Status.DONE)
-    client_count = Client.objects.aggregate(total=Count("id"))["total"]
-    project_count = Project.objects.aggregate(total=Count("id"))["total"]
-    bot_counts = Bot.objects.aggregate(
-        total=Count("id"), active=Count("id", filter=Q(status=Bot.Status.ACTIVE))
+    month_start = today.replace(day=1)
+
+    # ── Asosiy hisoblar ───────────────────────────────────────────────────
+    client_count   = Client.objects.count()
+    project_count  = Project.objects.count()
+
+    open_tasks     = Task.objects.exclude(status=Task.Status.DONE)
+    task_counts    = open_tasks.aggregate(
+        open    = Count("id"),
+        overdue = Count("id", filter=Q(due_date__lt=today, due_date__isnull=False)),
     )
-    task_counts = open_tasks.aggregate(
-        open=Count("id"), overdue=Count("id", filter=Q(due_date__lt=today))
+
+    # ── Moliya ────────────────────────────────────────────────────────────
+    month_income   = Income.objects.filter(date__gte=month_start).aggregate(
+        total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+    month_expense  = Expense.objects.filter(date__gte=month_start).aggregate(
+        total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+    month_net      = month_income - month_expense
+
+    outstanding_qs = Invoice.objects.exclude(status=Invoice.Status.PAID)
+    outstanding_count = outstanding_qs.count()
+    outstanding_total = outstanding_qs.aggregate(
+        total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+
+    # ── Qarzlar ───────────────────────────────────────────────────────────
+    active_debts = Debt.objects.exclude(
+        status__in=[Debt.Status.PAID, Debt.Status.CANCELLED]
     )
-    invoice_counts = outstanding_invoices.aggregate(total=Count("id"))
+    i_owe_remaining = active_debts.filter(direction=Debt.Direction.I_OWE).aggregate(
+        s=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())),
+        p=Coalesce(Sum("paid_amount"), Value(0, output_field=DecimalField())),
+    )
+    they_owe_remaining = active_debts.filter(direction=Debt.Direction.THEY_OWE).aggregate(
+        s=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())),
+        p=Coalesce(Sum("paid_amount"), Value(0, output_field=DecimalField())),
+    )
+    debt_i_owe    = i_owe_remaining["s"] - i_owe_remaining["p"]
+    debt_they_owe = they_owe_remaining["s"] - they_owe_remaining["p"]
+    overdue_debts = active_debts.filter(due_date__lt=today).count()
+
+    # ── Maqsadlar ─────────────────────────────────────────────────────────
+    active_goals   = Goal.objects.filter(status=Goal.Status.ACTIVE)
+    goals_total    = active_goals.count()
+    goals_overdue  = active_goals.filter(deadline__lt=today).count()
+    # Faol maqsadlar uchun o'rtacha progress
+    avg_progress   = active_goals.aggregate(
+        avg=Coalesce(Sum("progress"), Value(0, output_field=DecimalField()))
+    )["avg"]
+    avg_progress   = int(avg_progress / goals_total) if goals_total else 0
+
+    # ── Bugungi kun uchun muhim ma'lumotlar ───────────────────────────────
+    today_tasks = open_tasks.filter(due_date=today).select_related("project").order_by("priority")[:5]
+    overdue_tasks_list = open_tasks.filter(
+        due_date__lt=today, due_date__isnull=False
+    ).select_related("project").order_by("due_date")[:5]
+    upcoming_tasks = open_tasks.filter(
+        due_date__gt=today
+    ).select_related("project").order_by("due_date")[:6]
+
+    recent_projects = Project.objects.select_related("client").order_by("-created_at")[:5]
+    recent_clients  = Client.objects.order_by("-created_at")[:4]
+
+    # Faol maqsadlar (progress bar uchun)
+    top_goals = active_goals.order_by("deadline")[:4]
 
     context = {
-        "clients_count": client_count,
-        "projects_count": project_count,
-        "bots_count": bot_counts["total"],
-        "bots_active_count": bot_counts["active"],
-        "projects_by_status": projects_by_status,
-        "recent_projects": Project.objects.select_related("client").order_by("-created_at")[:5],
-        "recent_bots": Bot.objects.select_related("project", "client").order_by("-created_at")[:5],
-        "recent_clients": Client.objects.order_by("-created_at")[:5],
-        "upcoming_tasks": open_tasks.select_related("project").order_by("due_date", "priority")[:6],
-        "month_income": month_income,
-        "month_expense": month_expense,
-        "outstanding_invoices_count": invoice_counts["total"],
-        "expiring_domains": Domain.objects.expiring_soon().order_by("expiration_date")[:5],
-        "expiring_certificates": SSLCertificate.objects.expiring_soon()
-        .select_related("domain")
-        .order_by("expiration_date")[:5],
-        "open_tasks_count": task_counts["open"],
-        "overdue_tasks_count": task_counts["overdue"],
+        "today": today,
+        # stat kartalar
+        "clients_count":        client_count,
+        "projects_count":       project_count,
+        "open_tasks_count":     task_counts["open"],
+        "overdue_tasks_count":  task_counts["overdue"],
+        "month_income":         month_income,
+        "month_expense":        month_expense,
+        "month_net":            month_net,
+        "outstanding_count":    outstanding_count,
+        "outstanding_total":    outstanding_total,
+        # qarzlar
+        "debt_i_owe":           debt_i_owe,
+        "debt_they_owe":        debt_they_owe,
+        "overdue_debts":        overdue_debts,
+        # maqsadlar
+        "goals_total":          goals_total,
+        "goals_overdue":        goals_overdue,
+        "avg_progress":         avg_progress,
+        "top_goals":            top_goals,
+        # jadvallar
+        "today_tasks":          today_tasks,
+        "overdue_tasks_list":   overdue_tasks_list,
+        "upcoming_tasks":       upcoming_tasks,
+        "recent_projects":      recent_projects,
+        "recent_clients":       recent_clients,
     }
     return render(request, "dashboard/home.html", context)
 
@@ -141,46 +189,6 @@ def _collect_alerts():
             }
         )
 
-    for domain in Domain.objects.expired():
-        alerts.append(
-            {
-                "level": "critical",
-                "title": f"Domen muddati tugagan: {domain.name}",
-                "detail": f"{domain.expiration_date}",
-                "link": reverse("infrastructure:domain_detail", args=[domain.pk]),
-            }
-        )
-
-    for cert in SSLCertificate.objects.expired().select_related("domain"):
-        alerts.append(
-            {
-                "level": "critical",
-                "title": f"SSL sertifikat muddati tugagan: {cert}",
-                "detail": f"{cert.expiration_date}",
-                "link": reverse("infrastructure:ssl_detail", args=[cert.pk]),
-            }
-        )
-
-    for domain in Domain.objects.expiring_soon():
-        alerts.append(
-            {
-                "level": "warning",
-                "title": f"Domen muddati yaqinlashmoqda: {domain.name}",
-                "detail": f"{domain.expiration_date}",
-                "link": reverse("infrastructure:domain_detail", args=[domain.pk]),
-            }
-        )
-
-    for cert in SSLCertificate.objects.expiring_soon().select_related("domain"):
-        alerts.append(
-            {
-                "level": "warning",
-                "title": f"SSL sertifikat muddati yaqinlashmoqda: {cert}",
-                "detail": f"{cert.expiration_date}",
-                "link": reverse("infrastructure:ssl_detail", args=[cert.pk]),
-            }
-        )
-
     for project in Project.objects.exclude(
         status__in=[Project.Status.COMPLETED, Project.Status.PAUSED]
     ).filter(deadline__isnull=False, deadline__lte=soon).select_related("client"):
@@ -203,6 +211,32 @@ def _collect_alerts():
                 "title": f"Vazifa muddati yaqin: {task.title}",
                 "detail": f"{task.due_date}",
                 "link": reverse("tasks:detail", args=[task.pk]),
+            }
+        )
+
+    # Muddati o'tgan qarzlar
+    from debts.models import Debt
+    for debt in Debt.objects.exclude(
+        status__in=[Debt.Status.PAID, Debt.Status.CANCELLED]
+    ).filter(due_date__lt=today):
+        alerts.append(
+            {
+                "level": "critical",
+                "title": f"Qarz muddati o'tgan: {debt.counterparty}",
+                "detail": f"{debt.remaining_amount} {debt.get_currency_display()} ({debt.due_date})",
+                "link": reverse("debts:detail", args=[debt.pk]),
+            }
+        )
+
+    # Muddati o'tgan maqsadlar
+    from goals.models import Goal
+    for goal in Goal.objects.filter(status=Goal.Status.ACTIVE, deadline__lt=today):
+        alerts.append(
+            {
+                "level": "warning",
+                "title": f"Maqsad muddati o'tgan: {goal.title}",
+                "detail": f"Deadline: {goal.deadline} — {goal.progress}% bajarildi",
+                "link": reverse("goals:detail", args=[goal.pk]),
             }
         )
 
@@ -243,10 +277,20 @@ def search(request):
                  "url": reverse("tasks:detail", args=[task.pk])}
             )
 
-        for bot in Bot.objects.filter(name__icontains=query).order_by("name")[:10]:
+        for debt in Debt.objects.filter(
+            Q(counterparty__icontains=query) | Q(reason__icontains=query)
+        ).order_by("counterparty")[:5]:
             results.append(
-                {"type": "Bot", "title": bot.name, "detail": bot.get_status_display(),
-                 "url": reverse("bots:detail", args=[bot.pk])}
+                {"type": "Qarz", "title": debt.counterparty,
+                 "detail": f"{debt.amount} {debt.get_currency_display()} — {debt.get_status_display()}",
+                 "url": reverse("debts:detail", args=[debt.pk])}
+            )
+
+        for goal in Goal.objects.filter(title__icontains=query).order_by("title")[:5]:
+            results.append(
+                {"type": "Maqsad", "title": goal.title,
+                 "detail": f"{goal.progress}% — {goal.get_status_display()}",
+                 "url": reverse("goals:detail", args=[goal.pk])}
             )
 
     return render(request, "dashboard/search.html", {"query": query, "results": results})
