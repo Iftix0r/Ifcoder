@@ -825,9 +825,6 @@
       <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.75 1.75 0 012.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0113.25 15h-3.5a.75.75 0 01-.75-.75V9.5a.25.25 0 00-.25-.25h-1.5a.25.25 0 00-.25.25v4.75a.75.75 0 01-.75.75h-3.5A1.75 1.75 0 011 13.25V6.23c0-.531.242-1.034.657-1.367l5.25-4.2z"/></svg>
         Bosh sahifa</a>
-      <a href="{% url 'dashboard:alerts' %}" class="{% if request.resolver_match.view_name == 'dashboard:alerts' %}active{% endif %}">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 16a2 2 0 001.985-1.75h-3.97A2 2 0 008 16zM8 1.5A3.5 3.5 0 004.5 5v2.947c0 .346-.102.683-.294.97l-1.703 2.556a.75.75 0 00.624 1.166h9.746a.75.75 0 00.624-1.166l-1.703-2.556a1.75 1.75 0 01-.294-.97V5A3.5 3.5 0 008 1.5z"/></svg>
-        Bildirishnomalar{% if nav_alerts_count %} <span class="badge overdue" style="margin-left:auto;">{{ nav_alerts_count }}</span>{% endif %}</a>
 
       <div class="nav-section">Boshqaruv</div>
       <a href="{% url 'clients:list' %}" class="{% if 'clients' in request.resolver_match.namespace %}active{% endif %}">
@@ -842,6 +839,9 @@
       <a href="{% url 'goals:list' %}" class="{% if 'goals' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm.75 4.75a.75.75 0 00-1.5 0v3.5c0 .414.336.75.75.75h3a.75.75 0 000-1.5H8.75V4.75z"/></svg>
         Maqsadlar</a>
+      <a href="{% url 'dashboard:alerts' %}" class="{% if request.resolver_match.view_name == 'dashboard:alerts' %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 16a2 2 0 001.985-1.75h-3.97A2 2 0 008 16zM8 1.5A3.5 3.5 0 004.5 5v2.947c0 .346-.102.683-.294.97l-1.703 2.556a.75.75 0 00.624 1.166h9.746a.75.75 0 00.624-1.166l-1.703-2.556a1.75 1.75 0 01-.294-.97V5A3.5 3.5 0 008 1.5z"/></svg>
+        Bildirishnomalar{% if nav_alerts_count %} <span class="badge overdue" style="margin-left:auto;">{{ nav_alerts_count }}</span>{% endif %}</a>
 
       <div class="nav-section">Moliya & Infra</div>
       <a href="{% url 'finance:home' %}" class="{% if 'finance' in request.resolver_match.namespace and request.resolver_match.view_name == 'finance:home' %}active{% endif %}">
