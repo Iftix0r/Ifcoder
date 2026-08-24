@@ -1,0 +1,279 @@
+{% extends "dashboard/base.html" %}
+{% block page_title %}{{ goal.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ goal.title }}</h1>
+    <p class="sub">
+      {{ goal.get_period_display }} &middot; {{ goal.get_category_display }}
+      {% if goal.deadline %}&middot; Deadline: {{ goal.deadline }}{% endif %}
+    </p>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'goals:edit' goal.pk %}" class="btn">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm1.414 1.06a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086zM11.189 6.25L9.75 4.81l-6.286 6.287a.25.25 0 00-.064.108l-.558 1.953 1.953-.558a.251.251 0 00.108-.064L11.19 6.25z"/></svg>
+      Tahrirlash
+    </a>
+    <a href="{% url 'goals:delete' goal.pk %}" class="btn btn-danger btn-sm">O'chirish</a>
+  </div>
+</div>
+
+<div class="detail-grid">
+
+  <!-- Chap: Vazifalar paneli -->
+  <div>
+
+    <!-- Progress karta -->
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <!-- Doira progress -->
+        <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
+          <svg viewBox="0 0 36 36" style="width:80px;height:80px;transform:rotate(-90deg);">
+            <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--panel-2)" stroke-width="3"/>
+            <circle cx="18" cy="18" r="15.9" fill="none"
+              id="progress-ring"
+              stroke="{% if goal.progress >= 100 %}var(--green){% elif goal.progress >= 50 %}var(--accent){% else %}var(--yellow){% endif %}"
+              stroke-width="3"
+              stroke-dasharray="{{ goal.progress }} {{ 100|add:0 }}"
+              stroke-linecap="round"/>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:800;" id="progress-text">
+            {{ goal.progress }}%
+          </div>
+        </div>
+        <!-- Stats -->
+        <div style="flex:1;display:flex;gap:20px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:24px;font-weight:800;color:var(--green);">{{ tasks_done.count }}</div>
+            <div style="font-size:12px;color:var(--muted);">Bajarildi</div>
+          </div>
+          <div>
+            <div style="font-size:24px;font-weight:800;color:var(--accent);">{{ tasks_in_progress.count }}</div>
+            <div style="font-size:12px;color:var(--muted);">Jarayonda</div>
+          </div>
+          <div>
+            <div style="font-size:24px;font-weight:800;color:var(--muted);">{{ tasks_todo.count }}</div>
+            <div style="font-size:12px;color:var(--muted);">Bajarilmagan</div>
+          </div>
+          {% if tasks_overdue.count %}
+          <div>
+            <div style="font-size:24px;font-weight:800;color:var(--red);">{{ tasks_overdue.count }}</div>
+            <div style="font-size:12px;color:var(--muted);">Muddati o'tgan</div>
+          </div>
+          {% endif %}
+        </div>
+        <!-- Holat -->
+        <div>
+          <span class="badge {{ goal.status }}" style="font-size:13px;padding:5px 14px;">{{ goal.get_status_display }}</span>
+          {% if goal.is_overdue %}
+            <br><span class="badge overdue" style="margin-top:6px;display:inline-flex;">Muddati o'tgan!</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="margin-top:14px;background:var(--panel-2);border-radius:6px;height:8px;overflow:hidden;">
+        <div id="progress-bar" style="height:100%;border-radius:6px;width:{{ goal.progress }}%;background:{% if goal.progress >= 100 %}var(--green){% elif goal.progress >= 50 %}var(--accent){% else %}var(--yellow){% endif %};transition:width .4s ease;"></div>
+      </div>
+    </div>
+
+    <!-- Vazifa qo'shish formasi -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="font-size:14px;font-weight:700;margin:0 0 14px;display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+        Yangi vazifa qo'shish
+      </h3>
+      <form method="post" action="{% url 'goals:task_add' goal.pk %}" id="task-add-form">
+        {% csrf_token %}
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:10px;">
+          <div>
+            <input type="text" name="title" placeholder="Vazifa nomi…" required
+              style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:var(--radius-sm);font-size:13.5px;outline:none;box-sizing:border-box;transition:border-color .15s ease;">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Qo'shish</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div>
+            <select name="priority" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-size:13px;outline:none;">
+              <option value="low">Past</option>
+              <option value="medium" selected>O'rta</option>
+              <option value="high">Yuqori</option>
+            </select>
+          </div>
+          <div>
+            <input type="date" name="due_date"
+              style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-size:13px;outline:none;box-sizing:border-box;">
+          </div>
+          <div>
+            <select name="status" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-size:13px;outline:none;">
+              <option value="todo">Bajarilmagan</option>
+              <option value="in_progress">Jarayonda</option>
+              <option value="done">Bajarildi</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Vazifalar ro'yxati -->
+    {% if tasks_all %}
+
+    {% if tasks_overdue %}
+    <h2 class="section-title" style="color:var(--red);">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm0 11a1 1 0 110 2 1 1 0 010-2zm.75-6.75a.75.75 0 00-1.5 0v4a.75.75 0 001.5 0v-4z"/></svg>
+      Muddati o'tgan
+    </h2>
+    {% for task in tasks_overdue %}{% include "goals/_task_row.html" %}{% endfor %}
+    {% endif %}
+
+    {% if tasks_in_progress %}
+    <h2 class="section-title">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm.75 4.75a.75.75 0 00-1.5 0v3.5c0 .414.336.75.75.75h3a.75.75 0 000-1.5H8.75V4.75z"/></svg>
+      Jarayonda
+    </h2>
+    {% for task in tasks_in_progress %}{% include "goals/_task_row.html" %}{% endfor %}
+    {% endif %}
+
+    {% if tasks_todo %}
+    <h2 class="section-title">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0zM8 0a8 8 0 100 16A8 8 0 008 0z"/></svg>
+      Bajarilmagan
+    </h2>
+    {% for task in tasks_todo %}{% include "goals/_task_row.html" %}{% endfor %}
+    {% endif %}
+
+    {% if tasks_done %}
+    <h2 class="section-title" style="color:var(--muted);">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 5.22a.75.75 0 00-1.06 0L7 8.94 5.28 7.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg>
+      Bajarildi ({{ tasks_done.count }})
+    </h2>
+    <div style="opacity:.65;">
+    {% for task in tasks_done %}{% include "goals/_task_row.html" %}{% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty">Hali vazifalar qo'shilmagan. Yuqoridagi forma orqali qo'shing.</div>
+    {% endif %}
+
+  </div>
+
+  <!-- O'ng: Meta panel -->
+  <div>
+    <div class="card">
+      <h3 style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 12px;">Tafsilotlar</h3>
+      <ul class="detail-list">
+        <li>
+          <span style="color:var(--muted);">Holati</span>
+          <span class="badge {{ goal.status }}">{{ goal.get_status_display }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Davr</span>
+          <span>{{ goal.get_period_display }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Kategoriya</span>
+          <span>{{ goal.get_category_display }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Boshlanish</span>
+          <span>{{ goal.start_date }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Deadline</span>
+          {% if goal.deadline %}
+            <span {% if goal.is_overdue %}style="color:var(--red);font-weight:600;"{% endif %}>
+              {{ goal.deadline }}
+              {% if goal.days_left is not None %}
+                <br><small>{% if goal.days_left >= 0 %}{{ goal.days_left }} kun qoldi{% else %}{{ goal.days_left|cut:"-" }} kun o'tdi{% endif %}</small>
+              {% endif %}
+            </span>
+          {% else %}
+            <span style="color:var(--muted);">—</span>
+          {% endif %}
+        </li>
+        <li>
+          <span style="color:var(--muted);">Progress</span>
+          <strong id="meta-progress">{{ goal.progress }}%</strong>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Jami vazifalar</span>
+          <span>{{ tasks_all.count }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Yaratilgan</span>
+          <span>{{ goal.created_at|date:"d.m.Y" }}</span>
+        </li>
+      </ul>
+
+      {% if goal.description %}
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Tavsif</div>
+        <p style="font-size:13.5px;white-space:pre-wrap;margin:0;line-height:1.7;color:var(--text);">{{ goal.description }}</p>
+      </div>
+      {% endif %}
+
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+        <a href="{% url 'goals:edit' goal.pk %}" class="btn" style="width:100%;justify-content:center;">Tahrirlash</a>
+        <a href="{% url 'goals:list' %}" class="btn btn-sm" style="width:100%;justify-content:center;">← Maqsadlar ro'yxati</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+
+function setTaskStatus(taskId, status) {
+  fetch(`/panel/goals/tasks/${taskId}/set-status/`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
+    body: `status=${status}`
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.ok) return;
+    // Satr rangini yangilash
+    const row = document.getElementById(`task-row-${taskId}`);
+    if (row) {
+      row.dataset.status = data.status;
+      const badge = row.querySelector('.task-status-badge');
+      if (badge) {
+        badge.textContent = data.label;
+        badge.className = `badge task-status-badge ${data.status}`;
+      }
+      // done bo'lsa ustiga chizish
+      const title = row.querySelector('.task-title');
+      if (title) title.style.textDecoration = data.status === 'done' ? 'line-through' : '';
+    }
+    updateProgress(data.progress);
+  });
+}
+
+function deleteTask(taskId) {
+  if (!confirm('Vazifani o\'chirishni tasdiqlaysizmi?')) return;
+  fetch(`/panel/goals/tasks/${taskId}/delete/`, {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF},
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.ok) return;
+    const row = document.getElementById(`task-row-${taskId}`);
+    if (row) row.remove();
+    updateProgress(data.progress);
+  });
+}
+
+function updateProgress(pct) {
+  const bar = document.getElementById('progress-bar');
+  const txt = document.getElementById('progress-text');
+  const meta = document.getElementById('meta-progress');
+  if (bar) bar.style.width = pct + '%';
+  if (txt) txt.textContent = pct + '%';
+  if (meta) meta.textContent = pct + '%';
+}
+</script>
+{% endblock %}

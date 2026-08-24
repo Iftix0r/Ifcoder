@@ -1,0 +1,108 @@
+{% extends "dashboard/base.html" %}
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ form_title }}</h1>
+</div>
+
+<div style="max-width:680px;">
+  <div class="card">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <ul class="messages">
+          {% for error in form.non_field_errors %}
+            <li class="error">{{ error }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <!-- Sarlavha -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">
+          {{ form.title.label }} <span style="color:var(--red);">*</span>
+        </label>
+        {{ form.title }}
+        {% if form.title.errors %}<div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.title.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Davr va Kategoriya -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">{{ form.period.label }}</label>
+          {{ form.period }}
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">{{ form.category.label }}</label>
+          {{ form.category }}
+        </div>
+      </div>
+
+      <!-- Holat va Progress -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">{{ form.status.label }}</label>
+          {{ form.status }}
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">{{ form.progress.label }}</label>
+          {{ form.progress }}
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Vazifalar qo'shilganda avtomatik hisoblanadi</div>
+        </div>
+      </div>
+
+      <!-- Boshlanish va Deadline -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">{{ form.start_date.label }}</label>
+          {{ form.start_date }}
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">{{ form.deadline.label }}</label>
+          {{ form.deadline }}
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Ixtiyoriy</div>
+        </div>
+      </div>
+
+      <!-- Tavsif -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">{{ form.description.label }}</label>
+        {{ form.description }}
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="submit" class="btn btn-primary">Saqlash</button>
+        {% if object %}
+          <a href="{% url 'goals:detail' object.pk %}" class="btn">Bekor qilish</a>
+        {% else %}
+          <a href="{% url 'goals:list' %}" class="btn">Bekor qilish</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  form input[type="text"], form input[type="number"], form input[type="date"],
+  form select, form textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+    box-sizing: border-box;
+    font-family: var(--font);
+  }
+  form input:focus, form select:focus, form textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  form select { appearance: auto; }
+</style>
+{% endblock %}

@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'vault',
     'tasks',
     'debts',
+    'goals',
     'dashboard',
 ]
 

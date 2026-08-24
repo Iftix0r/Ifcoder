@@ -1,0 +1,55 @@
+<div id="task-row-{{ task.pk }}" data-status="{{ task.status }}"
+  style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--panel);margin-bottom:8px;transition:background .15s ease;"
+  onmouseover="this.style.background='var(--panel-2)'" onmouseout="this.style.background='var(--panel)'">
+
+  <!-- Holat tugmasi (checkbox ko'rinishida) -->
+  <button onclick="setTaskStatus({{ task.pk }}, '{% if task.status == 'done' %}todo{% else %}done{% endif %}')"
+    title="{% if task.status == 'done' %}Bajarilmagan qilish{% else %}Bajarildi deb belgilash{% endif %}"
+    style="width:22px;height:22px;border-radius:6px;border:2px solid {% if task.status == 'done' %}var(--green){% elif task.status == 'in_progress' %}var(--accent){% else %}var(--border){% endif %};background:{% if task.status == 'done' %}var(--green){% else %}transparent{% endif %};cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;transition:all .15s ease;">
+    {% if task.status == 'done' %}
+      <svg viewBox="0 0 16 16" fill="white" width="12" height="12"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>
+    {% endif %}
+  </button>
+
+  <!-- Sarlavha va meta -->
+  <div style="flex:1;min-width:0;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span class="task-title" style="font-size:13.5px;font-weight:500;{% if task.status == 'done' %}text-decoration:line-through;color:var(--muted);{% endif %}">
+        {{ task.title }}
+      </span>
+      <span class="badge task-status-badge {{ task.status }}" style="font-size:11px;">{{ task.get_status_display }}</span>
+      {% if task.priority == 'high' %}
+        <span style="font-size:11px;font-weight:700;color:var(--red);">↑ Yuqori</span>
+      {% elif task.priority == 'low' %}
+        <span style="font-size:11px;color:var(--muted);">↓ Past</span>
+      {% endif %}
+      {% if task.is_overdue %}
+        <span class="badge overdue" style="font-size:11px;">Muddati o'tgan</span>
+      {% endif %}
+    </div>
+    {% if task.due_date %}
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">📅 {{ task.due_date }}</div>
+    {% endif %}
+    {% if task.notes %}
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;white-space:pre-wrap;">{{ task.notes|truncatechars:80 }}</div>
+    {% endif %}
+  </div>
+
+  <!-- Holat o'zgartirish select -->
+  <select onchange="setTaskStatus({{ task.pk }}, this.value)"
+    style="background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;">
+    {% for val, label in status_choices %}
+      <option value="{{ val }}" {% if task.status == val %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+
+  <!-- O'chirish -->
+  <button onclick="deleteTask({{ task.pk }})"
+    title="O'chirish"
+    style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all .15s ease;"
+    onmouseover="this.style.background='var(--red-dim)';this.style.color='var(--red)';this.style.borderColor='var(--red)'"
+    onmouseout="this.style.background='transparent';this.style.color='var(--muted)';this.style.borderColor='var(--border)'">
+    <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12"><path d="M11 1.75V3h2.25a.75.75 0 010 1.5H2.75a.75.75 0 010-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75zm-4.5 0v1.25h3V1.75a.25.25 0 00-.25-.25h-2.5a.25.25 0 00-.25.25zM4.997 6.5a.75.75 0 10-1.493.144L4.916 13.9a1.75 1.75 0 001.742 1.6h2.684a1.75 1.75 0 001.742-1.6l1.413-7.256a.75.75 0 00-1.494-.144l-1.412 7.25a.25.25 0 01-.249.229H6.658a.25.25 0 01-.249-.228L4.997 6.5z"/></svg>
+  </button>
+
+</div>

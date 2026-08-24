@@ -1,0 +1,149 @@
+{% extends "dashboard/base.html" %}
+{% block page_title %}Maqsadlar{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Maqsadlar</h1>
+    <p class="sub">Oylik, yillik va boshqa maqsadlaringiz</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}export=csv" class="btn btn-sm">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6h-2.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.086c.464 0 .909.184 1.237.513l3.414 3.414c.329.328.513.773.513 1.237V13.25A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75z"/></svg>
+      CSV
+    </a>
+    <a href="{% url 'goals:add' %}" class="btn btn-primary">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+      Yangi maqsad
+    </a>
+  </div>
+</div>
+
+<!-- Statistika -->
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:24px;">
+  <div class="card stat-green">
+    <div class="card-top"><div class="icon">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 5.22a.75.75 0 00-1.06 0L7 8.94 5.28 7.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg>
+    </div></div>
+    <div class="value">{{ stat_active }}</div>
+    <div class="label">Faol maqsadlar</div>
+  </div>
+  <div class="card">
+    <div class="card-top"><div class="icon">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm.75 4.75a.75.75 0 00-1.5 0v3.5c0 .414.336.75.75.75h3a.75.75 0 000-1.5H8.75V4.75z"/></svg>
+    </div></div>
+    <div class="value">{{ stat_completed }}</div>
+    <div class="label">Bajarilgan</div>
+  </div>
+  <div class="card stat-red">
+    <div class="card-top"><div class="icon">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.47.22A.75.75 0 015 0h6a.75.75 0 01.53.22l4.25 4.25c.141.14.22.331.22.53v8.75A1.75 1.75 0 0114.25 15H1.75A1.75 1.75 0 010 13.25V4.5a.75.75 0 01.22-.53L4.47.22zM8 11a1 1 0 110 2 1 1 0 010-2zm.75-6.75a.75.75 0 00-1.5 0v4a.75.75 0 001.5 0v-4z"/></svg>
+    </div></div>
+    <div class="value">{{ stat_overdue }}</div>
+    <div class="label">Muddati o'tgan</div>
+  </div>
+</div>
+
+<!-- Filtrlar -->
+<div class="toolbar">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;flex:1;">
+    <input type="text" name="q" value="{{ q }}" placeholder="Maqsad nomini qidirish…">
+    <select name="status">
+      <option value="">— Holat —</option>
+      {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if status == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="period">
+      <option value="">— Davr —</option>
+      {% for val, label in period_choices %}
+        <option value="{{ val }}" {% if period == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="category">
+      <option value="">— Kategoriya —</option>
+      {% for val, label in category_choices %}
+        <option value="{{ val }}" {% if category == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn">Filtrlash</button>
+    {% if q or status or period or category %}
+      <a href="{% url 'goals:list' %}" class="btn">✕ Tozalash</a>
+    {% endif %}
+  </form>
+</div>
+
+{% if goals %}
+<div style="display:flex;flex-direction:column;gap:12px;">
+  {% for goal in goals %}
+  <a href="{% url 'goals:detail' goal.pk %}" style="text-decoration:none;color:inherit;">
+    <div class="card" style="transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+
+        <!-- Nomi va meta -->
+        <div style="flex:1;min-width:200px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+            <strong style="font-size:15px;">{{ goal.title }}</strong>
+            <span class="badge {{ goal.status }}">{{ goal.get_status_display }}</span>
+            <span class="badge" style="background:var(--panel-2);color:var(--muted);">{{ goal.get_period_display }}</span>
+            <span class="badge" style="background:var(--panel-2);color:var(--muted);">{{ goal.get_category_display }}</span>
+            {% if goal.is_overdue %}
+              <span class="badge overdue">Muddati o'tgan!</span>
+            {% endif %}
+          </div>
+          {% if goal.description %}
+            <p style="font-size:13px;color:var(--muted);margin:0 0 8px;">{{ goal.description|truncatechars:100 }}</p>
+          {% endif %}
+          <div style="font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;">
+            <span>📅 {{ goal.start_date }} dan</span>
+            {% if goal.deadline %}
+              <span {% if goal.is_overdue %}style="color:var(--red);font-weight:600;"{% endif %}>
+                🏁 Deadline: {{ goal.deadline }}
+                {% if goal.days_left is not None %}
+                  ({% if goal.days_left >= 0 %}{{ goal.days_left }} kun qoldi{% else %}{{ goal.days_left|cut:"-" }} kun o'tdi{% endif %})
+                {% endif %}
+              </span>
+            {% endif %}
+            <span>📋 {{ goal.goal_tasks.count }} ta vazifa</span>
+          </div>
+        </div>
+
+        <!-- Progress doira -->
+        <div style="text-align:center;min-width:70px;">
+          <div style="position:relative;width:60px;height:60px;margin:0 auto;">
+            <svg viewBox="0 0 36 36" style="width:60px;height:60px;transform:rotate(-90deg);">
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--panel-2)" stroke-width="3"/>
+              <circle cx="18" cy="18" r="15.9" fill="none"
+                stroke="{% if goal.progress >= 100 %}var(--green){% elif goal.progress >= 50 %}var(--accent){% else %}var(--yellow){% endif %}"
+                stroke-width="3"
+                stroke-dasharray="{{ goal.progress }} {{ 100|add:'-'|add:goal.progress|default:100 }}"
+                stroke-dashoffset="0"
+                stroke-linecap="round"/>
+            </svg>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:700;">
+              {{ goal.progress }}%
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Progress bar -->
+      <div style="margin-top:12px;background:var(--panel-2);border-radius:4px;height:6px;overflow:hidden;">
+        <div style="height:100%;border-radius:4px;width:{{ goal.progress }}%;background:{% if goal.progress >= 100 %}var(--green){% elif goal.progress >= 50 %}var(--accent){% else %}var(--yellow){% endif %};transition:width .4s ease;"></div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+{% include "dashboard/_pagination.html" %}
+
+{% else %}
+<div class="empty">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="32" height="32" style="margin-bottom:10px;opacity:.4;"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm.75 4.75a.75.75 0 00-1.5 0v3.5c0 .414.336.75.75.75h3a.75.75 0 000-1.5H8.75V4.75z"/></svg>
+  <p>Hali maqsadlar yo'q.</p>
+  <a href="{% url 'goals:add' %}" class="btn btn-primary" style="margin-top:10px;">Birinchi maqsadni qo'shish</a>
+</div>
+{% endif %}
+{% endblock %}
