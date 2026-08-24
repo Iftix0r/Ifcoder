@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'content',
     'vault',
     'tasks',
+    'debts',
     'dashboard',
 ]
 

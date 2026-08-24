@@ -1,0 +1,127 @@
+{% extends "dashboard/base.html" %}
+{% block page_title %}{{ debt.counterparty }} — Qarz{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ debt.counterparty }}</h1>
+    <p class="sub">{{ debt.get_direction_display }} &middot; {{ debt.reason }}</p>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'debts:edit' debt.pk %}" class="btn">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm1.414 1.06a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086zM11.189 6.25L9.75 4.81l-6.286 6.287a.25.25 0 00-.064.108l-.558 1.953 1.953-.558a.251.251 0 00.108-.064L11.19 6.25z"/></svg>
+      Tahrirlash
+    </a>
+    <a href="{% url 'debts:delete' debt.pk %}" class="btn btn-danger btn-sm">O'chirish</a>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <!-- Asosiy ma'lumotlar -->
+  <div>
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div style="flex:1;">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">To'liq summa</div>
+          <div style="font-size:32px;font-weight:800;font-family:var(--font-heading);">
+            {{ debt.amount|floatformat:0 }} <span style="font-size:16px;color:var(--muted);">{{ debt.get_currency_display }}</span>
+          </div>
+        </div>
+        <div>
+          <span class="badge {{ debt.status }}">{{ debt.get_status_display }}</span>
+          {% if debt.is_overdue %}
+            <br><span class="badge overdue" style="margin-top:6px;display:inline-flex;">Muddati o'tgan!</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- To'lov progressi -->
+      {% if debt.amount > 0 %}
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+          <span style="color:var(--muted);">To'langan: <strong>{{ debt.paid_amount|floatformat:0 }} {{ debt.get_currency_display }}</strong></span>
+          <span style="color:var(--muted);">Qoldi: <strong style="color:{% if debt.remaining_amount > 0 %}var(--red){% else %}var(--green){% endif %};">{{ debt.remaining_amount|floatformat:0 }} {{ debt.get_currency_display }}</strong></span>
+        </div>
+        <div style="background:var(--panel-2);border-radius:6px;height:10px;overflow:hidden;">
+          <div style="height:100%;border-radius:6px;background:{% if debt.paid_percent >= 100 %}var(--green){% elif debt.paid_percent >= 50 %}var(--accent){% else %}var(--red){% endif %};width:{{ debt.paid_percent }}%;transition:width 0.4s ease;"></div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--muted);margin-top:4px;">{{ debt.paid_percent }}%</div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if debt.notes %}
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin:0 0 10px;">Batafsil izoh</h3>
+      <p style="font-size:14px;color:var(--text);white-space:pre-wrap;margin:0;">{{ debt.notes }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Meta panel -->
+  <div>
+    <div class="card">
+      <h3 style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 12px;">Tafsilotlar</h3>
+      <ul class="detail-list">
+        <li>
+          <span style="color:var(--muted);">Yo'nalish</span>
+          {% if debt.direction == 'i_owe' %}
+            <span class="badge overdue">Men olganman</span>
+          {% else %}
+            <span class="badge active">Men berganman</span>
+          {% endif %}
+        </li>
+        <li>
+          <span style="color:var(--muted);">Tomon</span>
+          <strong>{{ debt.counterparty }}</strong>
+        </li>
+        {% if debt.client %}
+        <li>
+          <span style="color:var(--muted);">Mijoz</span>
+          <a href="{% url 'clients:detail' debt.client.pk %}" style="color:var(--accent);">{{ debt.client.name }}</a>
+        </li>
+        {% endif %}
+        {% if debt.project %}
+        <li>
+          <span style="color:var(--muted);">Loyiha</span>
+          <a href="{% url 'projects:detail' debt.project.pk %}" style="color:var(--accent);">{{ debt.project.name }}</a>
+        </li>
+        {% endif %}
+        <li>
+          <span style="color:var(--muted);">Sabab</span>
+          <span>{{ debt.reason }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Valyuta</span>
+          <span>{{ debt.get_currency_display }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">Qarz sanasi</span>
+          <span>{{ debt.debt_date }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">To'lov muddati</span>
+          {% if debt.due_date %}
+            <span {% if debt.is_overdue %}style="color:var(--red);font-weight:600;"{% endif %}>{{ debt.due_date }}</span>
+          {% else %}
+            <span style="color:var(--muted);">Belgilanmagan</span>
+          {% endif %}
+        </li>
+        <li>
+          <span style="color:var(--muted);">Yaratilgan</span>
+          <span>{{ debt.created_at|date:"d.m.Y H:i" }}</span>
+        </li>
+        <li>
+          <span style="color:var(--muted);">O'zgartirilgan</span>
+          <span>{{ debt.updated_at|date:"d.m.Y H:i" }}</span>
+        </li>
+      </ul>
+
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+        <a href="{% url 'debts:edit' debt.pk %}" class="btn" style="width:100%;justify-content:center;">Tahrirlash</a>
+        <a href="{% url 'debts:list' %}" class="btn btn-sm" style="width:100%;justify-content:center;">← Qarzlar ro'yxati</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

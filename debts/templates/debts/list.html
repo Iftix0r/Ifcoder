@@ -1,0 +1,146 @@
+{% extends "dashboard/base.html" %}
+{% block page_title %}Qarzlar{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Qarzlar</h1>
+    <p class="sub">Qarzdor mijozlar va men kimlardan qarz olganman</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}export=csv" class="btn btn-sm">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6h-2.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.086c.464 0 .909.184 1.237.513l3.414 3.414c.329.328.513.773.513 1.237V13.25A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75zm4.5 7.75a.75.75 0 011.5 0v2.69l.72-.72a.75.75 0 011.06 1.06l-2 2a.75.75 0 01-1.06 0l-2-2a.75.75 0 111.06-1.06l.72.72V9.5z"/></svg>
+      CSV yuklab olish
+    </a>
+    <a href="{% url 'debts:add' %}" class="btn btn-primary">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+      Yangi qarz qo'shish
+    </a>
+  </div>
+</div>
+
+<!-- Statistika kartalar -->
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));">
+  <div class="card stat-red">
+    <div class="card-top">
+      <div class="icon">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm-.75 4.75v4.5a.75.75 0 001.5 0v-4.5a.75.75 0 00-1.5 0zM8 11a1 1 0 110 2 1 1 0 010-2z"/></svg>
+      </div>
+    </div>
+    <div class="value">{{ stat_i_owe|floatformat:0 }}</div>
+    <div class="label">Men qarzdorman (qolgan)</div>
+  </div>
+  <div class="card stat-green">
+    <div class="card-top">
+      <div class="icon">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm.75 4.75a.75.75 0 00-1.5 0v3.5H3.75a.75.75 0 000 1.5h4.25a.75.75 0 00.75-.75v-4.25z"/></svg>
+      </div>
+    </div>
+    <div class="value">{{ stat_they_owe|floatformat:0 }}</div>
+    <div class="label">Menga qarzdor (qolgan)</div>
+  </div>
+  <div class="card stat-yellow">
+    <div class="card-top">
+      <div class="icon">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.47.22A.75.75 0 015 0h6a.75.75 0 01.53.22l4.25 4.25c.141.14.22.331.22.53v8.75A1.75 1.75 0 0114.25 15H1.75A1.75 1.75 0 010 13.25V4.5a.75.75 0 01.22-.53L4.47.22zm.06 1.28L1 5.06V13.25c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V5.06L10.47 1.5H5.53z"/></svg>
+      </div>
+    </div>
+    <div class="value">{{ stat_overdue_count }}</div>
+    <div class="label">Muddati o'tgan qarzlar</div>
+  </div>
+</div>
+
+<!-- Filtrlar -->
+<div class="toolbar">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;flex:1;">
+    <input type="text" name="q" value="{{ q }}" placeholder="Qidirish (tomon, sabab…)">
+    <select name="direction">
+      <option value="">— Yo'nalish —</option>
+      {% for val, label in direction_choices %}
+        <option value="{{ val }}" {% if direction == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="status">
+      <option value="">— Holat —</option>
+      {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if status == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="currency">
+      <option value="">— Valyuta —</option>
+      {% for val, label in currency_choices %}
+        <option value="{{ val }}" {% if currency == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn">Filtrlash</button>
+    {% if q or direction or status or currency %}
+      <a href="{% url 'debts:list' %}" class="btn">✕ Tozalash</a>
+    {% endif %}
+  </form>
+</div>
+
+{% if debts %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Yo'nalish</th>
+        <th>Tomon</th>
+        <th>Sabab</th>
+        <th>Summa</th>
+        <th>To'langan</th>
+        <th>Qoldi</th>
+        <th>Holat</th>
+        <th>Muddati</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for debt in debts %}
+      <tr class="row-link" onclick="location.href='{% url 'debts:detail' debt.pk %}'">
+        <td>
+          {% if debt.direction == 'i_owe' %}
+            <span class="badge overdue">Men olganman</span>
+          {% else %}
+            <span class="badge active">Men berganman</span>
+          {% endif %}
+        </td>
+        <td><strong>{{ debt.counterparty }}</strong></td>
+        <td style="max-width:200px;white-space:normal;font-size:13px;color:var(--muted);">{{ debt.reason|truncatechars:60 }}</td>
+        <td><strong>{{ debt.amount|floatformat:0 }}</strong> {{ debt.get_currency_display }}</td>
+        <td>{{ debt.paid_amount|floatformat:0 }}</td>
+        <td>
+          {% if debt.remaining_amount > 0 %}
+            <span style="color:var(--red);font-weight:600;">{{ debt.remaining_amount|floatformat:0 }}</span>
+          {% else %}
+            <span style="color:var(--green);">0</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="badge {{ debt.status }}">{{ debt.get_status_display }}</span>
+          {% if debt.is_overdue %}
+            <span class="badge overdue" style="margin-left:4px;">Muddati o'tgan!</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if debt.due_date %}
+            {{ debt.due_date }}
+          {% else %}
+            <span style="color:var(--muted);">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% include "dashboard/_pagination.html" %}
+
+{% else %}
+<div class="empty">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="32" height="32" style="margin-bottom:10px;opacity:.4;"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
+  <p>Hali qarzlar yo'q.</p>
+  <a href="{% url 'debts:add' %}" class="btn btn-primary" style="margin-top:10px;">Birinchi qarzni qo'shish</a>
+</div>
+{% endif %}
+{% endblock %}

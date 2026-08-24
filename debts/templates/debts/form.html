@@ -1,0 +1,170 @@
+{% extends "dashboard/base.html" %}
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ form_title }}</h1>
+</div>
+
+<div style="max-width:680px;">
+  <div class="card">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <ul class="messages">
+          {% for error in form.non_field_errors %}
+            <li class="error">{{ error }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <!-- Yo'nalish -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+          {{ form.direction.label }} <span style="color:var(--red);">*</span>
+        </label>
+        {{ form.direction }}
+        {% if form.direction.errors %}
+          <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.direction.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Qarama-qarshi tomon -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+          {{ form.counterparty.label }} <span style="color:var(--red);">*</span>
+        </label>
+        {{ form.counterparty }}
+        {% if form.counterparty.errors %}
+          <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.counterparty.errors.0 }}</div>
+        {% endif %}
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Kim bergan / kimga berganingiz (ism yoki kompaniya nomi)</div>
+      </div>
+
+      <!-- Sabab -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+          {{ form.reason.label }} <span style="color:var(--red);">*</span>
+        </label>
+        {{ form.reason }}
+        {% if form.reason.errors %}
+          <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.reason.errors.0 }}</div>
+        {% endif %}
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Qarz nimadan kelib chiqdi (qisqacha)</div>
+      </div>
+
+      <!-- Summa va Valyuta -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.amount.label }} <span style="color:var(--red);">*</span>
+          </label>
+          {{ form.amount }}
+          {% if form.amount.errors %}
+            <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.amount.errors.0 }}</div>
+          {% endif %}
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.currency.label }}
+          </label>
+          {{ form.currency }}
+        </div>
+      </div>
+
+      <!-- To'langan summa -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+          {{ form.paid_amount.label }}
+        </label>
+        {{ form.paid_amount }}
+        {% if form.paid_amount.errors %}
+          <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.paid_amount.errors.0 }}</div>
+        {% endif %}
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Hozircha to'langan bo'lsa kiriting (0 bo'lsa bo'sh qoldiring)</div>
+      </div>
+
+      <!-- Holat -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+          {{ form.status.label }}
+        </label>
+        {{ form.status }}
+      </div>
+
+      <!-- Sanalar -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.debt_date.label }}
+          </label>
+          {{ form.debt_date }}
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.due_date.label }}
+          </label>
+          {{ form.due_date }}
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Ixtiyoriy — to'lov muddati</div>
+        </div>
+      </div>
+
+      <!-- Mijoz va Loyiha (ixtiyoriy) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.client.label }}
+          </label>
+          {{ form.client }}
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.project.label }}
+          </label>
+          {{ form.project }}
+        </div>
+      </div>
+
+      <!-- Izoh -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+          {{ form.notes.label }}
+        </label>
+        {{ form.notes }}
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="submit" class="btn btn-primary">Saqlash</button>
+        {% if object %}
+          <a href="{% url 'debts:detail' object.pk %}" class="btn">Bekor qilish</a>
+        {% else %}
+          <a href="{% url 'debts:list' %}" class="btn">Bekor qilish</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  form input[type="text"], form input[type="number"], form input[type="date"],
+  form select, form textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+    box-sizing: border-box;
+    font-family: var(--font);
+  }
+  form input:focus, form select:focus, form textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  form select { appearance: auto; }
+</style>
+{% endblock %}
