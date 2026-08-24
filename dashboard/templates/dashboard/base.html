@@ -839,9 +839,6 @@
       <a href="{% url 'tasks:list' %}" class="{% if 'tasks' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v2.5H13V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.5v-1.5h-3.5a.25.25 0 01-.25-.25V1.75zM4.75 4a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM4 7.75A.75.75 0 014.75 7h3a.75.75 0 010 1.5h-3A.75.75 0 014 7.75zM10.5 9a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm-4 2.5a4 4 0 118 0 4 4 0 01-8 0zm5.03-1.03a.75.75 0 00-1.06 0L9 11.94l-.47-.47a.75.75 0 10-1.06 1.06l1 1a.75.75 0 001.06 0l2-2a.75.75 0 000-1.06z"/></svg>
         Vazifalar</a>
-      <a href="{% url 'bots:list' %}" class="{% if 'bots' in request.resolver_match.namespace %}active{% endif %}">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1zM5.75 4.5A1.25 1.25 0 004.5 5.75v6.5a1.25 1.25 0 001.25 1.25h4.5a1.25 1.25 0 001.25-1.25v-6.5A1.25 1.25 0 0010.25 4.5h-4.5zM6 7a1 1 0 112 0 1 1 0 01-2 0zm4 0a1 1 0 11-2 0 1 1 0 012 0zm-5 3.25a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75z"/></svg>
-        Botlar</a>
 
       <div class="nav-section">Moliya & Infra</div>
       <a href="{% url 'finance:home' %}" class="{% if 'finance' in request.resolver_match.namespace and request.resolver_match.view_name == 'finance:home' %}active{% endif %}">
@@ -856,9 +853,6 @@
       <a href="{% url 'dashboard:ai_assistant' %}" class="{% if request.resolver_match.view_name == 'dashboard:ai_assistant' %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a1 1 0 011 1v1.05a6.01 6.01 0 014.95 4.95H15a1 1 0 110 2h-1.05A6.01 6.01 0 019 13.95V15a1 1 0 11-2 0v-1.05A6.01 6.01 0 012.05 9H1a1 1 0 110-2h1.05A6.01 6.01 0 017 2.05V1a1 1 0 011-1zm0 4a4 4 0 100 8 4 4 0 000-8z"/></svg>
         AI Yordamchi</a>
-      <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
-        Infratuzilma</a>
       <a href="{% url 'content:post_list' %}" class="{% if 'content' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M0 1.75A.75.75 0 01.75 1h4.253c1.227 0 2.317.59 3 1.501A3.744 3.744 0 0111.006 1h4.245a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-4.507a2.25 2.25 0 00-1.591.659l-.622.621a.75.75 0 01-1.06 0l-.622-.621A2.25 2.25 0 005.258 13H.75a.75.75 0 01-.75-.75V1.75zm7.251 10.324a3.744 3.744 0 012.255-.75h3.994V2.5h-3.495a2.25 2.25 0 00-2.254 2.25v7.324zm-1.501 0V4.75A2.25 2.25 0 003.496 2.5H1.5v9.5h3.758c.884 0 1.75.284 2.492.75z"/></svg>
         Kontent</a>
@@ -915,7 +909,6 @@
             <a href="{% url 'projects:add' %}">+ Loyiha qo'shish</a>
             <a href="{% url 'clients:add' %}">+ Mijoz qo'shish</a>
             <a href="{% url 'tasks:add' %}">+ Vazifa yaratish</a>
-            <a href="{% url 'bots:add' %}">+ Bot qo'shish</a>
             <a href="{% url 'finance:invoice_add' %}">+ Hisob-faktura</a>
             <a href="{% url 'finance:expense_add' %}">+ Xarajat qo'shish</a>
             <a href="{% url 'debts:add' %}">+ Qarz qo'shish</a>
