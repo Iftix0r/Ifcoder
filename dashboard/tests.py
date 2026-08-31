@@ -82,7 +82,10 @@ class AlertsAndReportsTests(TestCase):
         self.assertContains(response, "Hozircha e'tibor talab qiladigan holatlar yo'q.")
 
     def test_dashboard_task_can_be_completed_quickly(self):
-        task = Task.objects.create(title="Dashboarddan bajarish")
+        task = Task.objects.create(
+            title="Dashboarddan bajarish",
+            due_date=datetime.date.today()
+        )
 
         response = self.client.get("/panel/")
         self.assertContains(response, "Dashboarddan bajarish")

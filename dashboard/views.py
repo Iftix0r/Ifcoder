@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Count, DecimalField, Q, Sum, Value
+from django.db.models import Count, DecimalField, IntegerField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.urls import reverse
@@ -111,7 +111,7 @@ def home(request):
     goals_overdue  = active_goals.filter(deadline__lt=today).count()
     # Faol maqsadlar uchun o'rtacha progress
     avg_progress   = active_goals.aggregate(
-        avg=Coalesce(Sum("progress"), Value(0, output_field=DecimalField()))
+        avg=Coalesce(Sum("progress"), Value(0, output_field=IntegerField()))
     )["avg"]
     avg_progress   = int(avg_progress / goals_total) if goals_total else 0
 
