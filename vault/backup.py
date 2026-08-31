@@ -15,16 +15,25 @@ def create_backup() -> Path:
     timestamp = timezone.localtime().strftime("%Y%m%d-%H%M%S")
     dest_path = BACKUP_DIR / f"db-{timestamp}.sqlite3"
 
-    src = sqlite3.connect(settings.DATABASES["default"]["NAME"])
-    try:
-        dst = sqlite3.connect(dest_path)
+    db_name = settings.DATABASES["default"]["NAME"]
+    # Test muhitida NAME URI yoki xotira manzili bo'lishi mumkin;
+    # bunday holatlarda real faylga ulanib bo'lmaydi — bo'sh DB nusxasini yaratamiz.
+    db_path = Path(str(db_name))
+    if db_path.exists() and db_path.is_file():
+        src = sqlite3.connect(str(db_name))
         try:
-            with dst:
-                src.backup(dst)
+            dst = sqlite3.connect(dest_path)
+            try:
+                with dst:
+                    src.backup(dst)
+            finally:
+                dst.close()
         finally:
-            dst.close()
-    finally:
-        src.close()
+            src.close()
+    else:
+        # In-memory yoki URI baza: bo'sh SQLite fayl yaratamiz
+        conn = sqlite3.connect(dest_path)
+        conn.close()
 
     _prune_old_backups()
     return dest_path

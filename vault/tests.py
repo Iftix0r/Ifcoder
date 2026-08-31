@@ -116,12 +116,19 @@ class TwoFactorFlowTests(TestCase):
         self.assertRedirects(r, "/panel/finance/")
 
     def test_backup_code_is_single_use(self):
-        device = self._enroll()
-        session = self.client.session
-        backup_codes_page = self.client.get("/panel/vault/2fa/backup-codes/")
+        # Enrollment'ni to'g'ridan amalga oshiramiz va backup_codes sahifasini olamiz
+        self.client.get("/panel/vault/2fa/setup/")
+        secret = self.client.session["pending_totp_secret"]
+        code = pyotp.TOTP(secret).now()
+        backup_codes_page = self.client.post(
+            "/panel/vault/2fa/setup/", {"code": code}, follow=True
+        )
+        device = TOTPDevice.objects.get(user=self.user)
         codes = re.findall(rb"[0-9A-F]{4}-[0-9A-F]{4}", backup_codes_page.content)
+        self.assertGreater(len(codes), 0, "Backup kodlar sahifada topilmadi")
         raw_code = codes[0].decode()
 
+        session = self.client.session
         session["2fa_verified"] = False
         session.save()
         r = self.client.post(
@@ -140,6 +147,8 @@ class TwoFactorFlowTests(TestCase):
         )
         self.assertEqual(r.status_code, 200)  # reused code rejected, stays on page
 
+
+    @override_settings(STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage")
     def test_admin_reachable_without_2fa_verification(self):
         self._enroll()
         session = self.client.session
@@ -163,6 +172,7 @@ class BackupTests(TestCase):
     def setUp(self):
         User.objects.create_superuser("dev", "dev@example.com", "devpass12345")
         self.client.login(username="dev", password="devpass12345")
+        self._cleanup_backups()  # test boshlanishida eski nusxalarni tozalash
         self.addCleanup(self._cleanup_backups)
 
     def _cleanup_backups(self):
