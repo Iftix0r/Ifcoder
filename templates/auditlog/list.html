@@ -1,0 +1,134 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Audit Jurnali — Ifcoder Panel{% endblock %}
+{% block page_title %}Aktivlik Audit Jurnali{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>
+      <svg class="svg-icon" viewBox="0 0 24 24" style="width:20px;height:20px;margin-right:8px;vertical-align:-4px;">
+        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+      </svg>
+      Audit Jurnali
+    </h1>
+    <div class="sub">Tizimda amalga oshirilgan barcha harakatlar yozuvi</div>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<form method="get" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;align-items:flex-end;">
+  <div style="flex:1;min-width:200px;">
+    <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px;">Qidiruv</label>
+    <input type="text" name="q" value="{{ q }}" placeholder="Foydalanuvchi, obyekt, xabar…" class="form-control" style="width:100%;">
+  </div>
+  <div style="min-width:180px;">
+    <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px;">Harakat Turi</label>
+    <select name="action" class="form-control">
+      <option value="">— Barchasi —</option>
+      {% for val, label in action_choices %}
+      <option value="{{ val }}" {% if action == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div style="min-width:160px;">
+    <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px;">Model</label>
+    <select name="model" class="form-control">
+      <option value="">— Barchasi —</option>
+      {% for m in model_choices %}
+      <option value="{{ m }}" {% if model == m %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <button type="submit" class="btn">
+      <svg class="svg-icon" viewBox="0 0 24 24" style="width:14px;height:14px;margin-right:4px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Filtrlash
+    </button>
+    {% if q or action or model %}
+    <a href="{% url 'auditlog:list' %}" class="btn" style="margin-left:4px;">✕ Tozalash</a>
+    {% endif %}
+  </div>
+</form>
+
+<!-- TABLE -->
+{% if logs %}
+<div class="card" style="padding:0;overflow:hidden;">
+  <div class="table-wrap" style="margin:0;">
+    <table>
+      <thead>
+        <tr>
+          <th>Vaqt</th>
+          <th>Foydalanuvchi</th>
+          <th>Harakat</th>
+          <th>Model / Obyekt</th>
+          <th>Xabar</th>
+          <th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td style="font-size:12px;white-space:nowrap;color:var(--muted);">
+            <strong style="color:var(--text);">{{ log.timestamp|date:"d.m.Y" }}</strong>
+            {{ log.timestamp|date:"H:i" }}
+          </td>
+          <td>
+            {% if log.user %}
+            <span style="font-weight:700;color:var(--accent-2);">{{ log.user.username }}</span>
+            {% else %}
+            <span style="color:var(--muted);">Tizim</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if log.action == "create" %}
+            <span class="badge active">{{ log.get_action_display }}</span>
+            {% elif log.action == "delete" %}
+            <span class="badge overdue">{{ log.get_action_display }}</span>
+            {% elif log.action == "update" or log.action == "status" %}
+            <span class="badge pending">{{ log.get_action_display }}</span>
+            {% elif log.action == "login" %}
+            <span class="badge planning">{{ log.get_action_display }}</span>
+            {% elif log.action == "export" or log.action == "upload" %}
+            <span class="badge in_progress">{{ log.get_action_display }}</span>
+            {% else %}
+            <span class="badge">{{ log.get_action_display }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <span style="font-size:11px;background:var(--panel-2);padding:2px 8px;border-radius:4px;color:var(--muted);font-family:monospace;">
+              {{ log.model_name|default:"—" }}
+            </span>
+            {% if log.object_repr %}
+            <div style="font-size:13px;margin-top:2px;color:var(--text);">{{ log.object_repr|truncatechars:40 }}</div>
+            {% endif %}
+          </td>
+          <td style="font-size:13px;color:var(--muted);max-width:260px;">{{ log.message|truncatechars:70|default:"—" }}</td>
+          <td style="font-size:12px;font-family:monospace;color:var(--muted);">{{ log.ip_address|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGINATION -->
+{% if is_paginated %}
+<div style="display:flex;gap:8px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+  {% if page_obj.has_previous %}
+  <a class="btn" href="?{% if q %}q={{ q }}&{% endif %}{% if action %}action={{ action }}&{% endif %}page={{ page_obj.previous_page_number }}">← Oldingi</a>
+  {% endif %}
+  <span class="btn" style="cursor:default;background:var(--panel-2);">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a class="btn" href="?{% if q %}q={{ q }}&{% endif %}{% if action %}action={{ action }}&{% endif %}page={{ page_obj.next_page_number }}">Keyingi →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="card" style="text-align:center;padding:64px 24px;">
+  <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 16px;display:block;color:var(--muted);"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+  <h3 style="color:var(--muted);font-weight:600;margin-bottom:8px;">Yozuvlar topilmadi</h3>
+  <p style="color:var(--muted);font-size:14px;">Filtrlaringizga mos audit yozuvlari mavjud emas.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -97,3 +97,58 @@ class TicketReply(models.Model):
 
     def __str__(self):
         return f"Reply #{self.pk} — Tiket #{self.ticket_id}"
+
+
+def ticket_attachment_path(instance, filename):
+    return f"tickets/{instance.ticket_id}/{filename}"
+
+
+class TicketAttachment(models.Model):
+    """Tiket yoki tiket javobiga biriktirilgan fayl."""
+    ticket = models.ForeignKey(
+        Ticket,
+        verbose_name="Tiket",
+        on_delete=models.CASCADE,
+        related_name="attachments",
+    )
+    reply = models.ForeignKey(
+        TicketReply,
+        verbose_name="Javob",
+        on_delete=models.CASCADE,
+        related_name="attachments",
+        null=True,
+        blank=True,
+    )
+    file = models.FileField("Fayl", upload_to=ticket_attachment_path)
+    filename = models.CharField("Fayl nomi", max_length=255, blank=True)
+    uploaded_by = models.ForeignKey(
+        User,
+        verbose_name="Yuklagan",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    uploaded_at = models.DateTimeField("Yuklangan vaqt", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Tiket Fayli"
+        verbose_name_plural = "Tiket Fayllari"
+        ordering = ["uploaded_at"]
+
+    def __str__(self):
+        return self.filename or str(self.file)
+
+    def save(self, *args, **kwargs):
+        if not self.filename:
+            import os
+            self.filename = os.path.basename(self.file.name)
+        super().save(*args, **kwargs)
+
+    @property
+    def extension(self):
+        import os
+        return os.path.splitext(self.filename or "")[1].lower().lstrip(".")
+
+    @property
+    def is_image(self):
+        return self.extension in ("jpg", "jpeg", "png", "gif", "webp", "svg")
+

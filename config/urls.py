@@ -29,6 +29,9 @@ def robots_txt(request):
     return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain")
 
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
     path('admin/', admin.site.urls),
@@ -46,6 +49,10 @@ urlpatterns = [
     path('panel/debts/', include('debts.urls')),
     path('panel/goals/', include('goals.urls')),
     path('tickets/', include('tickets.urls')),
+    path('panel/audit/', include('auditlog.urls')),
     path('panel/', include('dashboard.urls')),
     path('', landing_view, name='landing'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
