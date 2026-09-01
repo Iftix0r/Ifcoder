@@ -136,3 +136,13 @@ class AlertsAndReportsTests(TestCase):
         self.assertEqual(answer, "Avval landing page ustida ishlang.")
         self.assertIn("Landing page tayyorlash", payload["input"][0]["content"])
         self.assertIn("Yangi sayt", payload["input"][0]["content"])
+
+
+class ErrorPageTests(TestCase):
+    @override_settings(DEBUG=False)
+    def test_custom_404_page_rendered_when_debug_false(self):
+        response = self.client.get("/non-existent-page-url/")
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "Sahifa topilmadi", status_code=404)
+        self.assertContains(response, "404", status_code=404)
+
