@@ -1,46 +1,73 @@
 {% extends "dashboard/base.html" %}
+{% load dashboard_extras %}
 {% block title %}Hisobotlar — Ifcoder Panel{% endblock %}
 {% block page_title %}Hisobotlar{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="margin-bottom:28px;">
   <div>
-    <h1>Moliyaviy va Tizim Hisobotlari</h1>
-    <div class="sub">So'nggi 6 oy hamda umumiy faoliyat ko'rsatkichlari</div>
+    <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;">Moliyaviy va Tizim Hisobotlari</h1>
+    <div class="sub">So'nggi 6 oy hamda umumiy faoliyat ko'rsatkichlari dinamikasi</div>
   </div>
 </div>
 
-<div class="grid report-summary">
-  <div class="card stat-green"><div class="value">${{ total_income }}</div><div class="label">6 Oy Jami Daromad</div></div>
-  <div class="card stat-red"><div class="value">${{ total_expense }}</div><div class="label">6 Oy Jami Xarajat</div></div>
-  <div class="card {% if net_income >= 0 %}stat-green{% else %}stat-red{% endif %}"><div class="value">${{ net_income }}</div><div class="label">Sof Natija</div></div>
+<div class="grid report-summary" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:32px;">
+  <div class="card stat-green">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg></div>
+    </div>
+    <div class="value">{{ total_income|currency:"" }} <span style="font-size:13px;font-weight:600;color:var(--muted);">UZS</span></div>
+    <div class="label">6 Oy Jami Daromad</div>
+  </div>
+
+  <div class="card stat-red">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75z"/></svg></div>
+    </div>
+    <div class="value">{{ total_expense|currency:"" }} <span style="font-size:13px;font-weight:600;color:var(--muted);">UZS</span></div>
+    <div class="label">6 Oy Jami Xarajat</div>
+  </div>
+
+  <div class="card {% if net_income >= 0 %}stat-green{% else %}stat-red{% endif %}">
+    <div class="card-top">
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm.75 4.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM8 11a1 1 0 110 2 1 1 0 010-2z"/></svg></div>
+      <span class="trend {% if net_income >= 0 %}up{% else %}down{% endif %}">
+        {% if net_income >= 0 %}+{% endif %}{{ net_income|compact_num:"" }} UZS
+      </span>
+    </div>
+    <div class="value">{{ net_income|currency:"" }} <span style="font-size:13px;font-weight:600;color:var(--muted);">UZS</span></div>
+    <div class="label">Sof Natija Balansi</div>
+  </div>
 </div>
 
 <h2 class="section-title">
   <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75zm14.28 2.53a.75.75 0 00-1.06-1.06L10 7.94 7.53 5.47a.75.75 0 00-1.06 0L3.22 8.72a.75.75 0 001.06 1.06L7 7.06l2.47 2.47a.75.75 0 001.06 0l5.25-5.25z"/></svg>
-  Daromad va Xarajat (So'nggi 6 oy)
+  Daromad va Xarajat Dinamikasi (So'nggi 6 oy)
 </h2>
-<div class="chart-block">
-  <div class="chart-legend">
-    <span><span class="dot" style="background:var(--green);"></span>Daromad</span>
-    <span><span class="dot" style="background:var(--red);"></span>Xarajat</span>
+<div class="chart-block" style="border-radius:var(--radius);padding:24px;">
+  <div class="chart-legend" style="gap:20px;margin-bottom:24px;">
+    <span style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:linear-gradient(90deg,var(--green),#34d399);width:12px;height:12px;"></span>Daromad</span>
+    <span style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:linear-gradient(90deg,var(--red),#f87171);width:12px;height:12px;"></span>Xarajat</span>
   </div>
   {% for row in monthly %}
-  <div class="chart-group">
-    <div class="chart-month">{{ row.label }}</div>
-    <div class="chart-row">
-      <div class="chart-label" style="color:var(--green);">Daromad</div>
-      <div class="chart-track"><div class="chart-fill" style="width:{{ row.income_pct }}%;background:var(--green);"></div></div>
-      <div class="chart-value">${{ row.income }}</div>
+  <div class="chart-group" style="padding-bottom:18px;margin-bottom:20px;">
+    <div class="chart-month" style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px;">{{ row.label }}</div>
+    <div class="chart-row" style="margin-bottom:10px;">
+      <div class="chart-label" style="color:var(--green);font-weight:700;">Daromad</div>
+      <div class="chart-track" style="height:14px;"><div class="chart-fill" data-width="{{ row.income_pct }}%" style="background:linear-gradient(90deg,var(--green),#34d399);"></div></div>
+      <div class="chart-value" style="font-size:13.5px;font-weight:700;">{{ row.income|currency:"" }} UZS</div>
     </div>
-    <div class="chart-row">
-      <div class="chart-label" style="color:var(--red);">Xarajat</div>
-      <div class="chart-track"><div class="chart-fill" style="width:{{ row.expense_pct }}%;background:var(--red);"></div></div>
-      <div class="chart-value">${{ row.expense }}</div>
+    <div class="chart-row" style="margin-bottom:10px;">
+      <div class="chart-label" style="color:var(--red);font-weight:700;">Xarajat</div>
+      <div class="chart-track" style="height:14px;"><div class="chart-fill" data-width="{{ row.expense_pct }}%" style="background:linear-gradient(90deg,var(--red),#f87171);"></div></div>
+      <div class="chart-value" style="font-size:13.5px;font-weight:700;">{{ row.expense|currency:"" }} UZS</div>
     </div>
-    <div class="chart-row">
-      <div class="chart-label">Sof natija</div>
-      <div class="chart-value">${{ row.net }}</div>
+    <div class="chart-row" style="margin-top:6px;">
+      <div class="chart-label" style="color:var(--muted);font-size:12.5px;">Sof Natija</div>
+      <div style="flex:1;"></div>
+      <div class="chart-value" style="font-size:13px;font-weight:700;color:{% if row.net >= 0 %}var(--green){% else %}var(--red){% endif %};">
+        {% if row.net >= 0 %}+{% endif %}{{ row.net|currency:"" }} UZS
+      </div>
     </div>
   </div>
   {% endfor %}
@@ -48,14 +75,14 @@
 
 <h2 class="section-title">
   <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg>
-  Loyihalar Holati Bo'yicha
+  Loyihalar Holati Bo'yicha Taqsimot
 </h2>
-<div class="chart-block">
+<div class="chart-block" style="border-radius:var(--radius);padding:24px;margin-bottom:32px;">
   {% for s in projects_by_status %}
-  <div class="chart-row">
-    <div class="chart-label">{{ s.label }}</div>
-    <div class="chart-track"><div class="chart-fill" style="width:{{ s.pct }}%;background:var(--accent);"></div></div>
-    <div class="chart-value">{{ s.count }} ta loyiha</div>
+  <div class="chart-row" style="margin-bottom:12px;">
+    <div class="chart-label" style="font-weight:700;">{{ s.label }}</div>
+    <div class="chart-track" style="height:14px;"><div class="chart-fill" data-width="{{ s.pct }}%" style="background:linear-gradient(90deg,var(--accent),#818cf8);"></div></div>
+    <div class="chart-value" style="font-weight:700;">{{ s.count }} ta loyiha</div>
   </div>
   {% endfor %}
 </div>
@@ -64,9 +91,9 @@
   <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
   Hisob-fakturalar Holati
 </h2>
-<div class="grid">
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:32px;">
   {% for s in invoices_by_status %}
-  <div class="card {% if s.value == 'paid' %}stat-green{% elif s.value == 'overdue' %}stat-yellow{% endif %}">
+  <div class="card {% if s.value == 'paid' %}stat-green{% elif s.value == 'overdue' %}stat-yellow{% else %}stat-gray{% endif %}">
     <div class="value">{{ s.count }}</div>
     <div class="label">{{ s.label }}</div>
   </div>
@@ -79,21 +106,27 @@
 </h2>
 {% if top_clients %}
 <div class="table-wrap">
-<table>
-  <thead>
-    <tr><th>Mijoz Ismi</th><th>Umumiy Daromad</th></tr>
-  </thead>
-  <tbody>
-    {% for c in top_clients %}
-    <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
-      <td><strong>{{ c.name }}</strong></td>
-      <td><span class="badge paid">${{ c.total_income }}</span></td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>Mijoz Ismi</th>
+        <th style="text-align:right;">Umumiy Daromad</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in top_clients %}
+      <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
+        <td><strong style="color:var(--text);">{{ c.name }}</strong></td>
+        <td style="text-align:right;">
+          <span class="badge paid" style="font-size:12.5px;font-weight:700;">{{ c.total_income|currency:"" }} UZS</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% else %}
 <div class="empty">Hozircha daromad qayd etilmagan.</div>
 {% endif %}
 {% endblock %}
+

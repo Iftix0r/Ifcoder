@@ -634,8 +634,17 @@
   /* MESSAGES / TOASTS */
   .messages { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 10px; }
   .messages li {
-    padding: 14px 18px; border-radius: var(--radius); font-size: 14px; font-weight: 600;
-    border: 1px solid var(--border); background: var(--panel); box-shadow: var(--shadow);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    box-shadow: var(--shadow);
     animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -643,6 +652,123 @@
   .messages li.error { border-color: var(--red); background: var(--red-dim); color: var(--red); }
   .messages li.warning { border-color: var(--yellow); background: var(--yellow-dim); color: var(--yellow); }
   .messages li.info { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+  .messages li .msg-icon { font-size: 16px; flex-shrink: 0; }
+  .messages li .msg-close {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: currentColor;
+    opacity: 0.7;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+  }
+  .messages li .msg-close:hover { opacity: 1; }
+
+  /* COMMAND PALETTE */
+  .cmd-palette {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 300;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 20px 20px;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cmd-palette.show {
+    display: flex;
+    opacity: 1;
+  }
+  .cmd-palette-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 580px;
+    box-shadow: var(--shadow-hover);
+    overflow: hidden;
+    animation: cmdZoom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes cmdZoom { from { transform: scale(0.96) translateY(-10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+  .cmd-palette-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+  .cmd-palette-header .cmd-icon { color: var(--accent); }
+  .cmd-palette-header input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: inherit;
+  }
+  .cmd-kbd {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .cmd-palette-list {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .cmd-group-title {
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding: 8px 10px 4px;
+  }
+  .cmd-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+  .cmd-item svg { color: var(--muted); }
+  .cmd-item:hover {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .cmd-item:hover svg { color: var(--accent); }
+  .cmd-item .cmd-tag {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: var(--panel-2);
+    color: var(--muted);
+  }
+  .cmd-item.action { color: var(--accent); font-weight: 600; }
 
   /* CHARTS & PAGINATION */
   .chart-block {
@@ -990,16 +1116,56 @@
       if (formsDirty) { e.preventDefault(); e.returnValue = ''; }
     });
 
+    // Command Palette Modal JS
+    function openCmdPalette() {
+      var modal = document.getElementById('cmd-palette');
+      var input = document.getElementById('cmd-input');
+      if (!modal || !input) return;
+      modal.classList.add('show');
+      input.value = '';
+      input.focus();
+      filterCmdList('');
+    }
+    function closeCmdPalette() {
+      var modal = document.getElementById('cmd-palette');
+      if (modal) modal.classList.remove('show');
+    }
+    function filterCmdList(q) {
+      document.querySelectorAll('#cmd-list .cmd-item').forEach(function(item) {
+        var txt = item.textContent.toLowerCase();
+        item.style.display = txt.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    document.querySelector('.global-search input')?.addEventListener('focus', function(e) {
+      e.target.blur();
+      openCmdPalette();
+    });
+
+    document.getElementById('cmd-input')?.addEventListener('input', function(e) {
+      filterCmdList(e.target.value.toLowerCase());
+    });
+
+    document.getElementById('cmd-palette')?.addEventListener('click', function(e) {
+      if (e.target === this) closeCmdPalette();
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        var modal = document.getElementById('cmd-palette');
+        if (modal?.classList.contains('show')) { closeCmdPalette(); } else { openCmdPalette(); }
+        return;
+      }
       var tag = document.activeElement.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (e.key === '/') {
-        var inp = document.querySelector('.global-search input') ||
-                  document.querySelector('.toolbar input[type="text"]');
-        if (inp) { e.preventDefault(); inp.focus(); inp.select(); }
+        e.preventDefault();
+        openCmdPalette();
       }
       if (e.key === 'Escape') {
+        closeCmdPalette();
         document.querySelector('.global-search input:focus')?.blur();
         document.querySelector('.quick-add-wrap')?.classList.remove('show');
         var sb = document.querySelector('.sidebar');
@@ -1059,6 +1225,69 @@
 </head>
 <body>
 <div id="sidebar-overlay"></div>
+
+<!-- COMMAND PALETTE MODAL -->
+<div class="cmd-palette" id="cmd-palette">
+  <div class="cmd-palette-box">
+    <div class="cmd-palette-header">
+      <svg class="cmd-icon" viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M11.5 7a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06l-3.04-3.04z"/></svg>
+      <input type="text" id="cmd-input" placeholder="Sahifa yoki tezkor amalni qidirish... (Ctrl+K)" autocomplete="off">
+      <kbd class="cmd-kbd">ESC</kbd>
+    </div>
+    <div class="cmd-palette-list" id="cmd-list">
+      <div class="cmd-group-title">Navigatsiya</div>
+      <a href="{% url 'dashboard:home' %}" class="cmd-item">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M6.906.664a1.75 1.75 0 012.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0113.25 15h-3.5a.75.75 0 01-.75-.75V9.5a.25.25 0 00-.25-.25h-1.5a.25.25 0 00-.25.25v4.75a.75.75 0 01-.75.75h-3.5A1.75 1.75 0 011 13.25V6.23c0-.531.242-1.034.657-1.367l5.25-4.2z"/></svg>
+        Bosh Sahifa
+        <span class="cmd-tag">Dashboard</span>
+      </a>
+      <a href="{% url 'projects:list' %}" class="cmd-item">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM7.75 6a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5z"/></svg>
+        Loyihalar
+        <span class="cmd-tag">Boshqaruv</span>
+      </a>
+      <a href="{% url 'clients:list' %}" class="cmd-item">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5z"/></svg>
+        Mijozlar
+        <span class="cmd-tag">Boshqaruv</span>
+      </a>
+      <a href="{% url 'tasks:list' %}" class="cmd-item">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v2.5H13V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.5v-1.5h-3.5a.25.25 0 01-.25-.25V1.75z"/></svg>
+        Vazifalar
+        <span class="cmd-tag">Boshqaruv</span>
+      </a>
+      <a href="{% url 'finance:home' %}" class="cmd-item">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
+        Moliya va Xarajatlar
+        <span class="cmd-tag">Moliya</span>
+      </a>
+      <a href="{% url 'dashboard:reports' %}" class="cmd-item">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75zm14.28 2.53a.75.75 0 00-1.06-1.06L10 7.94 7.53 5.47a.75.75 0 00-1.06 0L3.22 8.72a.75.75 0 001.06 1.06L7 7.06l2.47 2.47a.75.75 0 001.06 0l5.25-5.25z"/></svg>
+        Hisobotlar &amp; Analitika
+        <span class="cmd-tag">Hisobot</span>
+      </a>
+      <a href="{% url 'vault:home' %}" class="cmd-item">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M14.5 4a3.5 3.5 0 11-3.478 3.897L4.9 14.02a1.75 1.75 0 01-1.238.513H2.75a.75.75 0 01-.75-.75v-.913c0-.464.184-.909.513-1.238L8.29 5.478A3.5 3.5 0 0114.5 4zM11 4a.5.5 0 100 1 .5.5 0 000-1z"/></svg>
+        Vault &amp; Sozlamalar
+        <span class="cmd-tag">Xavfsizlik</span>
+      </a>
+
+      <div class="cmd-group-title">Tezkor Amallar</div>
+      <a href="{% url 'projects:add' %}" class="cmd-item action">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+        + Yangi Loyiha Yaratish
+      </a>
+      <a href="{% url 'tasks:add' %}" class="cmd-item action">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+        + Yangi Vazifa Qo'shish
+      </a>
+      <a href="{% url 'clients:add' %}" class="cmd-item action">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+        + Yangi Mijoz Qo'shish
+      </a>
+    </div>
+  </div>
+</div>
 
 <div class="delete-modal" id="delete-modal">
   <div class="delete-modal-box">
