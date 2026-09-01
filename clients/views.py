@@ -53,11 +53,21 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["projects"] = self.object.projects.select_related("client").all()
-        ctx["bots"] = self.object.bots.select_related("project").all()
-        ctx["tasks"] = self.object.tasks.select_related("project").exclude(
+        client = self.object
+        ctx["projects"] = client.projects.select_related("client").all()
+        ctx["bots"] = client.bots.select_related("project").all()
+        ctx["tasks"] = client.tasks.select_related("project").exclude(
             status="done"
         )[:10]
+        
+        incomes = client.incomes.all()
+        invoices = client.invoices.all()
+        
+        ctx["total_income"] = sum(inc.amount for inc in incomes)
+        ctx["total_invoiced"] = sum(inv.amount for inv in invoices)
+        ctx["paid_invoiced"] = sum(inv.amount for inv in invoices if inv.status == "paid")
+        ctx["unpaid_invoiced"] = ctx["total_invoiced"] - ctx["paid_invoiced"]
+        ctx["invoices"] = invoices[:10]
         return ctx
 
 

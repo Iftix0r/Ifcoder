@@ -32,19 +32,42 @@
 <div class="table-wrap">
 <table>
   <thead>
-    <tr><th>Mijoz Ismi</th><th>Lead holati</th><th>Keyingi aloqa</th><th>Telefon</th><th>Loyihalar</th><th>Botlar</th><th>Amallar</th></tr>
+    <tr>
+      <th>Mijoz Ismi</th>
+      <th>Lead Holati</th>
+      <th>Keyingi Aloqa</th>
+      <th>Telefon</th>
+      <th>Telegram</th>
+      <th style="text-align:center;">Loyihalar</th>
+      <th style="text-align:center;">Botlar</th>
+      <th style="text-align:right;">Amallar</th>
+    </tr>
   </thead>
   <tbody>
     {% for c in clients %}
     <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
-      <td><strong>{{ c.name }}</strong></td>
-      <td><span class="badge">{{ c.get_lead_status_display }}</span></td>
+      <td><strong style="color:var(--text);">{{ c.name }}</strong></td>
+      <td>
+        <span class="badge {% if c.lead_status == 'active' %}paid{% elif c.lead_status == 'proposal' %}sent{% elif c.lead_status == 'contacted' %}in_progress{% elif c.lead_status == 'lost' %}overdue{% else %}pending{% endif %}">
+          {{ c.get_lead_status_display }}
+        </span>
+      </td>
       <td>{{ c.follow_up_date|default:"—" }}</td>
-      <td>{{ c.phone|default:"—" }}</td>
-      <td>{{ c.telegram|default:"—" }}</td>
-      <td><span class="badge">{{ c.project_count }} ta</span></td>
-      <td><span class="badge active">{{ c.bot_count }} ta</span></td>
-      <td><a href="{% url 'clients:detail' c.pk %}" class="btn btn-sm">Batafsil &rarr;</a></td>
+      <td>
+        {% if c.phone %}<a href="tel:{{ c.phone }}" onclick="event.stopPropagation();" style="color:var(--accent);text-decoration:none;">{{ c.phone }}</a>{% else %}—{% endif %}
+      </td>
+      <td>
+        {% if c.telegram %}
+          <a href="https://t.me/{{ c.telegram|cut:'@' }}" target="_blank" onclick="event.stopPropagation();" style="color:var(--accent);text-decoration:none;font-weight:600;">
+            {% if '@' in c.telegram %}{{ c.telegram }}{% else %}@{{ c.telegram }}{% endif %}
+          </a>
+        {% else %}—{% endif %}
+      </td>
+      <td style="text-align:center;"><span class="badge">{{ c.project_count }} ta</span></td>
+      <td style="text-align:center;"><span class="badge active">{{ c.bot_count }} ta</span></td>
+      <td style="text-align:right;">
+        <a href="{% url 'clients:detail' c.pk %}" class="btn btn-sm" onclick="event.stopPropagation();">Batafsil &rarr;</a>
+      </td>
     </tr>
     {% endfor %}
   </tbody>

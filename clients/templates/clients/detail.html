@@ -1,16 +1,48 @@
 {% extends "dashboard/base.html" %}
-{% block title %}{{ client.name }} — Ifcoder Panel{% endblock %}
-{% block page_title %}Mijoz Tafsiloti{% endblock %}
+{% load dashboard_extras %}
+{% block title %}{{ client.name }} — Mijoz Paneli — Ifcoder{% endblock %}
+{% block page_title %}Mijoz Paneli{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="margin-bottom:24px;">
   <div>
-    <h1>{{ client.name }}</h1>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <h1 style="margin:0;font-size:26px;font-weight:800;">{{ client.name }}</h1>
+      <span class="badge {% if client.lead_status == 'active' %}paid{% elif client.lead_status == 'proposal' %}sent{% elif client.lead_status == 'contacted' %}in_progress{% elif client.lead_status == 'lost' %}overdue{% else %}pending{% endif %}" style="font-size:12.5px;padding:4px 10px;">
+        {{ client.get_lead_status_display }}
+      </span>
+    </div>
     <div class="sub">Tizimga qo'shilgan sana: {{ client.created_at|date:"d.m.Y H:i" }}</div>
   </div>
   <div class="btn-row">
+    {% if client.telegram %}
+    <a class="btn" href="https://t.me/{{ client.telegram|cut:'@' }}" target="_blank" style="color:var(--accent);">
+      💬 Telegram Chat
+    </a>
+    {% endif %}
+    <a class="btn" href="{% url 'projects:add' %}?client={{ client.pk }}">+ Loyiha</a>
     <a class="btn" href="{% url 'clients:edit' client.pk %}">✏️ Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'clients:delete' client.pk %}">🗑️ O'chirish</a>
+  </div>
+</div>
+
+<!-- CLIENT FINANCIAL SUMMARY CARDS -->
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:32px;">
+  <div class="card stat-green">
+    <div class="value">{{ total_income|currency:"" }} <span style="font-size:12px;color:var(--muted);">UZS</span></div>
+    <div class="label">Jami Tushgan Daromad</div>
+  </div>
+  <div class="card stat-blue">
+    <div class="value">{{ paid_invoiced|currency:"" }} <span style="font-size:12px;color:var(--muted);">UZS</span></div>
+    <div class="label">To'langan Invoyslar</div>
+  </div>
+  <div class="card {% if unpaid_invoiced > 0 %}stat-yellow{% else %}stat-gray{% endif %}">
+    <div class="value">{{ unpaid_invoiced|currency:"" }} <span style="font-size:12px;color:var(--muted);">UZS</span></div>
+    <div class="label">Qarzdorlik / Kutilayotgan Summa</div>
+  </div>
+  <div class="card">
+    <div class="value">{{ projects|length }} <span style="font-size:12px;color:var(--muted);">ta</span></div>
+    <div class="label">Jami Loyihalar</div>
   </div>
 </div>
 
@@ -24,24 +56,57 @@
     <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Loyiha Nomi</th><th>Holati</th><th>Topshirish Muddati</th></tr>
+        <tr><th>Loyiha Nomi</th><th>Holati</th><th style="text-align:right;">Topshirish Muddati</th></tr>
       </thead>
       <tbody>
         {% for p in projects %}
         <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
-          <td><strong>{{ p.name }}</strong></td>
+          <td><strong style="color:var(--text);">{{ p.name }}</strong></td>
           <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
-          <td>{{ p.deadline|default:"—" }}</td>
+          <td style="text-align:right;">{{ p.deadline|default:"Belgilanmagan" }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
     </div>
     {% else %}
-    <div class="empty">Hozircha loyihalar yo'q.</div>
+    <div class="empty">Hozircha loyihalar mavjud emas. <a href="{% url 'projects:add' %}?client={{ client.pk }}">Loyiha biriktiring</a></div>
     {% endif %}
 
-    <h2 class="section-title">
+    {% if invoices %}
+    <h2 class="section-title" style="margin-top:28px;">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
+      Hisob-fakturalar (Invoyslar)
+    </h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Invoys №</th>
+            <th>Loyiha</th>
+            <th>Holati</th>
+            <th style="text-align:right;">Summa</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in invoices %}
+          <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' inv.pk %}'">
+            <td><strong>{{ inv.number }}</strong></td>
+            <td>{{ inv.project.name|default:"—" }}</td>
+            <td>
+              <span class="badge {% if inv.status == 'paid' %}paid{% elif inv.status == 'overdue' %}overdue{% elif inv.status == 'sent' %}sent{% else %}pending{% endif %}">
+                {{ inv.get_status_display }}
+              </span>
+            </td>
+            <td style="text-align:right;font-weight:700;">{{ inv.amount|currency:"" }} UZS</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <h2 class="section-title" style="margin-top:28px;">
       <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M8 1a.75.75 0 01.75.75V3h1.5A2.75 2.75 0 0113 5.75v.55c.6.19 1 .756 1 1.4v2.6a1.5 1.5 0 01-1 1.415v.535A2.75 2.75 0 0110.25 15h-4.5A2.75 2.75 0 013 12.25v-.535a1.5 1.5 0 01-1-1.415v-2.6c0-.644.4-1.21 1-1.4v-.55A2.75 2.75 0 015.75 3h1.5V1.75A.75.75 0 018 1z"/></svg>
       Tegishli Botlar
     </h2>
@@ -49,34 +114,36 @@
     <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Bot Nomi</th><th>Platforma</th><th>Holati</th></tr>
+        <tr><th>Bot Nomi</th><th>Platforma</th><th style="text-align:right;">Holati</th></tr>
       </thead>
       <tbody>
         {% for b in bots %}
         <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
-          <td><strong>{{ b.name }}</strong></td>
+          <td><strong style="color:var(--text);">{{ b.name }}</strong></td>
           <td>{{ b.get_platform_display }}</td>
-          <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+          <td style="text-align:right;"><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
     </div>
     {% else %}
-    <div class="empty">Hozircha botlar yo'q.</div>
+    <div class="empty">Hozircha botlar biriktirilmagan.</div>
     {% endif %}
 
-    <h2 class="section-title">Ochiq Vazifalar</h2>
+    <h2 class="section-title" style="margin-top:28px;">Ochiq Vazifalar</h2>
     {% if tasks %}
     <div class="table-wrap">
     <table>
-      <thead><tr><th>Vazifa</th><th>Loyiha</th><th>Muddat</th></tr></thead>
+      <thead><tr><th>Vazifa</th><th>Loyiha</th><th style="text-align:right;">Muddat</th></tr></thead>
       <tbody>
         {% for task in tasks %}
         <tr class="row-link" onclick="location.href='{% url 'tasks:detail' task.pk %}'">
-          <td><strong>{{ task.title }}</strong></td>
-          <td>{{ task.project|default:"—" }}</td>
-          <td>{% if task.is_overdue %}<span class="badge overdue">Muddati o'tgan</span>{% else %}{{ task.due_date|default:"—" }}{% endif %}</td>
+          <td><strong style="color:var(--text);">{{ task.title }}</strong></td>
+          <td>{{ task.project.name|default:"—" }}</td>
+          <td style="text-align:right;">
+            {% if task.is_overdue %}<span class="badge overdue">Muddati o'tgan</span>{% else %}{{ task.due_date|default:"—" }}{% endif %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -85,17 +152,46 @@
     {% else %}<div class="empty">Ochiq vazifalar yo'q.</div>{% endif %}
   </div>
 
-  <div class="card">
-    <h3 style="margin-top:0;font-size:16px;font-weight:700;margin-bottom:14px;">Aloqa Ma'lumotlari</h3>
-    <ul class="detail-list">
-      <li><span class="k">Telefon</span><span><strong>{{ client.phone|default:"—" }}</strong></span></li>
-      <li><span class="k">Telegram</span><span><strong>{{ client.telegram|default:"—" }}</strong></span></li>
-      <li><span class="k">Email</span><span><strong>{{ client.email|default:"—" }}</strong></span></li>
+  <div class="card" style="height:fit-content;">
+    <h3 style="margin-top:0;font-size:16px;font-weight:700;margin-bottom:16px;">Aloqa Ma'lumotlari</h3>
+    <ul class="detail-list" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;">
+      <li style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px dashed var(--border);">
+        <span class="k" style="color:var(--muted);font-size:13px;">Telefon</span>
+        <span>
+          {% if client.phone %}
+            <a href="tel:{{ client.phone }}" style="color:var(--accent);font-weight:700;text-decoration:none;">{{ client.phone }}</a>
+          {% else %}—{% endif %}
+        </span>
+      </li>
+      <li style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px dashed var(--border);">
+        <span class="k" style="color:var(--muted);font-size:13px;">Telegram</span>
+        <span>
+          {% if client.telegram %}
+            <a href="https://t.me/{{ client.telegram|cut:'@' }}" target="_blank" style="color:var(--accent);font-weight:700;text-decoration:none;">
+              {% if '@' in client.telegram %}{{ client.telegram }}{% else %}@{{ client.telegram }}{% endif %}
+            </a>
+          {% else %}—{% endif %}
+        </span>
+      </li>
+      <li style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px dashed var(--border);">
+        <span class="k" style="color:var(--muted);font-size:13px;">Email</span>
+        <span>
+          {% if client.email %}
+            <a href="mailto:{{ client.email }}" style="color:var(--accent);font-weight:600;text-decoration:none;">{{ client.email }}</a>
+          {% else %}—{% endif %}
+        </span>
+      </li>
+      <li style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="k" style="color:var(--muted);font-size:13px;">Keyingi Aloqa</span>
+        <span style="font-weight:700;">{{ client.follow_up_date|default:"Belgilanmagan" }}</span>
+      </li>
     </ul>
+
     {% if client.notes %}
-    <h4 class="section-title" style="margin-top:20px;">Qo'shimcha izoh:</h4>
-    <div style="font-size:13.5px;white-space:pre-wrap;background:var(--panel-2);padding:12px;border-radius:8px;color:var(--text);">{{ client.notes }}</div>
+    <h4 class="section-title" style="margin-top:24px;margin-bottom:8px;">Qo'shimcha izoh:</h4>
+    <div style="font-size:13.5px;line-height:1.5;white-space:pre-wrap;background:var(--panel-2);padding:14px;border-radius:var(--radius-sm);color:var(--text);border:1px solid var(--border);">{{ client.notes }}</div>
     {% endif %}
   </div>
 </div>
 {% endblock %}
+
