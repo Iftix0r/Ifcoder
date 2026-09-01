@@ -17,10 +17,12 @@ urlpatterns = [
     path("expenses/<int:pk>/edit/", views.ExpenseUpdateView.as_view(), name="expense_edit"),
     path("expenses/<int:pk>/delete/", views.ExpenseDeleteView.as_view(), name="expense_delete"),
     path("invoices/", views.InvoiceListView.as_view(), name="invoice_list"),
+    path("invoices/export/excel/", views.invoices_excel, name="invoices_excel"),
     path("invoices/add/", views.InvoiceCreateView.as_view(), name="invoice_add"),
     path("invoices/<int:pk>/", views.InvoiceDetailView.as_view(), name="invoice_detail"),
     path("invoices/<int:pk>/edit/", views.InvoiceUpdateView.as_view(), name="invoice_edit"),
     path("invoices/<int:pk>/print/", views.InvoicePrintView.as_view(), name="invoice_print"),
+    path("invoices/<int:pk>/pdf/", views.invoice_pdf, name="invoice_pdf"),
     path("invoices/<int:pk>/delete/", views.InvoiceDeleteView.as_view(), name="invoice_delete"),
     path("invoices/<int:pk>/mark-paid/", views.invoice_mark_paid, name="invoice_mark_paid"),
 ]

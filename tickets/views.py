@@ -5,10 +5,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, TemplateView
 
+from auditlog.models import log_action, AuditLog
 from clients.models import Client
 from projects.models import Project
 
-from .models import Ticket, TicketReply
+from .models import Ticket, TicketAttachment, TicketReply
 
 
 # ─────────────────────────────────────────────
@@ -111,7 +112,8 @@ class PortalTicketDetailView(LoginRequiredMixin, TemplateView):
             return redirect("tickets:portal_list")
         return render(request, self.template_name, {
             "ticket": ticket,
-            "replies": ticket.replies.select_related("author"),
+            "replies": ticket.replies.select_related("author").prefetch_related("attachments"),
+            "attachments": ticket.attachments.filter(reply__isnull=True),
             "client": getattr(request.user, "client_profile", None),
         })
 
@@ -129,11 +131,21 @@ class PortalTicketDetailView(LoginRequiredMixin, TemplateView):
             messages.warning(request, "Bu tiket yopilgan. Yangi tiket oching.")
             return redirect("tickets:portal_detail", pk=pk)
 
-        TicketReply.objects.create(
+        reply = TicketReply.objects.create(
             ticket=ticket,
             author=request.user,
             body=body,
             is_staff=False,
+        )
+        # Handle file attachments
+        for f in request.FILES.getlist("attachments"):
+            TicketAttachment.objects.create(
+                ticket=ticket, reply=reply, file=f, uploaded_by=request.user
+            )
+        log_action(
+            request=request, action=AuditLog.Action.UPDATE,
+            model_name="Ticket", object_id=ticket.pk,
+            object_repr=str(ticket), message=f"Mijoz javob yozdi",
         )
         # Re-open if it was answered
         if ticket.status == Ticket.Status.ANSWERED:
@@ -196,7 +208,8 @@ class AdminTicketDetailView(TemplateView):
         ticket = get_object_or_404(Ticket, pk=pk)
         return render(request, self.template_name, {
             "ticket": ticket,
-            "replies": ticket.replies.select_related("author"),
+            "replies": ticket.replies.select_related("author").prefetch_related("attachments"),
+            "attachments": ticket.attachments.filter(reply__isnull=True),
             "status_choices": Ticket.Status.choices,
             "priority_choices": Ticket.Priority.choices,
         })
@@ -208,14 +221,23 @@ class AdminTicketDetailView(TemplateView):
         if action == "reply":
             body = request.POST.get("body", "").strip()
             if body:
-                TicketReply.objects.create(
+                reply = TicketReply.objects.create(
                     ticket=ticket,
                     author=request.user,
                     body=body,
                     is_staff=True,
                 )
+                for f in request.FILES.getlist("attachments"):
+                    TicketAttachment.objects.create(
+                        ticket=ticket, reply=reply, file=f, uploaded_by=request.user
+                    )
                 ticket.status = Ticket.Status.ANSWERED
                 ticket.save(update_fields=["status", "updated_at"])
+                log_action(
+                    request=request, action=AuditLog.Action.UPDATE,
+                    model_name="Ticket", object_id=ticket.pk,
+                    object_repr=str(ticket), message="Admin javob berdi",
+                )
                 messages.success(request, "Javob yuborildi va tiket holati 'Javob berildi'ga o'zgartirildi.")
             else:
                 messages.error(request, "Javob matni bo'sh bo'lishi mumkin emas.")
