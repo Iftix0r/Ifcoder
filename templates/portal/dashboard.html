@@ -1,120 +1,490 @@
 {% extends "portal/base.html" %}
 {% load dashboard_extras %}
 {% block title %}Bosh Sahifa — Mijoz Kabineti — Ifcoder{% endblock %}
+{% block page_title %}Bosh Sahifa{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_styles %}
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover {
+    border-color: rgba(99,102,241,0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    opacity: 0.06;
+    transition: opacity 0.2s;
+  }
+  .stat-card:hover::before { opacity: 0.12; }
+  .stat-card.accent::before { background: var(--accent); }
+  .stat-card.green::before  { background: var(--green); }
+  .stat-card.yellow::before { background: var(--yellow); }
+  .stat-card.cyan::before   { background: var(--cyan); }
+
+  .stat-label {
+    font-size: 12.5px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .stat-value {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px; font-weight: 900; line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-value.accent { color: var(--accent-2); }
+  .stat-value.green  { color: var(--green); }
+  .stat-value.yellow { color: var(--yellow); }
+  .stat-value.cyan   { color: var(--cyan); }
+  .stat-sub { font-size: 12px; color: var(--muted); }
+  .stat-icon {
+    position: absolute; top: 18px; right: 20px;
+    font-size: 26px; opacity: 0.4;
+  }
+
+  /* Section headers */
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 18px; font-weight: 800;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* Project cards */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+    margin-bottom: 36px;
+  }
+  .project-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px;
+    transition: all 0.2s ease; position: relative; overflow: hidden;
+  }
+  .project-card:hover {
+    border-color: rgba(99,102,241,0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.3);
+  }
+  .project-card-head {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .project-name {
+    font-size: 16px; font-weight: 800; color: var(--text);
+    line-height: 1.3;
+  }
+  .project-desc {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 16px;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* Progress bar */
+  .progress-wrap { margin-bottom: 14px; }
+  .progress-meta {
+    display: flex; justify-content: space-between;
+    font-size: 12px; font-weight: 700; margin-bottom: 6px;
+  }
+  .progress-track {
+    background: var(--panel-3); border-radius: 99px; height: 8px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    position: relative; overflow: hidden;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(100%); }
+  }
+
+  .project-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12.5px; color: var(--muted);
+    border-top: 1px solid var(--border); padding-top: 12px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    background: var(--panel); border: 1px dashed var(--border-soft);
+    border-radius: var(--radius-lg); padding: 48px 24px;
+    text-align: center; color: var(--muted);
+    margin-bottom: 36px;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.6; }
+  .empty-title { font-size: 16px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+  .empty-sub { font-size: 13.5px; }
+
+  /* Table wrapper */
+  .table-wrap {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+    margin-bottom: 36px;
+  }
+
+  /* New project form */
+  .request-form-wrap {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 32px;
+    max-width: 740px; margin-bottom: 36px;
+    position: relative; overflow: hidden;
+  }
+  .request-form-wrap::before {
+    content: '';
+    position: absolute; top: -60px; right: -60px;
+    width: 180px; height: 180px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%);
+    pointer-events: none;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block; font-size: 13px; font-weight: 700;
+    color: var(--muted); margin-bottom: 6px;
+  }
+
+  /* Payment modal extra */
+  .requis-card {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .requis-label { font-size: 11.5px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .requis-number {
+    font-size: 18px; font-weight: 900; color: var(--accent-2);
+    letter-spacing: 0.06em; margin-bottom: 2px;
+    cursor: pointer;
+  }
+  .requis-name { font-size: 12.5px; color: var(--text-2); }
+
+  /* Greeting bar */
+  .greet-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(129,140,248,0.04));
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: var(--radius-lg); padding: 24px 28px;
+    position: relative; overflow: hidden;
+  }
+  .greet-bar::before {
+    content: '';
+    position: absolute; bottom: -30px; right: -30px;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%);
+  }
+  .greet-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 24px; font-weight: 900; margin-bottom: 4px;
+  }
+  .greet-sub { font-size: 14px; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .project-grid { grid-template-columns: 1fr; }
+  }
+{% endblock %}
 
 {% block content %}
-<div style="display:flex;align-items:center;justify-space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px;">
+
+<!-- GREETING BAR -->
+<div class="greet-bar">
   <div>
-    <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:26px;font-weight:800;margin:0 0 6px;">
-      Xush kelibsiz, {{ client.name|default:user.username }}! 👋
-    </h1>
-    <div style="color:var(--muted);font-size:14.5px;">Barcha loyihalaringiz va to'lovlaringiz monitoringi bitta joyda</div>
+    <div class="greet-title">Xush kelibsiz, {{ client.name|default:user.username }}! 👋</div>
+    <div class="greet-sub">Barcha loyihalar, invoyslar va to'lovlar nazorati bitta joyda</div>
   </div>
-  <div>
-    <a href="#new-project-section" class="btn btn-primary">+ Yangi Loyiha Buyurtma Qilish</a>
-  </div>
-</div>
-
-<!-- METRICS -->
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:36px;">
-  <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;">
-    <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:8px;">Jami Loyihalaringiz</div>
-    <div style="font-size:26px;font-weight:800;color:var(--text);">{{ projects|length }} <span style="font-size:14px;color:var(--muted);">ta</span></div>
-  </div>
-  <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;">
-    <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:8px;">To'langan Invoyslar</div>
-    <div style="font-size:24px;font-weight:800;color:var(--green);">{{ paid_invoiced|currency:"" }} <span style="font-size:12px;color:var(--muted);">UZS</span></div>
-  </div>
-  <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;">
-    <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:8px;">Kutilayotgan Balans</div>
-    <div style="font-size:24px;font-weight:800;color:{% if unpaid_invoiced > 0 %}var(--yellow){% else %}var(--muted){% endif %};">
-      {{ unpaid_invoiced|currency:"" }} <span style="font-size:12px;color:var(--muted);">UZS</span>
-    </div>
-  </div>
-  <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;">
-    <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:8px;">Bajarilayotgan Vazifalar</div>
-    <div style="font-size:26px;font-weight:800;color:var(--accent);">{{ tasks|length }} <span style="font-size:14px;color:var(--muted);">ta</span></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;position:relative;">
+    <button class="btn btn-secondary" onclick="document.getElementById('profile-modal').classList.add('show')">
+      ⚙️ Profil
+    </button>
+    <a href="#new-project-section" class="btn btn-primary">
+      🚀 Yangi Buyurtma
+    </a>
   </div>
 </div>
 
-<!-- PROJECTS LIST -->
-<h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;margin:0 0 16px;">
-  📋 Sizning Loyihalaringiz
-</h2>
-{% if projects %}
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin-bottom:40px;">
-  {% for p in projects %}
-  <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <h3 style="margin:0;font-size:17px;font-weight:800;color:var(--text);">{{ p.name }}</h3>
-      <span class="badge {{ p.status }}">{{ p.get_status_display }}</span>
-    </div>
-    {% if p.description %}
-    <p style="color:var(--muted);font-size:13.5px;margin:0 0 16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-      {{ p.description }}
-    </p>
-    {% endif %}
-    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--border);padding-top:12px;">
-      <span>Topshirish muddati:</span>
-      <strong style="color:var(--text);">{{ p.deadline|default:"Jarayonda" }}</strong>
-    </div>
+<!-- STATS GRID -->
+<div class="stat-grid">
+  <div class="stat-card accent">
+    <span class="stat-icon">📋</span>
+    <div class="stat-label">Jami Loyihalar</div>
+    <div class="stat-value accent">{{ projects|length }}</div>
+    <div class="stat-sub">Barcha loyihalaringiz</div>
   </div>
-  {% endfor %}
+  <div class="stat-card green">
+    <span class="stat-icon">✅</span>
+    <div class="stat-label">To'langan</div>
+    <div class="stat-value green">{{ paid_invoiced|currency:"" }}</div>
+    <div class="stat-sub">UZS (to'langan invoyslar)</div>
+  </div>
+  <div class="stat-card yellow">
+    <span class="stat-icon">⏳</span>
+    <div class="stat-label">Kutilayotgan To'lov</div>
+    <div class="stat-value {% if unpaid_invoiced > 0 %}yellow{% else %}accent{% endif %}">
+      {{ unpaid_invoiced|currency:"" }}
+    </div>
+    <div class="stat-sub">UZS (qolgan balans)</div>
+  </div>
+  <div class="stat-card cyan">
+    <span class="stat-icon">📌</span>
+    <div class="stat-label">Faol Vazifalar</div>
+    <div class="stat-value cyan">{{ tasks|length }}</div>
+    <div class="stat-sub">Ochiq vazifalar</div>
+  </div>
 </div>
-{% else %}
-<div style="background:var(--panel);border:1px dashed var(--border);border-radius:16px;padding:40px;text-align:center;color:var(--muted);margin-bottom:40px;">
-  Hozircha faol loyihalaringiz mavjud emas. Pastdagi forma orqali yangi loyiha buyurtma qilishingiz mumkin.
-</div>
-{% endif %}
 
-<!-- INVOICES -->
-{% if invoices %}
-<h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;margin:0 0 16px;">
-  💳 Hisob-fakturalar hamda To'lovlar
-</h2>
-<div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:40px;">
-  <table style="width:100%;border-collapse:collapse;text-align:left;">
-    <thead>
-      <tr style="border-bottom:1px solid var(--border);background:var(--panel-2);">
-        <th style="padding:14px 20px;font-size:13px;">Invoys №</th>
-        <th style="padding:14px 20px;font-size:13px;">Loyiha</th>
-        <th style="padding:14px 20px;font-size:13px;">Holati</th>
-        <th style="padding:14px 20px;font-size:13px;text-align:right;">Summa</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for inv in invoices %}
-      <tr style="border-bottom:1px solid var(--border);">
-        <td style="padding:14px 20px;font-weight:700;">{{ inv.number }}</td>
-        <td style="padding:14px 20px;">{{ inv.project.name|default:"—" }}</td>
-        <td style="padding:14px 20px;"><span class="badge {{ inv.status }}">{{ inv.get_status_display }}</span></td>
-        <td style="padding:14px 20px;text-align:right;font-weight:800;color:var(--text);">{{ inv.amount|currency:"" }} UZS</td>
-      </tr>
+<!-- PROJECTS SECTION -->
+<div id="projects-section">
+  <div class="section-head">
+    <div class="section-title">📋 Loyihalaringiz</div>
+    <a href="#new-project-section" class="btn btn-primary btn-sm">+ Yangi Buyurtma</a>
+  </div>
+
+  {% if projects %}
+    <div class="project-grid">
+      {% for p in projects %}
+      <div class="project-card">
+        <div class="project-card-head">
+          <div class="project-name">{{ p.name }}</div>
+          <span class="badge {{ p.status }}">{{ p.get_status_display }}</span>
+        </div>
+        {% if p.description %}
+        <p class="project-desc">{{ p.description }}</p>
+        {% endif %}
+
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <span style="color:var(--muted);">Bajarilish</span>
+            <span style="color:var(--accent-2);">{{ p.progress_percent }}%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:{{ p.progress_percent }}%;"></div>
+          </div>
+        </div>
+
+        <div class="project-footer">
+          <span>📅 Muddat:</span>
+          <strong style="color:var(--text);">{{ p.deadline|default:"Jarayonda" }}</strong>
+        </div>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">Hozircha faol loyiha yo'q</div>
+      <div class="empty-sub">Pastdagi forma orqali yangi loyiha buyurtma qiling</div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- INVOICES SECTION -->
+{% if invoices %}
+<div id="invoices-section">
+  <div class="section-head">
+    <div class="section-title">💳 Hisob-Fakturalar</div>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Invoys №</th>
+          <th>Loyiha</th>
+          <th>Holati</th>
+          <th style="text-align:right;">Summa</th>
+          <th style="text-align:right;">Amal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td style="font-weight:700;">{{ inv.number }}</td>
+          <td style="color:var(--text-2);">{{ inv.project.name|default:"—" }}</td>
+          <td><span class="badge {{ inv.status }}">{{ inv.get_status_display }}</span></td>
+          <td style="text-align:right;font-weight:800;">
+            {{ inv.amount|currency:"" }}
+            <span style="font-size:11px;color:var(--muted);"> UZS</span>
+          </td>
+          <td style="text-align:right;">
+            <button class="btn btn-secondary btn-sm"
+              onclick="document.getElementById('payment-modal').classList.add('show')">
+              💳 Rekvizitlar
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endif %}
 
-<!-- REQUEST NEW PROJECT SECTION -->
-<div id="new-project-section" style="background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:36px;max-width:720px;">
-  <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;margin:0 0 8px;">
-    🚀 Yangi Loyiha Buyurtma Qilish
-  </h2>
-  <p style="color:var(--muted);font-size:14px;margin:0 0 24px;">
-    Yangi vebsayt, Telegram bot yoki CRM tizim bo'yicha g'oyangizni qoldiring. Loyiha menejerimiz smeta va muddatlarni tayyorlaydi.
+<!-- ACTIVE TASKS SECTION -->
+{% if tasks %}
+<div>
+  <div class="section-head">
+    <div class="section-title">📌 Ochiq Vazifalar</div>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Vazifa Nomi</th>
+          <th>Loyiha</th>
+          <th style="text-align:right;">Muddat</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tasks %}
+        <tr>
+          <td style="font-weight:700;">{{ t.title }}</td>
+          <td style="color:var(--muted);">{{ t.project.name|default:"—" }}</td>
+          <td style="text-align:right;">
+            {% if t.due_date %}
+              <span style="color:var(--text-2);">{{ t.due_date }}</span>
+            {% else %}
+              <span class="badge">Jarayonda</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- NEW PROJECT REQUEST FORM -->
+<div id="new-project-section" class="request-form-wrap">
+  <div class="section-head" style="margin-bottom:8px;">
+    <div class="section-title">🚀 Yangi Loyiha Buyurtma Qilish</div>
+  </div>
+  <p style="color:var(--muted);font-size:13.5px;margin-bottom:24px;">
+    Yangi vebsayt, Telegram bot yoki CRM tizimi bo'yicha g'oyangizni qoldiring. Mutaxassisimiz smeta va muddatlarni tayyorlaydi.
   </p>
   <form method="post" action="{% url 'portal:dashboard' %}">
     {% csrf_token %}
-    <div style="margin-bottom:18px;">
-      <label style="display:block;font-size:13.5px;font-weight:700;margin-bottom:6px;">Loyiha Nomi *</label>
+    <input type="hidden" name="action" value="request_project">
+    <div class="form-group">
+      <label class="form-label">Loyiha Nomi *</label>
       {{ request_form.name }}
     </div>
-    <div style="margin-bottom:24px;">
-      <label style="display:block;font-size:13.5px;font-weight:700;margin-bottom:6px;">Loyiha haqida batafsil / Talablar</label>
+    <div class="form-group" style="margin-bottom:24px;">
+      <label class="form-label">Loyiha haqida batafsil / Talablar</label>
       {{ request_form.description }}
     </div>
-    <button type="submit" class="btn btn-primary" style="padding:12px 24px;">Buyurtmani Yuborish &rarr;</button>
+    <button type="submit" class="btn btn-primary" style="padding:12px 28px;">
+      Buyurtmani Yuborish →
+    </button>
   </form>
 </div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="payment-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>💳 To'lov Rekvizitlari</h3>
+      <button class="modal-close" onclick="document.getElementById('payment-modal').classList.remove('show')">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">
+      To'lovni quyidagi karta yoki bank hisob raqamiga o'tkazishingiz mumkin:
+    </p>
+
+    <div class="requis-card">
+      <div class="requis-label">🏦 Humo / Uzcard Karta</div>
+      <div class="requis-number" onclick="copyText('8600 1234 5678 9012', this)" title="Nusxa olish uchun bosing">
+        8600 1234 5678 9012
+      </div>
+      <div class="requis-name">Qabul qiluvchi: Ifcoder Digital LLC</div>
+    </div>
+
+    <div class="requis-card">
+      <div class="requis-label">🏢 Bank Hisob Raqami (MChJ)</div>
+      <div class="requis-number" onclick="copyText('2020 8000 9000 1234 5001', this)" title="Nusxa olish uchun bosing">
+        2020 8000 9000 1234 5001
+      </div>
+      <div class="requis-name">MFO: 00440 — Kapitalbank ATB</div>
+    </div>
+
+    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;text-align:center;">
+      💡 Raqamlarga bosib clipboard'ga nusxa olishingiz mumkin
+    </p>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="document.getElementById('payment-modal').classList.remove('show')">Yopish</button>
+      <a href="https://t.me/iftix0r" target="_blank" class="btn btn-primary">💬 Chekni Telegramga Yuborish</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Style dynamic form inputs from Django
+  document.querySelectorAll('#new-project-section input, #new-project-section textarea').forEach(function(el) {
+    el.classList.add('form-input');
+    if (el.tagName === 'TEXTAREA') {
+      el.style.minHeight = '120px';
+      el.style.resize = 'vertical';
+    }
+  });
+
+  // Copy text to clipboard
+  function copyText(text, el) {
+    navigator.clipboard.writeText(text.replace(/\s/g, '')).then(function() {
+      var orig = el.textContent;
+      el.textContent = '✅ Nusxa olindi!';
+      el.style.color = 'var(--green)';
+      setTimeout(function() {
+        el.textContent = orig;
+        el.style.color = '';
+      }, 2000);
+    });
+  }
+
+  // Animate stat values on page load
+  document.querySelectorAll('.stat-value').forEach(function(el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    el.style.transition = 'all 0.4s ease';
+  });
+  requestAnimationFrame(function() {
+    setTimeout(function() {
+      document.querySelectorAll('.stat-value').forEach(function(el, i) {
+        setTimeout(function() {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }, i * 80);
+      });
+    }, 100);
+  });
+</script>
 {% endblock %}

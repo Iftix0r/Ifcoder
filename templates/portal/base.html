@@ -4,118 +4,576 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}Mijoz Kabineti — Ifcoder{% endblock %}</title>
+<meta name="description" content="Ifcoder mijoz kabineti — loyihalar, invoyslar va to'lovlarni nazorat qiling">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f46e5'/><stop offset='1' stop-color='%23818cf8'/></linearGradient></defs><rect width='64' height='64' rx='18' fill='url(%23g)'/><text x='32' y='45' font-family='sans-serif' font-size='38' font-weight='900' fill='%23ffffff' text-anchor='middle'>I</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0b0f19;
-    --panel: #131b2e;
-    --panel-2: #1c2640;
-    --border: rgba(51, 65, 85, 0.6);
-    --text: #f8fafc;
-    --muted: #94a3b8;
+    --bg: #07091a;
+    --panel: #0f1629;
+    --panel-2: #18213a;
+    --panel-3: #1e2b4a;
+    --border: rgba(79, 70, 229, 0.15);
+    --border-soft: rgba(51, 65, 85, 0.5);
+    --text: #f1f5f9;
+    --text-2: #cbd5e1;
+    --muted: #64748b;
     --accent: #6366f1;
-    --accent-glow: rgba(99, 102, 241, 0.25);
+    --accent-2: #818cf8;
+    --accent-glow: rgba(99, 102, 241, 0.2);
+    --accent-glow-strong: rgba(99, 102, 241, 0.4);
     --green: #10b981;
-    --green-dim: rgba(16, 185, 129, 0.15);
+    --green-dim: rgba(16, 185, 129, 0.12);
     --yellow: #f59e0b;
-    --yellow-dim: rgba(245, 158, 11, 0.15);
+    --yellow-dim: rgba(245, 158, 11, 0.12);
     --red: #ef4444;
-    --red-dim: rgba(239, 68, 68, 0.15);
+    --red-dim: rgba(239, 68, 68, 0.12);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6, 182, 212, 0.12);
+    --sidebar-w: 260px;
+    --header-h: 64px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
   }
-  * { box-sizing: border-box; }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5;
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+    display: flex; flex-direction: column;
   }
   a { color: inherit; text-decoration: none; }
 
-  header {
-    background: var(--panel); border-bottom: 1px solid var(--border);
-    padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 10;
+  /* ───── LAYOUT ───── */
+  .portal-layout {
+    display: flex; flex: 1;
+  }
+
+  /* ───── SIDEBAR ───── */
+  .portal-sidebar {
+    width: var(--sidebar-w);
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0; bottom: 0;
+    z-index: 50;
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .sidebar-head {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
   .brand {
-    display: flex; align-items: center; gap: 12px;
-    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800;
+    display: flex; align-items: center; gap: 11px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 19px; font-weight: 800; color: var(--text);
   }
   .brand-logo {
-    width: 34px; height: 34px; border-radius: 10px;
-    background: linear-gradient(135deg, var(--accent), #818cf8);
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 900;
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; font-weight: 900; color: #fff;
+    box-shadow: 0 4px 12px var(--accent-glow);
+    flex-shrink: 0;
+  }
+  .brand-badge {
+    font-size: 10px; background: var(--accent-glow); color: var(--accent-2);
+    border: 1px solid var(--accent-glow-strong);
+    padding: 2px 7px; border-radius: 6px; font-weight: 700;
+    white-space: nowrap;
   }
 
-  .user-badge { display: flex; align-items: center; gap: 14px; }
-  .user-info { text-align: right; }
-  .user-name { font-size: 14px; font-weight: 700; color: var(--text); }
-  .user-role { font-size: 11.5px; color: var(--muted); }
+  /* User info block */
+  .sidebar-user {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .user-avatar {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900; color: #fff;
+    flex-shrink: 0;
+  }
+  .user-meta { overflow: hidden; }
+  .user-name-text {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .user-role-text { font-size: 11.5px; color: var(--muted); }
 
-  .container { max-width: 1150px; margin: 0 auto; padding: 36px 24px; }
-  
+  /* Nav */
+  .sidebar-nav {
+    flex: 1; overflow-y: auto; padding: 12px 12px;
+  }
+  .sidebar-nav::-webkit-scrollbar { width: 4px; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 4px; }
+
+  .nav-section-label {
+    font-size: 10.5px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 14px 8px 6px; margin-top: 4px;
+  }
+  .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 10px;
+    font-size: 13.5px; font-weight: 600; color: var(--text-2);
+    transition: all 0.18s ease;
+    position: relative; margin-bottom: 2px;
+  }
+  .nav-link:hover {
+    background: var(--panel-2); color: var(--text);
+  }
+  .nav-link.active {
+    background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(129,140,248,0.1));
+    color: var(--accent-2);
+    border: 1px solid rgba(99,102,241,0.2);
+  }
+  .nav-link.active::before {
+    content: '';
+    position: absolute; left: 0; top: 20%; bottom: 20%;
+    width: 3px; border-radius: 0 3px 3px 0;
+    background: var(--accent); left: -12px;
+  }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+
+  /* Sidebar footer */
+  .sidebar-footer {
+    padding: 14px 12px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-footer a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    transition: all 0.18s; margin-bottom: 2px;
+  }
+  .sidebar-footer a:hover { background: var(--panel-2); color: var(--text); }
+  .sidebar-footer .logout-btn {
+    color: #fca5a5; 
+  }
+  .sidebar-footer .logout-btn:hover { background: var(--red-dim); color: var(--red); }
+
+  /* ───── MOBILE SIDEBAR OVERLAY ───── */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    z-index: 49;
+  }
+  .sidebar-overlay.show { display: block; }
+
+  /* ───── MAIN CONTENT ───── */
+  .portal-main {
+    flex: 1;
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* Top Header Bar */
+  .portal-header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: var(--header-h);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 40;
+    backdrop-filter: blur(12px);
+  }
+  .portal-header-left {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .mobile-menu-btn {
+    display: none; background: none; border: none;
+    color: var(--text); font-size: 22px; cursor: pointer;
+    padding: 6px;
+  }
+  .page-breadcrumb {
+    font-size: 13.5px; color: var(--muted); font-weight: 500;
+  }
+  .page-breadcrumb span { color: var(--text); font-weight: 700; }
+
+  .portal-header-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .header-badge {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 7px 14px;
+    font-size: 13px; font-weight: 600; color: var(--text-2);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .online-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ───── CONTENT AREA ───── */
+  .portal-content {
+    flex: 1;
+    padding: 32px 32px 48px;
+    max-width: 1200px;
+  }
+
+  /* ───── BUTTONS ───── */
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 9px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 700;
-    cursor: pointer; border: none; transition: all 0.2s ease;
+    padding: 9px 18px; border-radius: var(--radius); font-size: 13.5px;
+    font-weight: 700; cursor: pointer; border: none;
+    transition: all 0.2s ease; font-family: inherit;
+    white-space: nowrap;
   }
   .btn-primary {
     background: linear-gradient(135deg, var(--accent), #4f46e5);
-    color: #fff; box-shadow: 0 4px 12px var(--accent-glow);
+    color: #fff; box-shadow: 0 4px 14px var(--accent-glow);
   }
-  .btn-primary:hover { transform: translateY(-1px); }
-  .btn-secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); }
-  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow-strong); }
+  .btn-secondary {
+    background: var(--panel-2); border: 1px solid var(--border-soft);
+    color: var(--text-2);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--text); }
+  .btn-danger { background: var(--red-dim); border: 1px solid var(--red); color: var(--red); }
+  .btn-sm { padding: 6px 13px; font-size: 12.5px; border-radius: 9px; }
 
+  /* ───── BADGES ───── */
   .badge {
-    display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px;
-    font-size: 12px; font-weight: 700; background: var(--panel-2); color: var(--muted);
+    display: inline-flex; align-items: center; padding: 3px 10px;
+    border-radius: 99px; font-size: 11.5px; font-weight: 700;
+    background: var(--panel-2); color: var(--muted);
   }
-  .badge.paid, .badge.active, .badge.done { background: var(--green-dim); color: var(--green); }
-  .badge.sent, .badge.in_progress, .badge.planned { background: rgba(99, 102, 241, 0.15); color: var(--accent); }
-  .badge.overdue, .badge.expired { background: var(--red-dim); color: var(--red); }
-  .badge.pending, .badge.draft { background: var(--yellow-dim); color: var(--yellow); }
+  .badge.paid, .badge.active, .badge.done, .badge.completed {
+    background: var(--green-dim); color: var(--green);
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+  .badge.sent, .badge.in_progress, .badge.planned, .badge.review {
+    background: rgba(99,102,241,0.12); color: var(--accent-2);
+    border: 1px solid rgba(99,102,241,0.2);
+  }
+  .badge.overdue, .badge.expired, .badge.cancelled {
+    background: var(--red-dim); color: var(--red);
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+  .badge.pending, .badge.draft, .badge.hold {
+    background: var(--yellow-dim); color: var(--yellow);
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+  .badge.planning { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(6,182,212,0.2); }
 
-  .messages { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 10px; }
-  .messages li {
-    padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 600;
-    border: 1px solid var(--border); background: var(--panel);
+  /* ───── CARDS ───── */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .messages li.success { border-color: var(--green); background: var(--green-dim); color: var(--green); }
-  .messages li.error { border-color: var(--red); background: var(--red-dim); color: var(--red); }
+  .card:hover { border-color: rgba(99,102,241,0.3); box-shadow: var(--shadow-card); }
+
+  /* ───── MESSAGES / TOASTS ───── */
+  .messages-wrap { margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .msg-toast {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 18px; border-radius: var(--radius);
+    font-size: 13.5px; font-weight: 600;
+    border: 1px solid var(--border-soft);
+    background: var(--panel);
+    animation: slide-in 0.3s ease;
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg-toast.success { background: var(--green-dim); border-color: rgba(16,185,129,0.25); color: var(--green); }
+  .msg-toast.error   { background: var(--red-dim); border-color: rgba(239,68,68,0.25); color: var(--red); }
+  .msg-toast.warning { background: var(--yellow-dim); border-color: rgba(245,158,11,0.25); color: var(--yellow); }
+  .msg-toast.info    { background: var(--cyan-dim); border-color: rgba(6,182,212,0.25); color: var(--cyan); }
+  .msg-icon { font-size: 18px; flex-shrink: 0; }
+  .msg-text { flex: 1; }
+  .msg-close {
+    background: none; border: none; cursor: pointer; color: inherit;
+    opacity: 0.6; font-size: 16px; padding: 2px; flex-shrink: 0;
+  }
+  .msg-close:hover { opacity: 1; }
+
+  /* ───── TABLES ───── */
+  .data-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .data-table thead tr {
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table thead th {
+    padding: 12px 18px; font-size: 12px; font-weight: 700;
+    color: var(--muted); text-align: left; white-space: nowrap;
+  }
+  .data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .data-table tbody tr:hover { background: rgba(99,102,241,0.04); }
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table td { padding: 13px 18px; vertical-align: middle; }
+
+  /* ───── FORM INPUTS ───── */
+  .form-input {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    background: var(--panel-2); border: 1px solid var(--border-soft);
+    color: var(--text); font-family: inherit; font-size: 14px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  /* ───── MODAL ───── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
+    z-index: 200; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); max-width: 520px; width: 100%;
+    padding: 32px; box-shadow: var(--shadow);
+    animation: modal-in 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-head h3 { font-size: 20px; font-weight: 800; }
+  .modal-close {
+    background: var(--panel-2); border: 1px solid var(--border-soft);
+    color: var(--muted); width: 32px; height: 32px; border-radius: 8px;
+    cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--red-dim); color: var(--red); border-color: var(--red); }
+
+  /* ───── RESPONSIVE ───── */
+  @media (max-width: 900px) {
+    .portal-sidebar {
+      transform: translateX(-100%);
+    }
+    .portal-sidebar.open {
+      transform: translateX(0);
+    }
+    .portal-main {
+      margin-left: 0;
+    }
+    .mobile-menu-btn { display: block; }
+    .portal-content { padding: 20px 16px 48px; }
+  }
+  @media (max-width: 600px) {
+    .portal-header { padding: 0 16px; }
+  }
+
+  /* Page-level block for extra styles */
+  {% block extra_styles %}{% endblock %}
 </style>
 </head>
 <body>
 
-<header>
-  <a href="{% url 'portal:dashboard' %}" class="brand">
-    <div class="brand-logo">I</div>
-    Ifcoder <span style="font-size:12px;color:var(--accent);background:rgba(99,102,241,0.15);padding:2px 8px;border-radius:6px;">Mijoz Kabineti</span>
-  </a>
-  <div class="user-badge">
-    <div class="user-info">
-      <div class="user-name">{{ client.name|default:user.username }}</div>
-      <div class="user-role">{% if user.is_staff %}Administrator{% else %}Mijoz Profili{% endif %}</div>
+<div class="portal-layout">
+  <!-- SIDEBAR -->
+  <aside class="portal-sidebar" id="portal-sidebar">
+    <div class="sidebar-head">
+      <a href="{% url 'portal:dashboard' %}" class="brand">
+        <div class="brand-logo">I</div>
+        <div>
+          Ifcoder
+          <div class="brand-badge">Mijoz Kabineti</div>
+        </div>
+      </a>
     </div>
-    {% if user.is_staff %}
-      <a href="{% url 'dashboard:home' %}" class="btn btn-secondary" style="font-size:12.5px;">📊 Admin Panel</a>
-    {% endif %}
-    <a href="{% url 'portal:logout' %}" class="btn btn-secondary" style="font-size:12.5px;">Chiqish &rarr;</a>
+
+    <div class="sidebar-user">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="user-avatar">{{ client.name|default:user.username|slice:":1"|upper }}</div>
+        <div class="user-meta">
+          <div class="user-name-text">{{ client.name|default:user.username }}</div>
+          <div class="user-role-text">{% if user.is_staff %}Administrator{% else %}Mijoz Profili{% endif %}</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Asosiy</div>
+      <a href="{% url 'portal:dashboard' %}" class="nav-link {% block nav_dashboard %}{% endblock %}">
+        <span class="nav-icon">🏠</span> Bosh Sahifa
+      </a>
+
+      <div class="nav-section-label">Loyihalar</div>
+      <a href="{% url 'portal:dashboard' %}#projects-section" class="nav-link {% block nav_projects %}{% endblock %}">
+        <span class="nav-icon">📋</span> Loyihalarim
+      </a>
+      <a href="{% url 'portal:dashboard' %}#new-project-section" class="nav-link {% block nav_new_project %}{% endblock %}">
+        <span class="nav-icon">🚀</span> Yangi Buyurtma
+      </a>
+
+      <div class="nav-section-label">Moliya</div>
+      <a href="{% url 'portal:dashboard' %}#invoices-section" class="nav-link {% block nav_invoices %}{% endblock %}">
+        <span class="nav-icon">💳</span> Hisob-fakturalar
+      </a>
+
+      <div class="nav-section-label">Yordam</div>
+      <a href="https://t.me/iftix0r" target="_blank" class="nav-link">
+        <span class="nav-icon">💬</span> Telegram Yordam
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      {% if user.is_staff %}
+        <a href="{% url 'dashboard:home' %}">
+          <span class="nav-icon">📊</span> Admin Panel
+        </a>
+      {% endif %}
+      <a href="javascript:void(0)" onclick="document.getElementById('profile-modal').classList.add('show')">
+        <span class="nav-icon">⚙️</span> Profil Sozlamalari
+      </a>
+      <a href="{% url 'portal:logout' %}" class="logout-btn">
+        <span class="nav-icon">🚪</span> Chiqish
+      </a>
+    </div>
+  </aside>
+
+  <!-- MOBILE OVERLAY -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- MAIN AREA -->
+  <div class="portal-main">
+    <!-- TOP HEADER -->
+    <header class="portal-header">
+      <div class="portal-header-left">
+        <button class="mobile-menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+        <div class="page-breadcrumb">
+          Ifcoder / <span>{% block page_title %}Bosh Sahifa{% endblock %}</span>
+        </div>
+      </div>
+      <div class="portal-header-right">
+        <div class="header-badge">
+          <div class="online-dot"></div>
+          Online
+        </div>
+        {% if user.is_staff %}
+          <a href="{% url 'dashboard:home' %}" class="btn btn-secondary btn-sm">📊 Admin</a>
+        {% endif %}
+        <a href="{% url 'portal:logout' %}" class="btn btn-secondary btn-sm">Chiqish →</a>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="portal-content">
+      {% if messages %}
+        <div class="messages-wrap">
+          {% for message in messages %}
+            <div class="msg-toast {{ message.tags }}">
+              <span class="msg-icon">
+                {% if message.tags == 'success' %}✅
+                {% elif message.tags == 'error' %}❌
+                {% elif message.tags == 'warning' %}⚠️
+                {% else %}ℹ️{% endif %}
+              </span>
+              <span class="msg-text">{{ message }}</span>
+              <button class="msg-close" onclick="this.closest('.msg-toast').remove()">✕</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </div>
   </div>
-</header>
+</div>
 
-<main class="container">
-  {% if messages %}
-    <ul class="messages">
-      {% for message in messages %}
-        <li class="{{ message.tags }}">{{ message }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+<!-- PROFILE MODAL (Global) -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>⚙️ Profil Sozlamalari</h3>
+      <button class="modal-close" onclick="document.getElementById('profile-modal').classList.remove('show')">✕</button>
+    </div>
+    <form method="post" action="{% url 'portal:dashboard' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_profile">
+      <div style="display:grid;gap:14px;margin-bottom:20px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:var(--muted);">Ism / Kompaniya Nomi</label>
+          <input type="text" name="name" value="{{ client.name|default:'' }}" class="form-input" placeholder="Ism yoki kompaniya">
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:var(--muted);">Telefon Raqam</label>
+          <input type="text" name="phone" value="{{ client.phone|default:'' }}" class="form-input" placeholder="+998 90 123 45 67">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:var(--muted);">Telegram</label>
+            <input type="text" name="telegram" value="{{ client.telegram|default:'' }}" class="form-input" placeholder="@username">
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:var(--muted);">Email</label>
+            <input type="email" name="email" value="{{ client.email|default:'' }}" class="form-input" placeholder="you@example.com">
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('profile-modal').classList.remove('show')">Bekor qilish</button>
+        <button type="submit" class="btn btn-primary">💾 Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-  {% block content %}{% endblock %}
-</main>
-
+<script>
+  function openSidebar() {
+    document.getElementById('portal-sidebar').classList.add('open');
+    document.getElementById('sidebar-overlay').classList.add('show');
+  }
+  function closeSidebar() {
+    document.getElementById('portal-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  }
+  // Close modal on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) overlay.classList.remove('show');
+    });
+  });
+  // Auto-dismiss messages after 5s
+  setTimeout(function() {
+    document.querySelectorAll('.msg-toast').forEach(function(el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-8px)';
+      el.style.transition = 'all 0.4s ease';
+      setTimeout(function() { el.remove(); }, 400);
+    });
+  }, 5000);
+</script>
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

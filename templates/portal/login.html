@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tizimga Kirish — Mijoz Kabineti — Ifcoder</title>
+<meta name="description" content="Ifcoder mijoz kabineti — tizimga kiring">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f46e5'/><stop offset='1' stop-color='%23818cf8'/></linearGradient></defs><rect width='64' height='64' rx='18' fill='url(%23g)'/><text x='32' y='45' font-family='sans-serif' font-size='38' font-weight='900' fill='%23ffffff' text-anchor='middle'>I</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07091a;
+    --panel: #0f1629;
+    --panel-2: #18213a;
+    --border: rgba(79, 70, 229, 0.15);
+    --border-soft: rgba(51, 65, 85, 0.5);
+    --text: #f1f5f9;
+    --text-2: #cbd5e1;
+    --muted: #64748b;
+    --accent: #6366f1;
+    --accent-2: #818cf8;
+    --accent-glow: rgba(99, 102, 241, 0.22);
+    --accent-glow-s: rgba(99, 102, 241, 0.4);
+    --green: #10b981;
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.12);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    min-height: 100vh; display: flex;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .left-panel {
+    flex: 1; position: relative; overflow: hidden;
+    background: linear-gradient(160deg, #0f1629 0%, #0b0f1e 100%);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 60px 56px;
+  }
+  .left-panel::before {
+    content: '';
+    position: absolute; top: -120px; right: -120px;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+  }
+  .left-panel::after {
+    content: '';
+    position: absolute; bottom: -80px; left: -60px;
+    width: 360px; height: 360px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(129,140,248,0.1) 0%, transparent 70%);
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 60px; position: relative; z-index: 1;
+  }
+  .brand-logo {
+    width: 44px; height: 44px; border-radius: 13px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 900; color: #fff;
+    box-shadow: 0 6px 20px var(--accent-glow);
+  }
+  .brand-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 24px; font-weight: 900;
+  }
+
+  .hero-text { position: relative; z-index: 1; }
+  .hero-text h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 38px; font-weight: 900; line-height: 1.2; margin-bottom: 16px;
+  }
+  .hero-text h1 span {
+    background: linear-gradient(135deg, var(--accent-2), #c4b5fd);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-text p { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 380px; margin-bottom: 40px; }
+
+  .trust-badges {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .trust-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 10px; padding: 10px 16px;
+    font-size: 13px; color: var(--text-2);
+  }
+  .trust-badge-icon { font-size: 16px; }
+
+  /* Floating stats */
+  .floating-stats {
+    position: absolute; right: 48px; top: 50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 14px;
+    z-index: 1;
+  }
+  .fstat {
+    background: rgba(15,22,41,0.85); border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 14px; padding: 16px 20px;
+    backdrop-filter: blur(16px);
+    animation: float 5s ease-in-out infinite;
+    min-width: 160px;
+  }
+  .fstat:nth-child(2) { animation-delay: 1s; }
+  .fstat:nth-child(3) { animation-delay: 2s; }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .fstat-icon { font-size: 20px; margin-bottom: 6px; }
+  .fstat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 22px; font-weight: 900; color: var(--accent-2); }
+  .fstat-label { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+  /* RIGHT FORM */
+  .right-panel {
+    width: 460px; flex-shrink: 0;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    justify-content: center; padding: 52px 44px;
+    overflow-y: auto;
+  }
+
+  .form-header { margin-bottom: 28px; }
+  .form-header h2 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px; font-weight: 900; margin-bottom: 8px;
+  }
+  .form-header p { font-size: 14px; color: var(--muted); }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 700;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%; padding: 12px 15px; border-radius: 11px;
+    background: var(--panel-2); border: 1px solid var(--border-soft);
+    color: var(--text); font-family: inherit; font-size: 14px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .form-group input::placeholder { color: var(--muted); }
+
+  .errorlist {
+    background: var(--red-dim); border: 1px solid rgba(239,68,68,0.25);
+    color: var(--red); padding: 12px 16px; border-radius: 10px;
+    list-style: none; margin-bottom: 20px;
+    font-size: 13px; font-weight: 600;
+  }
+
+  .submit-btn {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    font-size: 15px; font-weight: 800; font-family: inherit;
+    background: linear-gradient(135deg, var(--accent), #4f46e5);
+    color: #fff; cursor: pointer;
+    box-shadow: 0 4px 18px var(--accent-glow);
+    transition: all 0.2s ease; margin-top: 8px;
+    letter-spacing: 0.02em;
+  }
+  .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 26px var(--accent-glow-s); }
+  .submit-btn:active { transform: translateY(0); }
+
+  .form-footer {
+    margin-top: 24px; text-align: center;
+    font-size: 13.5px; color: var(--muted);
+  }
+  .form-footer a { color: var(--accent-2); font-weight: 700; }
+  .form-footer a:hover { text-decoration: underline; }
+
+  /* Admin login link */
+  .admin-link {
+    margin-top: 12px; padding: 10px 14px; border-radius: 10px;
+    background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.12);
+    font-size: 12.5px; color: var(--muted); text-align: center;
+  }
+  .admin-link a { color: var(--accent-2); font-weight: 600; }
+
+  @media (max-width: 960px) {
+    .left-panel { display: none; }
+    .right-panel { width: 100%; border-left: none; }
+    body { justify-content: center; align-items: center; }
+  }
+  @media (max-width: 480px) {
+    .right-panel { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="left-panel">
+  <div class="brand">
+    <div class="brand-logo">I</div>
+    <div class="brand-name">Ifcoder</div>
+  </div>
+
+  <div class="hero-text">
+    <h1>Xush Kelibsiz<br><span>Kabinetingizga</span></h1>
+    <p>
+      Loyihalaringiz, invoyslar va vazifalaringizni bitta paneldan nazorat qiling.
+      Istalgan vaqt, istalgan joydan.
+    </p>
+  </div>
+
+  <div class="trust-badges">
+    <div class="trust-badge">
+      <span class="trust-badge-icon">🔒</span>
+      Xavfsiz kirish
+    </div>
+    <div class="trust-badge">
+      <span class="trust-badge-icon">⚡</span>
+      Real-vaqt yangilanish
+    </div>
+    <div class="trust-badge">
+      <span class="trust-badge-icon">📱</span>
+      Mobil qulay
+    </div>
+  </div>
+
+  <div class="floating-stats">
+    <div class="fstat">
+      <div class="fstat-icon">📋</div>
+      <div class="fstat-val">50+</div>
+      <div class="fstat-label">Bajarilgan loyihalar</div>
+    </div>
+    <div class="fstat">
+      <div class="fstat-icon">⭐</div>
+      <div class="fstat-val">98%</div>
+      <div class="fstat-label">Mijoz mamnuniyati</div>
+    </div>
+    <div class="fstat">
+      <div class="fstat-icon">🚀</div>
+      <div class="fstat-val">24/7</div>
+      <div class="fstat-label">Panel mavjudligi</div>
+    </div>
+  </div>
+</div>
+
+<div class="right-panel">
+  <div class="form-header">
+    <h2>Tizimga Kirish 🔐</h2>
+    <p>Login va parolingizni kiriting</p>
+  </div>
+
+  {% if form.errors %}
+    <ul class="errorlist">
+      {% for field, errors in form.errors.items %}
+        {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if messages %}
+    {% for message in messages %}
+    <div style="background:{% if message.tags == 'error' %}rgba(239,68,68,0.12){% else %}rgba(99,102,241,0.1){% endif %};border:1px solid rgba({% if message.tags == 'error' %}239,68,68{% else %}99,102,241{% endif %},0.25);color:{% if message.tags == 'error' %}#ef4444{% else %}var(--accent-2){% endif %};padding:12px 16px;border-radius:10px;font-size:13.5px;font-weight:600;margin-bottom:16px;">
+      {{ message }}
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" autocomplete="on">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="id_username">Foydalanuvchi Nomi</label>
+      <input type="text" name="username" id="id_username" autocomplete="username" placeholder="Login yoki username" required autofocus>
+    </div>
+    <div class="form-group">
+      <label for="id_password">Parol</label>
+      <input type="password" name="password" id="id_password" autocomplete="current-password" placeholder="••••••••••" required>
+    </div>
+    <button type="submit" class="submit-btn">Kirish →</button>
+  </form>
+
+  <div class="form-footer" style="margin-top:20px;">
+    Akkauntingiz yo'qmi? <a href="{% url 'portal:register' %}">Ro'yxatdan O'ting</a>
+  </div>
+
+  <div class="admin-link">
+    Admin? <a href="{% url 'login' %}">Admin panel loginiga o'ting →</a>
+  </div>
+
+  <div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(99,102,241,0.1);text-align:center;">
+    <a href="/" style="font-size:12.5px;color:var(--muted);">← Bosh sahifaga qaytish</a>
+  </div>
+</div>
+
+<script>
+  // Focus styling via JS (same as register page)
+  document.querySelectorAll('input').forEach(function(el) {
+    el.addEventListener('focus', function() {
+      el.style.borderColor = 'var(--accent)';
+      el.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.22)';
+    });
+    el.addEventListener('blur', function() {
+      el.style.borderColor = 'rgba(51,65,85,0.5)';
+      el.style.boxShadow = 'none';
+    });
+  });
+</script>
+</body>
+</html>

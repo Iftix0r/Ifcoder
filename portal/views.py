@@ -50,6 +50,8 @@ class SmartLoginView(ThrottledLoginView):
     - Oddiy Mijoz foydalanuvchilar -> /portal/ (Mijozning Shaxsiy Kabineti)
     """
 
+    template_name = "portal/login.html"
+
     def get_success_url(self):
         user = self.request.user
         if user.is_staff or user.is_superuser:
@@ -111,6 +113,22 @@ class ClientPortalDashboardView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         client = getattr(request.user, "client_profile", None)
+        action = request.POST.get("action", "request_project")
+
+        if action == "update_profile" and client:
+            client.name = request.POST.get("name", client.name).strip() or client.name
+            client.phone = request.POST.get("phone", client.phone).strip()
+            client.telegram = request.POST.get("telegram", client.telegram).strip()
+            client.email = request.POST.get("email", client.email).strip()
+            client.save()
+
+            if client.user:
+                client.user.email = client.email
+                client.user.save()
+
+            messages.success(request, "Aloqa ma'lumotlaringiz muvaffaqiyatli yangilandi!")
+            return redirect("portal:dashboard")
+
         if not client and not request.user.is_staff:
             messages.error(request, "Loyiha buyurtma qilish uchun mijoz profili zarur.")
             return redirect("portal:dashboard")
@@ -120,7 +138,6 @@ class ClientPortalDashboardView(LoginRequiredMixin, TemplateView):
             name = form.cleaned_data["name"]
             desc = form.cleaned_data["description"]
 
-            # Admin yoki mijoz uchun loyiha yaratish
             if not client:
                 client = Client.objects.first()
 
@@ -128,7 +145,7 @@ class ClientPortalDashboardView(LoginRequiredMixin, TemplateView):
                 name=name,
                 description=desc,
                 client=client,
-                status=Project.Status.PLANNED,
+                status=Project.Status.PLANNING,
             )
             messages.success(
                 request,
