@@ -9,8 +9,9 @@
     <a href="{% url 'tickets:portal_list' %}" style="font-size:13px;color:var(--muted);font-weight:600;">
       ← Tiketlar ro'yxatiga qaytish
     </a>
-    <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:900;margin:8px 0 4px;">
-      📩 Yangi Tiket Ochish
+    <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:900;margin:8px 0 4px;display:flex;align-items:center;gap:10px;">
+      <svg class="svg-icon" style="width:24px;height:24px;color:var(--accent-2);" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Yangi Tiket Ochish
     </h1>
     <p style="color:var(--muted);font-size:14px;margin:0;">
       Muammo yoki savolingizni imkon qadar batafsilroq yozing. Mutaxassislarimiz tez orada javob berishadi.
@@ -35,10 +36,10 @@
         <select name="priority" class="form-input" style="cursor:pointer;">
           {% for val, label in priorities %}
             <option value="{{ val }}" {% if val == 'medium' %}selected{% endif %}>
-              {% if val == 'urgent' %}🚨 Shoshilinch (Zudlik bilan)
-              {% elif val == 'high' %}⚠️ Yuqori
-              {% elif val == 'medium' %}🔹 O'rta (Standart)
-              {% else %}⚪ Past{% endif %}
+              {% if val == 'urgent' %}Shoshilinch (Zudlik bilan)
+              {% elif val == 'high' %}Yuqori
+              {% elif val == 'medium' %}O'rta (Standart)
+              {% else %}Past{% endif %}
             </option>
           {% endfor %}
         </select>
@@ -54,7 +55,7 @@
       <div style="display:flex;gap:12px;justify-content:flex-end;align-items:center;">
         <a href="{% url 'tickets:portal_list' %}" class="btn btn-secondary">Bekor qilish</a>
         <button type="submit" class="btn btn-primary" style="padding:11px 28px;">
-          🚀 Tiketni Ochish
+          <svg class="svg-icon" style="width:15px;height:15px;" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Tiketni Ochish
         </button>
       </div>
     </form>

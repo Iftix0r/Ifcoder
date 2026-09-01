@@ -45,8 +45,9 @@
 {% block content %}
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px;">
   <div>
-    <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:900;margin:0 0 4px;">
-      🎧 Texnik Yordam &amp; Tiketlar
+    <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:900;margin:0 0 4px;display:flex;align-items:center;gap:10px;">
+      <svg class="svg-icon" style="width:26px;height:26px;color:var(--accent-2);" viewBox="0 0 24 24"><path d="M18 18.72a9 9 0 1 1 0-13.44"/><path d="M3 12a9 9 0 0 1 15-6.7"/><circle cx="12" cy="12" r="4"/><path d="M12 8v4l3 3"/></svg>
+      Texnik Yordam &amp; Tiketlar
     </h1>
     <p style="color:var(--muted);font-size:14px;margin:0;">
       Savol yoki muammo bormi? Tiket oching — mutaxassislarimiz yordam beradi.
@@ -64,7 +65,9 @@
       <div class="stat-mini-val" style="color:var(--text);">{{ tickets|length }}</div>
       <div class="stat-mini-label">Jami Tiketlar</div>
     </div>
-    <div class="stat-icon-wrap" style="background:var(--panel-2);color:var(--accent-2);">📁</div>
+    <div class="stat-icon-wrap" style="background:var(--panel-2);color:var(--accent-2);">
+      <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    </div>
   </div>
 
   <div class="stat-mini">
@@ -72,7 +75,9 @@
       <div class="stat-mini-val" style="color:var(--yellow);">{{ open_count }}</div>
       <div class="stat-mini-label">Ochiq / Jarayonda</div>
     </div>
-    <div class="stat-icon-wrap" style="background:var(--yellow-dim);color:var(--yellow);">⏳</div>
+    <div class="stat-icon-wrap" style="background:var(--yellow-dim);color:var(--yellow);">
+      <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
   </div>
 
   <div class="stat-mini">
@@ -80,7 +85,9 @@
       <div class="stat-mini-val" style="color:var(--green);">{{ answered_count }}</div>
       <div class="stat-mini-label">Javob berildi / Yopildi</div>
     </div>
-    <div class="stat-icon-wrap" style="background:var(--green-dim);color:var(--green);">✅</div>
+    <div class="stat-icon-wrap" style="background:var(--green-dim);color:var(--green);">
+      <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
   </div>
 </div>
 
@@ -113,10 +120,6 @@
         </td>
         <td>
           <span class="priority-badge priority-{{ t.priority }}">
-            {% if t.priority == 'urgent' %}🚨
-            {% elif t.priority == 'high' %}⚠️
-            {% elif t.priority == 'medium' %}🔹
-            {% else %}⚪{% endif %}
             {{ t.get_priority_display }}
           </span>
         </td>
@@ -126,7 +129,7 @@
           </span>
         </td>
         <td style="font-weight:700;color:var(--text-2);">
-          💬 {{ t.reply_count }}
+          <svg class="svg-icon" style="width:14px;height:14px;margin-right:2px;" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> {{ t.reply_count }}
         </td>
         <td style="font-size:12.5px;color:var(--muted);">
           {{ t.created_at|date:"d.m.Y H:i" }}
@@ -143,7 +146,9 @@
 </div>
 {% else %}
 <div class="empty-state">
-  <div class="empty-icon">🎧</div>
+  <div class="empty-icon">
+    <svg class="svg-icon" style="width:48px;height:48px;color:var(--muted);" viewBox="0 0 24 24"><path d="M18 18.72a9 9 0 1 1 0-13.44"/><path d="M3 12a9 9 0 0 1 15-6.7"/><circle cx="12" cy="12" r="4"/><path d="M12 8v4l3 3"/></svg>
+  </div>
   <div class="empty-title">Sizda hali tiketlar mavjud emas</div>
   <div class="empty-sub" style="margin-bottom:20px;">
     Savolingiz yoki yordam kerakli masala bo'lsa, birinchi tiketni oching!

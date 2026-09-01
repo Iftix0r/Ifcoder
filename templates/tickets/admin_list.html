@@ -6,7 +6,10 @@
 {% block content %}
 <div class="page-header" style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
   <div>
-    <h1 style="font-size:24px;font-weight:800;margin:0 0 4px;">🎧 Mijozlar Tiketlari Boshqaruvi</h1>
+    <h1 style="font-size:24px;font-weight:800;margin:0 0 4px;display:flex;align-items:center;gap:10px;">
+      <svg class="svg-icon" style="width:24px;height:24px;color:var(--accent);" viewBox="0 0 24 24"><path d="M18 18.72a9 9 0 1 1 0-13.44"/><path d="M3 12a9 9 0 0 1 15-6.7"/><circle cx="12" cy="12" r="4"/><path d="M12 8v4l3 3"/></svg>
+      Mijozlar Tiketlari Boshqaruvi
+    </h1>
     <p style="color:var(--muted);font-size:14px;margin:0;">Mijozlardan tushgan barcha texnik yordam so'rovlari va tiketlar</p>
   </div>
 </div>
@@ -43,8 +46,8 @@
 
   <div style="height:20px;width:1px;background:var(--border);"></div>
 
-  <a href="?priority=urgent" class="btn {% if current_priority == 'urgent' %}btn-danger{% else %}btn-secondary{% endif %}" style="font-size:12px;padding:5px 12px;">🚨 Shoshilinch</a>
-  <a href="?priority=high" class="btn {% if current_priority == 'high' %}btn-primary{% else %}btn-secondary{% endif %}" style="font-size:12px;padding:5px 12px;">⚠️ Yuqori</a>
+  <a href="?priority=urgent" class="btn {% if current_priority == 'urgent' %}btn-danger{% else %}btn-secondary{% endif %}" style="font-size:12px;padding:5px 12px;">Shoshilinch</a>
+  <a href="?priority=high" class="btn {% if current_priority == 'high' %}btn-primary{% else %}btn-secondary{% endif %}" style="font-size:12px;padding:5px 12px;">Yuqori</a>
 </div>
 
 <!-- TICKETS TABLE -->

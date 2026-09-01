@@ -217,15 +217,15 @@
 <!-- GREETING BAR -->
 <div class="greet-bar">
   <div>
-    <div class="greet-title">Xush kelibsiz, {{ client.name|default:user.username }}! 👋</div>
+    <div class="greet-title">Xush kelibsiz, {{ client.name|default:user.username }}!</div>
     <div class="greet-sub">Barcha loyihalar, invoyslar va to'lovlar nazorati bitta joyda</div>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;position:relative;">
     <button class="btn btn-secondary" onclick="document.getElementById('profile-modal').classList.add('show')">
-      ⚙️ Profil
+      <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Profil
     </button>
     <a href="#new-project-section" class="btn btn-primary">
-      🚀 Yangi Buyurtma
+      <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Yangi Buyurtma
     </a>
   </div>
 </div>
@@ -233,19 +233,19 @@
 <!-- STATS GRID -->
 <div class="stat-grid">
   <div class="stat-card accent">
-    <span class="stat-icon">📋</span>
+    <span class="stat-icon" style="opacity:0.6;"><svg class="svg-icon" style="width:28px;height:28px;color:var(--accent-2);" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
     <div class="stat-label">Jami Loyihalar</div>
     <div class="stat-value accent">{{ projects|length }}</div>
     <div class="stat-sub">Barcha loyihalaringiz</div>
   </div>
   <div class="stat-card green">
-    <span class="stat-icon">✅</span>
+    <span class="stat-icon" style="opacity:0.6;"><svg class="svg-icon" style="width:28px;height:28px;color:var(--green);" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
     <div class="stat-label">To'langan</div>
     <div class="stat-value green">{{ paid_invoiced|currency:"" }}</div>
     <div class="stat-sub">UZS (to'langan invoyslar)</div>
   </div>
   <div class="stat-card yellow">
-    <span class="stat-icon">⏳</span>
+    <span class="stat-icon" style="opacity:0.6;"><svg class="svg-icon" style="width:28px;height:28px;color:var(--yellow);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
     <div class="stat-label">Kutilayotgan To'lov</div>
     <div class="stat-value {% if unpaid_invoiced > 0 %}yellow{% else %}accent{% endif %}">
       {{ unpaid_invoiced|currency:"" }}
@@ -253,7 +253,7 @@
     <div class="stat-sub">UZS (qolgan balans)</div>
   </div>
   <div class="stat-card cyan">
-    <span class="stat-icon">📌</span>
+    <span class="stat-icon" style="opacity:0.6;"><svg class="svg-icon" style="width:28px;height:28px;color:var(--cyan);" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
     <div class="stat-label">Faol Vazifalar</div>
     <div class="stat-value cyan">{{ tasks|length }}</div>
     <div class="stat-sub">Ochiq vazifalar</div>
@@ -263,7 +263,10 @@
 <!-- PROJECTS SECTION -->
 <div id="projects-section">
   <div class="section-head">
-    <div class="section-title">📋 Loyihalaringiz</div>
+    <div class="section-title">
+      <svg class="svg-icon" style="color:var(--accent-2);" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Loyihalaringiz
+    </div>
     <a href="#new-project-section" class="btn btn-primary btn-sm">+ Yangi Buyurtma</a>
   </div>
 
@@ -290,7 +293,10 @@
         </div>
 
         <div class="project-footer">
-          <span>📅 Muddat:</span>
+          <span>
+            <svg class="svg-icon" style="width:14px;height:14px;margin-right:4px;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Muddat:
+          </span>
           <strong style="color:var(--text);">{{ p.deadline|default:"Jarayonda" }}</strong>
         </div>
       </div>
@@ -298,7 +304,9 @@
     </div>
   {% else %}
     <div class="empty-state">
-      <div class="empty-icon">📭</div>
+      <div class="empty-icon">
+        <svg class="svg-icon" style="width:48px;height:48px;color:var(--muted);" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+      </div>
       <div class="empty-title">Hozircha faol loyiha yo'q</div>
       <div class="empty-sub">Pastdagi forma orqali yangi loyiha buyurtma qiling</div>
     </div>
@@ -309,7 +317,10 @@
 {% if invoices %}
 <div id="invoices-section">
   <div class="section-head">
-    <div class="section-title">💳 Hisob-Fakturalar</div>
+    <div class="section-title">
+      <svg class="svg-icon" style="color:var(--green);" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Hisob-Fakturalar
+    </div>
   </div>
   <div class="table-wrap">
     <table class="data-table">
@@ -335,7 +346,7 @@
           <td style="text-align:right;">
             <button class="btn btn-secondary btn-sm"
               onclick="document.getElementById('payment-modal').classList.add('show')">
-              💳 Rekvizitlar
+              <svg class="svg-icon" style="width:13px;height:13px;" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Rekvizitlar
             </button>
           </td>
         </tr>
@@ -350,7 +361,10 @@
 {% if tasks %}
 <div>
   <div class="section-head">
-    <div class="section-title">📌 Ochiq Vazifalar</div>
+    <div class="section-title">
+      <svg class="svg-icon" style="color:var(--yellow);" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Ochiq Vazifalar
+    </div>
   </div>
   <div class="table-wrap">
     <table class="data-table">
@@ -384,7 +398,10 @@
 <!-- NEW PROJECT REQUEST FORM -->
 <div id="new-project-section" class="request-form-wrap">
   <div class="section-head" style="margin-bottom:8px;">
-    <div class="section-title">🚀 Yangi Loyiha Buyurtma Qilish</div>
+    <div class="section-title">
+      <svg class="svg-icon" style="color:var(--accent-2);" viewBox="0 0 24 24"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Yangi Loyiha Buyurtma Qilish
+    </div>
   </div>
   <p style="color:var(--muted);font-size:13.5px;margin-bottom:24px;">
     Yangi vebsayt, Telegram bot yoki CRM tizimi bo'yicha g'oyangizni qoldiring. Mutaxassisimiz smeta va muddatlarni tayyorlaydi.
@@ -410,7 +427,10 @@
 <div class="modal-overlay" id="payment-modal">
   <div class="modal-box">
     <div class="modal-head">
-      <h3>💳 To'lov Rekvizitlari</h3>
+      <h3 style="display:flex;align-items:center;gap:10px;">
+        <svg class="svg-icon" style="width:22px;height:22px;color:var(--accent-2);" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        To'lov Rekvizitlari
+      </h3>
       <button class="modal-close" onclick="document.getElementById('payment-modal').classList.remove('show')">✕</button>
     </div>
     <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">
@@ -418,7 +438,7 @@
     </p>
 
     <div class="requis-card">
-      <div class="requis-label">🏦 Humo / Uzcard Karta</div>
+      <div class="requis-label">Humo / Uzcard Karta</div>
       <div class="requis-number" onclick="copyText('8600 1234 5678 9012', this)" title="Nusxa olish uchun bosing">
         8600 1234 5678 9012
       </div>
@@ -426,7 +446,7 @@
     </div>
 
     <div class="requis-card">
-      <div class="requis-label">🏢 Bank Hisob Raqami (MChJ)</div>
+      <div class="requis-label">Bank Hisob Raqami (MChJ)</div>
       <div class="requis-number" onclick="copyText('2020 8000 9000 1234 5001', this)" title="Nusxa olish uchun bosing">
         2020 8000 9000 1234 5001
       </div>
@@ -434,12 +454,14 @@
     </div>
 
     <p style="font-size:12px;color:var(--muted);margin-bottom:20px;text-align:center;">
-      💡 Raqamlarga bosib clipboard'ga nusxa olishingiz mumkin
+      Raqamlarga bosib clipboard'ga nusxa olishingiz mumkin
     </p>
 
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn btn-secondary" onclick="document.getElementById('payment-modal').classList.remove('show')">Yopish</button>
-      <a href="https://t.me/iftix0r" target="_blank" class="btn btn-primary">💬 Chekni Telegramga Yuborish</a>
+      <a href="https://t.me/iftix0r" target="_blank" class="btn btn-primary">
+        <svg class="svg-icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Chekni Telegramga Yuborish
+      </a>
     </div>
   </div>
 </div>
