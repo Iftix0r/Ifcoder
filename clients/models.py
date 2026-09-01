@@ -1,7 +1,16 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
 class Client(models.Model):
+    user = models.OneToOneField(
+        User,
+        verbose_name="Foydalanuvchi hisobi",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="client_profile",
+    )
     class LeadStatus(models.TextChoices):
         NEW = "new", "Yangi lead"
         CONTACTED = "contacted", "Aloqa qilingan"

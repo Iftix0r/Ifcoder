@@ -21,6 +21,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 from dashboard.views import ThrottledLoginView
+from portal.views import landing_view
 
 
 def robots_txt(request):
@@ -33,6 +34,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/login/', ThrottledLoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('portal/', include('portal.urls')),
     path('panel/clients/', include('clients.urls')),
     path('panel/projects/', include('projects.urls')),
     path('panel/bots/', include('bots.urls')),
@@ -44,5 +46,5 @@ urlpatterns = [
     path('panel/debts/', include('debts.urls')),
     path('panel/goals/', include('goals.urls')),
     path('panel/', include('dashboard.urls')),
-    path('', RedirectView.as_view(url='panel/', permanent=False)),
+    path('', landing_view, name='landing'),
 ]

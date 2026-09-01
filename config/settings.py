@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'debts',
     'goals',
     'dashboard',
+    'portal',
 ]
 
 MIDDLEWARE = [
