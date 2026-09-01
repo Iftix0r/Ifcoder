@@ -10,7 +10,9 @@
     {% if invoice.status != 'paid' %}
     <button class="btn btn-primary" id="mark-paid-btn">✓ To'landi deb belgilash</button>
     {% endif %}
-    <a class="btn" href="{% url 'finance:invoice_print' invoice.pk %}" target="_blank">Chop etish / PDF</a>
+    <a class="btn" href="{% url 'finance:invoice_print' invoice.pk %}" target="_blank">🖨️ Chop etish</a>
+    <a class="btn btn-primary" href="{% url 'finance:invoice_pdf' invoice.pk %}">
+      <svg class="svg-icon" viewBox="0 0 24 24" style="width:14px;height:14px;margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><polyline points="9 15 12 18 15 15"/></svg>PDF yuklab olish</a>
     <a class="btn" href="{% url 'finance:invoice_edit' invoice.pk %}">Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'finance:invoice_delete' invoice.pk %}">O'chirish</a>
   </div>
