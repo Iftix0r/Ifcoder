@@ -68,6 +68,7 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         ctx["paid_invoiced"] = sum(inv.amount for inv in invoices if inv.status == "paid")
         ctx["unpaid_invoiced"] = ctx["total_invoiced"] - ctx["paid_invoiced"]
         ctx["invoices"] = invoices[:10]
+        ctx["tickets"] = client.tickets.select_related("project").all()[:10]
         return ctx
 
 

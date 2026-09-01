@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 from clients.models import Client
+from projects.models import Project
 
 
 class Ticket(models.Model):
@@ -32,6 +33,14 @@ class Ticket(models.Model):
         related_name="tickets",
         null=True,
         blank=True,
+    )
+    project = models.ForeignKey(
+        Project,
+        verbose_name="Loyiha",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tickets",
     )
     created_by = models.ForeignKey(
         User,

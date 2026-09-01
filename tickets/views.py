@@ -6,6 +6,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView, TemplateView
 
 from clients.models import Client
+from projects.models import Project
 
 from .models import Ticket, TicketReply
 
@@ -23,9 +24,9 @@ class PortalTicketListView(LoginRequiredMixin, ListView):
         user = self.request.user
         client = getattr(user, "client_profile", None)
         if client:
-            return Ticket.objects.filter(client=client).prefetch_related("replies")
+            return Ticket.objects.filter(client=client).select_related("project").prefetch_related("replies")
         elif user.is_staff:
-            return Ticket.objects.all().prefetch_related("replies")
+            return Ticket.objects.all().select_related("project").prefetch_related("replies")
         return Ticket.objects.none()
 
     def get_context_data(self, **kwargs):
@@ -47,8 +48,16 @@ class PortalTicketNewView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["client"] = getattr(self.request.user, "client_profile", None)
+        client = getattr(self.request.user, "client_profile", None)
+        ctx["client"] = client
         ctx["priorities"] = Ticket.Priority.choices
+        if client:
+            ctx["projects"] = client.projects.all()
+        elif self.request.user.is_staff:
+            ctx["projects"] = Project.objects.all()
+        else:
+            ctx["projects"] = Project.objects.none()
+        ctx["selected_project_id"] = self.request.GET.get("project_id", "")
         return ctx
 
     def post(self, request, *args, **kwargs):
@@ -56,6 +65,7 @@ class PortalTicketNewView(LoginRequiredMixin, TemplateView):
         title = request.POST.get("title", "").strip()
         body = request.POST.get("body", "").strip()
         priority = request.POST.get("priority", Ticket.Priority.MEDIUM)
+        project_id = request.POST.get("project_id")
 
         if not title or not body:
             messages.error(request, "Mavzu va muammo tavsifi majburiy.")
@@ -63,13 +73,18 @@ class PortalTicketNewView(LoginRequiredMixin, TemplateView):
 
         if not client and not request.user.is_staff:
             messages.error(request, "Tiket ochish uchun mijoz profili zarur.")
-            return redirect("portal:tickets_list")
+            return redirect("tickets:portal_list")
+
+        project = None
+        if project_id:
+            project = Project.objects.filter(pk=project_id).first()
 
         ticket = Ticket.objects.create(
             title=title,
             body=body,
             priority=priority,
             client=client,
+            project=project,
             created_by=request.user,
             status=Ticket.Status.OPEN,
         )
@@ -84,9 +99,9 @@ class PortalTicketDetailView(LoginRequiredMixin, TemplateView):
     def _get_ticket(self, request, pk):
         client = getattr(request.user, "client_profile", None)
         if client:
-            return get_object_or_404(Ticket, pk=pk, client=client)
+            return get_object_or_404(Ticket.objects.select_related("project", "client"), pk=pk, client=client)
         elif request.user.is_staff:
-            return get_object_or_404(Ticket, pk=pk)
+            return get_object_or_404(Ticket.objects.select_related("project", "client"), pk=pk)
         return None
 
     def get(self, request, pk, *args, **kwargs):
@@ -141,13 +156,19 @@ class AdminTicketListView(ListView):
     paginate_by = 30
 
     def get_queryset(self):
-        qs = Ticket.objects.all().select_related("client", "created_by").prefetch_related("replies")
+        qs = Ticket.objects.all().select_related("client", "project", "created_by").prefetch_related("replies")
         status = self.request.GET.get("status")
         priority = self.request.GET.get("priority")
+        client_id = self.request.GET.get("client")
+        project_id = self.request.GET.get("project")
         if status:
             qs = qs.filter(status=status)
         if priority:
             qs = qs.filter(priority=priority)
+        if client_id:
+            qs = qs.filter(client_id=client_id)
+        if project_id:
+            qs = qs.filter(project_id=project_id)
         return qs
 
     def get_context_data(self, **kwargs):
@@ -156,6 +177,7 @@ class AdminTicketListView(ListView):
         ctx["priority_choices"] = Ticket.Priority.choices
         ctx["current_status"] = self.request.GET.get("status", "")
         ctx["current_priority"] = self.request.GET.get("priority", "")
+        ctx["current_client"] = self.request.GET.get("client", "")
         ctx["open_count"] = Ticket.objects.filter(
             status__in=[Ticket.Status.OPEN, Ticket.Status.IN_PROGRESS]
         ).count()

@@ -54,6 +54,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
             )
             for status, label in Task.Status.choices
         ]
+        ctx["tickets"] = self.object.tickets.select_related("client").all()[:10]
         return ctx
 
 

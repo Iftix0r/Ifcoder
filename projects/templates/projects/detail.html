@@ -9,6 +9,9 @@
     <div class="sub">Yaratilgan sana: {{ project.created_at|date:"d.m.Y H:i" }}</div>
   </div>
   <div class="btn-row">
+    <a class="btn" href="{% url 'tickets:admin_list' %}?project={{ project.pk }}">
+      🎧 Tiketlar ({{ tickets|length }})
+    </a>
     <a class="btn" href="{% url 'projects:edit' project.pk %}">✏️ Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'projects:delete' project.pk %}">🗑️ O'chirish</a>
   </div>
@@ -76,6 +79,34 @@
     {% else %}
     <div class="empty">Hozircha botlar biriktirilmagan.</div>
     {% endif %}
+
+    <!-- TICKETS SECTION -->
+    <h2 class="section-title" style="margin-top:28px;">
+      <svg class="svg-icon" viewBox="0 0 24 24" style="width:16px;height:16px;margin-right:6px;"><path d="M18 18.72a9 9 0 1 1 0-13.44"/><path d="M3 12a9 9 0 0 1 15-6.7"/><circle cx="12" cy="12" r="4"/><path d="M12 8v4l3 3"/></svg>
+      Loyihaga Tegishli Yordam Tiketlari
+    </h2>
+    {% if tickets %}
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Mavzu</th><th>Mijoz</th><th>Holati</th><th>Muhimlik</th><th style="text-align:right;">Amal</th></tr>
+      </thead>
+      <tbody>
+        {% for t in tickets %}
+        <tr class="row-link" onclick="location.href='{% url 'tickets:admin_detail' t.pk %}'">
+          <td><strong style="color:var(--text);">#{{ t.pk }} {{ t.title }}</strong></td>
+          <td>{{ t.client.name|default:"—" }}</td>
+          <td><span class="badge {{ t.status }}">{{ t.get_status_display }}</span></td>
+          <td><span class="badge {% if t.priority == 'urgent' %}overdue{% elif t.priority == 'high' %}pending{% else %}active{% endif %}">{{ t.get_priority_display }}</span></td>
+          <td style="text-align:right;">
+            <a href="{% url 'tickets:admin_detail' t.pk %}" class="btn btn-sm" onclick="event.stopPropagation()">Javob berish →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}<div class="empty">Tiketlar mavjud emas.</div>{% endif %}
   </div>
 
   <div class="card">

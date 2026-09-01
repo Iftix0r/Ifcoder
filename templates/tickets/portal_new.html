@@ -29,6 +29,22 @@
         <input type="text" name="title" class="form-input" placeholder="Masalan: Vebsayt sahifasi sekin yuklanmoqda" required autofocus>
       </div>
 
+      {% if projects %}
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;">
+          Tegishli Loyiha (Ixtiyoriy)
+        </label>
+        <select name="project_id" class="form-input" style="cursor:pointer;">
+          <option value="">-- Loyihaga bog'lanmagan (Umumiy texnik yordam) --</option>
+          {% for p in projects %}
+            <option value="{{ p.pk }}" {% if selected_project_id == p.pk|stringformat:"s" %}selected{% endif %}>
+              📁 {{ p.name }} ({{ p.get_status_display }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
       <div style="margin-bottom:18px;">
         <label style="display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;">
           Muhimlik Darajasi
