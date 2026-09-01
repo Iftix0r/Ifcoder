@@ -1,15 +1,21 @@
 {% extends "dashboard/base.html" %}
+{% load dashboard_extras %}
 {% block page_title %}Bosh sahifa{% endblock %}
 
 {% block content %}
 
 <!-- ── Salomlashuv ──────────────────────────────────────────────────── -->
 <div class="page-header" style="margin-bottom:28px;">
-  <div>
-    <h1 style="font-size:24px;">Xush kelibsiz, {{ user.username }}! 👋</h1>
-    <p class="sub">{{ today|date:"l, d F Y" }} &middot; Bugungi holat</p>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#818cf8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;box-shadow:0 4px 14px var(--accent-glow);flex-shrink:0;">
+      {{ user.username|first|upper }}
+    </div>
+    <div>
+      <h1 style="font-size:24px;margin:0;font-weight:800;letter-spacing:-0.02em;">Xush kelibsiz, {{ user.username }}! 👋</h1>
+      <p class="sub" style="margin-top:2px;">{{ today|date:"l, d F Y" }} &middot; Bugungi panoramik holat</p>
+    </div>
   </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
     <a href="{% url 'projects:add' %}" class="btn btn-primary">+ Yangi loyiha</a>
     <a href="{% url 'tasks:add' %}" class="btn">+ Vazifa</a>
   </div>
@@ -17,38 +23,38 @@
 
 <!-- ── Bugungi kun bloki ────────────────────────────────────────────── -->
 {% if today_tasks or overdue_tasks_list %}
-<div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:24px;box-shadow:var(--shadow-sm);">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+<div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:28px;box-shadow:var(--shadow-sm);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
     <h2 style="font-size:14px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;">
       <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15" style="color:var(--accent);"><path d="M4.75 0a.75.75 0 01.75.75V2h5V.75a.75.75 0 011.5 0V2h1.25c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0113.25 16H2.75A1.75 1.75 0 011 14.25V3.75C1 2.784 1.784 2 2.75 2H4V.75A.75.75 0 014.75 0zm0 3.5h-2a.25.25 0 00-.25.25V6h11V3.75a.25.25 0 00-.25-.25h-2V4.25a.75.75 0 01-1.5 0V3.5h-5v.75a.75.75 0 01-1.5 0V3.5z"/></svg>
       Bugun — {{ today|date:"d F" }}
     </h2>
-    <a href="{% url 'tasks:list' %}?due=today" style="font-size:12px;color:var(--accent);">Barchasi →</a>
+    <a href="{% url 'tasks:list' %}?due=today" style="font-size:12.5px;font-weight:600;color:var(--accent);">Barchasi →</a>
   </div>
 
   {% if overdue_tasks_list %}
-  <div style="margin-bottom:12px;padding:10px 14px;background:var(--red-dim);border:1px solid var(--red);border-radius:var(--radius-sm);">
-    <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-      <svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm0 11a1 1 0 110 2 1 1 0 010-2zm.75-6.75a.75.75 0 00-1.5 0v4a.75.75 0 001.5 0v-4z"/></svg>
+  <div style="margin-bottom:14px;padding:12px 16px;background:var(--red-dim);border:1px solid var(--red);border-radius:var(--radius-sm);">
+    <div style="font-size:12.5px;font-weight:700;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm0 11a1 1 0 110 2 1 1 0 010-2zm.75-6.75a.75.75 0 00-1.5 0v4a.75.75 0 001.5 0v-4z"/></svg>
       {{ overdue_tasks_list|length }} ta vazifa muddati o'tgan
     </div>
     {% for task in overdue_tasks_list %}
-    <div style="display:flex;align-items:center;gap:10px;padding:5px 0;{% if not forloop.last %}border-bottom:1px solid rgba(239,68,68,.15);{% endif %}">
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;{% if not forloop.last %}border-bottom:1px solid rgba(239,68,68,.15);{% endif %}">
       <form action="{% url 'tasks:set_status' task.pk %}" method="post" style="flex-shrink:0;">
         {% csrf_token %}<input type="hidden" name="status" value="done">
         <button class="task-action" type="submit" title="Bajarildi">✓</button>
       </form>
-      <a href="{% url 'tasks:detail' task.pk %}" style="font-size:13px;color:var(--text);flex:1;">{{ task.title }}</a>
-      <span style="font-size:11px;color:var(--red);">{{ task.due_date }}</span>
+      <a href="{% url 'tasks:detail' task.pk %}" style="font-size:13.5px;color:var(--text);flex:1;font-weight:500;">{{ task.title }}</a>
+      <span style="font-size:11.5px;color:var(--red);font-weight:600;">{{ task.due_date }}</span>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
   {% if today_tasks %}
-  <div style="display:flex;flex-direction:column;gap:6px;">
+  <div style="display:flex;flex-direction:column;gap:8px;">
     {% for task in today_tasks %}
-    <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--panel-2);">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--panel-2);">
       <form action="{% url 'tasks:set_status' task.pk %}" method="post" style="flex-shrink:0;">
         {% csrf_token %}<input type="hidden" name="status" value="done">
         <button class="task-action" type="submit" title="Bajarildi">✓</button>
@@ -62,7 +68,7 @@
   {% endif %}
 
   {% if not today_tasks and not overdue_tasks_list %}
-  <p style="color:var(--green);font-size:13.5px;text-align:center;padding:12px 0;margin:0;">
+  <p style="color:var(--green);font-size:13.5px;text-align:center;padding:12px 0;margin:0;font-weight:600;">
     🎉 Bugun uchun barcha vazifalar bajarilgan!
   </p>
   {% endif %}
@@ -70,8 +76,9 @@
 {% endif %}
 
 <!-- ── Asosiy stat kartalar ─────────────────────────────────────────── -->
-<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr));margin-bottom:28px;">
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin-bottom:32px;">
 
+  <!-- Mijozlar -->
   <a class="card" href="{% url 'clients:list' %}">
     <div class="card-top">
       <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5z"/></svg></div>
@@ -80,6 +87,7 @@
     <div class="label">Jami mijozlar</div>
   </a>
 
+  <!-- Loyihalar -->
   <a class="card" href="{% url 'projects:list' %}">
     <div class="card-top">
       <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM7.75 6a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5zM2.75 10a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 10.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5a.75.75 0 01-.75-.75z"/></svg></div>
@@ -88,6 +96,7 @@
     <div class="label">Jami loyihalar</div>
   </a>
 
+  <!-- Vazifalar -->
   <a class="card {% if overdue_tasks_count %}stat-yellow{% endif %}" href="{% url 'tasks:list' %}">
     <div class="card-top">
       <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v2.5H13V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.5v-1.5h-3.5a.25.25 0 01-.25-.25V1.75z"/></svg></div>
@@ -97,83 +106,103 @@
     <div class="label">Ochiq vazifalar</div>
   </a>
 
+  <!-- Daromad -->
   <a class="card stat-green" href="{% url 'finance:income_list' %}">
     <div class="card-top">
       <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg></div>
       <span class="trend {% if month_net >= 0 %}up{% else %}down{% endif %}">
-        {% if month_net >= 0 %}+{% endif %}{{ month_net|floatformat:0 }}
+        {% if month_net >= 0 %}+{% endif %}{{ month_net|compact_num:"" }} UZS
       </span>
     </div>
-    <div class="value">{{ month_income|floatformat:0 }}</div>
+    <div class="value">{{ month_income|currency:"" }} <span style="font-size:13px;font-weight:600;color:var(--muted);">UZS</span></div>
     <div class="label">Bu oy daromad</div>
   </a>
 
+  <!-- Xarajat -->
   <a class="card stat-red" href="{% url 'finance:expense_list' %}">
     <div class="card-top">
       <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75z"/></svg></div>
     </div>
-    <div class="value">{{ month_expense|floatformat:0 }}</div>
+    <div class="value">{{ month_expense|currency:"" }} <span style="font-size:13px;font-weight:600;color:var(--muted);">UZS</span></div>
     <div class="label">Bu oy xarajat</div>
   </a>
 
+  <!-- Invoyslar -->
   <a class="card {% if outstanding_count %}stat-yellow{% else %}stat-gray{% endif %}" href="{% url 'finance:invoice_list' %}">
     <div class="card-top">
       <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6h-2.75A1.75 1.75 0 018 4.25V1.5H3.75z"/></svg></div>
-      {% if outstanding_count %}<span class="trend down">{{ outstanding_total|floatformat:0 }} so'm</span>{% endif %}
+      {% if outstanding_count %}<span class="trend down">{{ outstanding_total|compact_num }}</span>{% endif %}
     </div>
     <div class="value">{{ outstanding_count }}</div>
     <div class="label">To'lanmagan invoyslar</div>
   </a>
 
+  <!-- Men qarzdorman -->
   <a class="card {% if debt_i_owe > 0 %}stat-red{% else %}stat-gray{% endif %}" href="{% url 'debts:list' %}?direction=i_owe">
     <div class="card-top">
       <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm.75 4.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM8 11a1 1 0 110 2 1 1 0 010-2z"/></svg></div>
       {% if overdue_debts %}<span class="trend down">{{ overdue_debts }} muddati o'tgan</span>{% endif %}
     </div>
-    <div class="value">{{ debt_i_owe|floatformat:0 }}</div>
+    <div class="value">{{ debt_i_owe|currency:"" }} <span style="font-size:13px;font-weight:600;color:var(--muted);">UZS</span></div>
     <div class="label">Men qarzdorman</div>
   </a>
 
+  <!-- Menga qarzdor -->
   <a class="card {% if debt_they_owe > 0 %}stat-green{% else %}stat-gray{% endif %}" href="{% url 'debts:list' %}?direction=they_owe">
     <div class="card-top">
       <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 5.22a.75.75 0 00-1.06 0L7 8.94 5.28 7.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg></div>
     </div>
-    <div class="value">{{ debt_they_owe|floatformat:0 }}</div>
+    <div class="value">{{ debt_they_owe|currency:"" }} <span style="font-size:13px;font-weight:600;color:var(--muted);">UZS</span></div>
     <div class="label">Menga qarzdor</div>
   </a>
 
 </div>
 
 <!-- ── Ikki ustunli qism ───────────────────────────────────────────── -->
-<div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;">
 
-  <!-- Chap: Loyihalar + Maqsadlar + Kelayotgan vazifalar -->
+  <!-- Chap: Loyihalar + Yaqin vazifalar -->
   <div>
 
     <!-- So'nggi loyihalar -->
     <h2 class="section-title">
       <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M2.75 2a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75h-1.5zM7 3.5a.75.75 0 01.75-.75h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 017 3.5zM7.75 6a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5z"/></svg>
       So'nggi loyihalar
-      <a href="{% url 'projects:list' %}" style="font-size:12px;font-weight:500;color:var(--accent);margin-left:auto;">Barchasi →</a>
+      <a href="{% url 'projects:list' %}" style="font-size:12px;font-weight:600;color:var(--accent);margin-left:auto;">Barchasi →</a>
     </h2>
     {% if recent_projects %}
-    <div class="table-wrap" style="margin-bottom:24px;">
+    <div class="table-wrap" style="margin-bottom:28px;">
       <table>
-        <thead><tr><th>Loyiha</th><th>Mijoz</th><th>Holat</th><th>Deadline</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Loyiha</th>
+            <th>Mijoz</th>
+            <th style="text-align:center;">Holat</th>
+            <th style="text-align:right;">Deadline</th>
+          </tr>
+        </thead>
         <tbody>
           {% for p in recent_projects %}
           <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
-            <td><strong>{{ p.name }}</strong></td>
+            <td><strong style="color:var(--text);">{{ p.name }}</strong></td>
             <td style="color:var(--muted);">{{ p.client|default:"—" }}</td>
-            <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
-            <td>{{ p.deadline|default:"—" }}</td>
+            <td style="text-align:center;">
+              <span class="badge {{ p.status }}">{{ p.get_status_display }}</span>
+            </td>
+            <td style="text-align:right;font-size:12.5px;">
+              {% if p.deadline %}
+                <span style="color:var(--text);font-weight:500;">{{ p.deadline }}</span>
+              {% else %}
+                <span style="font-size:11px;color:var(--muted);opacity:0.7;border:1px dashed var(--border);padding:2px 6px;border-radius:4px;">Belgilanmagan</span>
+              {% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
     {% else %}
-    <div class="empty" style="margin-bottom:24px;">Hozircha loyihalar yo'q. <a href="{% url 'projects:add' %}">Qo'shish</a></div>
+    <div class="empty" style="margin-bottom:28px;">Hozircha loyihalar yo'q. <a href="{% url 'projects:add' %}">Qo'shish</a></div>
     {% endif %}
 
     <!-- Kelayotgan vazifalar -->
@@ -181,16 +210,16 @@
     <h2 class="section-title">
       <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M4.75 0a.75.75 0 01.75.75V2h5V.75a.75.75 0 011.5 0V2h1.25c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0113.25 16H2.75A1.75 1.75 0 011 14.25V3.75C1 2.784 1.784 2 2.75 2H4V.75A.75.75 0 014.75 0z"/></svg>
       Yaqin vazifalar
-      <a href="{% url 'tasks:list' %}?due=upcoming" style="font-size:12px;font-weight:500;color:var(--accent);margin-left:auto;">Barchasi →</a>
+      <a href="{% url 'tasks:list' %}?due=upcoming" style="font-size:12px;font-weight:600;color:var(--accent);margin-left:auto;">Barchasi →</a>
     </h2>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:24px;">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
       {% for task in upcoming_tasks %}
-      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--panel);">
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--panel);">
         <form action="{% url 'tasks:set_status' task.pk %}" method="post" style="flex-shrink:0;">
           {% csrf_token %}<input type="hidden" name="status" value="done">
           <button class="task-action" type="submit" title="Bajarildi">✓</button>
         </form>
-        <a href="{% url 'tasks:detail' task.pk %}" style="flex:1;color:var(--text);font-size:13.5px;font-weight:500;">{{ task.title }}</a>
+        <a href="{% url 'tasks:detail' task.pk %}" style="flex:1;color:var(--text);font-size:13.5px;font-weight:600;">{{ task.title }}</a>
         {% if task.project %}<span style="font-size:12px;color:var(--muted);">{{ task.project.name }}</span>{% endif %}
         <span style="font-size:12px;color:var(--muted);">{{ task.due_date }}</span>
         <span class="badge {% if task.priority == 'high' %}overdue{% elif task.priority == 'medium' %}in_progress{% else %}inactive{% endif %}" style="font-size:11px;">{{ task.get_priority_display }}</span>
@@ -208,25 +237,25 @@
     <h2 class="section-title" style="margin-top:0;">
       <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm.75 4.75a.75.75 0 00-1.5 0v3.5c0 .414.336.75.75.75h3a.75.75 0 000-1.5H8.75V4.75z"/></svg>
       Faol maqsadlar
-      <a href="{% url 'goals:list' %}" style="font-size:12px;font-weight:500;color:var(--accent);margin-left:auto;">Barchasi →</a>
+      <a href="{% url 'goals:list' %}" style="font-size:12px;font-weight:600;color:var(--accent);margin-left:auto;">Barchasi →</a>
     </h2>
     {% if top_goals %}
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
       {% for goal in top_goals %}
       <a href="{% url 'goals:detail' goal.pk %}" style="text-decoration:none;color:inherit;">
-        <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;transition:border-color .15s ease;"
+        <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;transition:var(--transition);"
           onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ goal.title }}</span>
-            <span style="font-size:12px;font-weight:700;color:{% if goal.progress >= 75 %}var(--green){% elif goal.progress >= 40 %}var(--accent){% else %}var(--yellow){% endif %};margin-left:8px;flex-shrink:0;">{{ goal.progress }}%</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:13.5px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ goal.title }}</span>
+            <span style="font-size:12px;font-weight:800;color:{% if goal.progress >= 75 %}var(--green){% elif goal.progress >= 40 %}var(--accent){% else %}var(--yellow){% endif %};margin-left:8px;flex-shrink:0;">{{ goal.progress }}%</span>
           </div>
-          <div style="background:var(--panel-2);border-radius:4px;height:5px;overflow:hidden;">
-            <div style="height:100%;border-radius:4px;width:{{ goal.progress }}%;background:{% if goal.progress >= 75 %}var(--green){% elif goal.progress >= 40 %}var(--accent){% else %}var(--yellow){% endif %};transition:width .4s ease;"></div>
+          <div style="background:var(--panel-2);border-radius:99px;height:6px;overflow:hidden;">
+            <div style="height:100%;border-radius:99px;width:{{ goal.progress }}%;background:{% if goal.progress >= 75 %}var(--green){% elif goal.progress >= 40 %}var(--accent){% else %}var(--yellow){% endif %};transition:width .4s ease;"></div>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:5px;">
-            <span style="font-size:11px;color:var(--muted);">{{ goal.get_period_display }}</span>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;">
+            <span style="font-size:11.5px;color:var(--muted);font-weight:500;">{{ goal.get_period_display }}</span>
             {% if goal.deadline %}
-            <span style="font-size:11px;{% if goal.is_overdue %}color:var(--red);font-weight:600;{% else %}color:var(--muted);{% endif %}">
+            <span style="font-size:11.5px;{% if goal.is_overdue %}color:var(--red);font-weight:600;{% else %}color:var(--muted);{% endif %}">
               🏁 {{ goal.deadline }}
             </span>
             {% endif %}
@@ -236,7 +265,7 @@
       {% endfor %}
     </div>
     {% else %}
-    <div class="empty" style="margin-bottom:24px;padding:20px;">
+    <div class="empty" style="margin-bottom:28px;padding:20px;">
       Maqsadlar yo'q.
       <a href="{% url 'goals:add' %}" style="display:block;margin-top:8px;color:var(--accent);">+ Maqsad qo'shish</a>
     </div>
@@ -246,18 +275,18 @@
     <h2 class="section-title">
       <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.002 4.002 0 00-7.9 0 .75.75 0 01-1.482-.236 5.507 5.507 0 013.034-4.084A3.494 3.494 0 012 5.5z"/></svg>
       So'nggi mijozlar
-      <a href="{% url 'clients:list' %}" style="font-size:12px;font-weight:500;color:var(--accent);margin-left:auto;">Barchasi →</a>
+      <a href="{% url 'clients:list' %}" style="font-size:12px;font-weight:600;color:var(--accent);margin-left:auto;">Barchasi →</a>
     </h2>
     {% if recent_clients %}
-    <div style="display:flex;flex-direction:column;gap:6px;">
+    <div style="display:flex;flex-direction:column;gap:8px;">
       {% for c in recent_clients %}
-      <a href="{% url 'clients:detail' c.pk %}" style="display:flex;align-items:center;gap:12px;padding:9px 12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);text-decoration:none;transition:border-color .15s ease;"
+      <a href="{% url 'clients:detail' c.pk %}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);text-decoration:none;transition:var(--transition);"
         onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="width:32px;height:32px;border-radius:9px;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
+        <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#818cf8);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
           {{ c.name|first|upper }}
         </div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.name }}</div>
+          <div style="font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.name }}</div>
           <div style="font-size:12px;color:var(--muted);">{{ c.phone|default:c.telegram|default:"—" }}</div>
         </div>
         <span class="badge {{ c.lead_status }}" style="font-size:11px;flex-shrink:0;">{{ c.get_lead_status_display }}</span>
@@ -296,3 +325,4 @@
   });
 </script>
 {% endblock %}
+
