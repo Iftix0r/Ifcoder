@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
 
@@ -156,3 +156,26 @@ class ClientPortalDashboardView(LoginRequiredMixin, TemplateView):
         ctx = self.get_context_data()
         ctx["request_form"] = form
         return self.render_to_response(ctx)
+
+
+class ClientPortalProjectDetailView(LoginRequiredMixin, TemplateView):
+    """Mijoz uchun loyiha batafsil ma'lumotlar sahifasi."""
+    template_name = "portal/project_detail.html"
+
+    def get(self, request, pk, *args, **kwargs):
+        client = getattr(request.user, "client_profile", None)
+        if client:
+            project = get_object_or_404(Project, pk=pk, client=client)
+        elif request.user.is_staff:
+            project = get_object_or_404(Project, pk=pk)
+        else:
+            messages.error(request, "Ruxsat etilmagan harakat.")
+            return redirect("portal:dashboard")
+
+        return render(request, self.template_name, {
+            "project": project,
+            "tasks": project.tasks.all(),
+            "invoices": project.invoices.all(),
+            "tickets": project.tickets.all(),
+            "client": client,
+        })

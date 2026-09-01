@@ -1,0 +1,182 @@
+{% extends "portal/base.html" %}
+{% load dashboard_extras %}
+{% block title %}{{ project.name }} — Loyiha — Ifcoder{% endblock %}
+{% block page_title %}{{ project.name }}{% endblock %}
+{% block nav_projects %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:960px;margin:0 auto;">
+  <div style="margin-bottom:20px;">
+    <a href="{% url 'portal:dashboard' %}#projects-section" style="font-size:13px;color:var(--muted);font-weight:600;">
+      ← Barcha loyihalarga qaytish
+    </a>
+  </div>
+
+  <!-- PROJECT HEADER CARD -->
+  <div class="card" style="padding:28px;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:16px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:900;margin:0;color:var(--text);">
+            {{ project.name }}
+          </h1>
+          <span class="badge {{ project.status }}">{{ project.get_status_display }}</span>
+        </div>
+        <div style="font-size:13px;color:var(--muted);">
+          📅 Topshirish muddati: <strong style="color:var(--text);">{{ project.deadline|default:"Jarayonda" }}</strong>
+          {% if project.repo_url %}
+            <span style="margin:0 8px;">•</span>
+            <a href="{{ project.repo_url }}" target="_blank" rel="noopener" style="color:var(--accent-2);font-weight:700;">
+              <svg class="svg-icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg> GitHub Repozitoriy →
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <a href="{% url 'tickets:portal_new' %}?project_id={{ project.pk }}" class="btn btn-primary">
+        + Ushbu Loyihadan Tiket Ochish
+      </a>
+    </div>
+
+    {% if project.description %}
+    <div style="background:var(--panel-2);border:1px solid var(--border-soft);border-radius:12px;padding:16px;font-size:14px;color:var(--text);line-height:1.6;margin-bottom:20px;">
+      {{ project.description }}
+    </div>
+    {% endif %}
+
+    <!-- PROGRESS BAR -->
+    <div class="progress-wrap" style="margin:0;">
+      <div class="progress-meta" style="margin-bottom:6px;">
+        <span style="font-size:13px;font-weight:700;color:var(--muted);">Loyiha Tayyorgarlik Jarayoni</span>
+        <span style="font-size:14px;font-weight:800;color:var(--accent-2);">{{ project.progress_percent }}%</span>
+      </div>
+      <div class="progress-track" style="height:10px;">
+        <div class="progress-fill" style="width:{{ project.progress_percent }}%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKS SECTION -->
+  <div class="card" style="padding:24px;margin-bottom:24px;">
+    <div class="section-head">
+      <div class="section-title" style="font-size:18px;">
+        <svg class="svg-icon" style="color:var(--accent-2);" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Loyiha Vazifalari
+      </div>
+    </div>
+
+    {% if tasks %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Vazifa Nomi</th>
+            <th>Holati</th>
+            <th style="text-align:right;">Muddat</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tasks %}
+          <tr>
+            <td style="font-weight:700;">{{ t.title }}</td>
+            <td><span class="badge {{ t.status }}">{{ t.get_status_display }}</span></td>
+            <td style="text-align:right;color:var(--muted);font-size:13px;">
+              {{ t.due_date|default:"Belgilanmagan" }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:13.5px;">
+      Vazifalar hali ro'yxatga olingan emas.
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- TICKETS FOR THIS PROJECT -->
+  <div class="card" style="padding:24px;margin-bottom:24px;">
+    <div class="section-head">
+      <div class="section-title" style="font-size:18px;">
+        <svg class="svg-icon" style="color:var(--accent-2);" viewBox="0 0 24 24"><path d="M18 18.72a9 9 0 1 1 0-13.44"/><path d="M3 12a9 9 0 0 1 15-6.7"/><circle cx="12" cy="12" r="4"/><path d="M12 8v4l3 3"/></svg>
+        Loyihaning Murojaat va Tiketlari
+      </div>
+      <a href="{% url 'tickets:portal_new' %}?project_id={{ project.pk }}" class="btn btn-secondary btn-sm">
+        + Yangi Tiket
+      </a>
+    </div>
+
+    {% if tickets %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Mavzu</th>
+            <th>Holati</th>
+            <th>Muhimlik</th>
+            <th style="text-align:right;">Amal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tickets %}
+          <tr class="ticket-row" onclick="window.location='{% url 'tickets:portal_detail' t.pk %}'">
+            <td style="font-weight:800;color:var(--muted);">#{{ t.pk }}</td>
+            <td style="font-weight:700;">{{ t.title }}</td>
+            <td><span class="badge {{ t.status }}">{{ t.get_status_display }}</span></td>
+            <td>
+              <span class="priority-badge priority-{{ t.priority }}">
+                {{ t.get_priority_display }}
+              </span>
+            </td>
+            <td style="text-align:right;">
+              <a href="{% url 'tickets:portal_detail' t.pk %}" class="btn btn-secondary btn-sm" onclick="event.stopPropagation()">
+                Ko'rish →
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:13.5px;">
+      Bu loyiha bo'yicha hech qanday tiket ochilmagan.
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- INVOICES FOR THIS PROJECT -->
+  {% if invoices %}
+  <div class="card" style="padding:24px;">
+    <div class="section-head">
+      <div class="section-title" style="font-size:18px;">
+        <svg class="svg-icon" style="color:var(--green);" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Loyiha Invoyslari
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Invoys №</th>
+            <th>Holati</th>
+            <th style="text-align:right;">Summa</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in invoices %}
+          <tr>
+            <td style="font-weight:700;">{{ inv.number }}</td>
+            <td><span class="badge {{ inv.status }}">{{ inv.get_status_display }}</span></td>
+            <td style="text-align:right;font-weight:800;">{{ inv.amount|currency:"" }} UZS</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

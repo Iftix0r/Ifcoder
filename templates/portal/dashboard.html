@@ -273,7 +273,7 @@
   {% if projects %}
     <div class="project-grid">
       {% for p in projects %}
-      <div class="project-card">
+      <div class="project-card" style="cursor:pointer;" onclick="window.location='{% url 'portal:project_detail' p.pk %}'">
         <div class="project-card-head">
           <div class="project-name">{{ p.name }}</div>
           <span class="badge {{ p.status }}">{{ p.get_status_display }}</span>

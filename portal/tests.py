@@ -68,3 +68,10 @@ class PortalTests(TestCase):
             "password": "pass12345"
         })
         self.assertRedirects(response, "/portal/")
+
+    def test_client_portal_project_detail(self):
+        self.client.force_login(self.client_user)
+        response = self.client.get(f"/portal/projects/{self.project.pk}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Test Website")
+        self.assertContains(response, "Loyiha Vazifalari")
