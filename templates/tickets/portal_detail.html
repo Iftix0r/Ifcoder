@@ -1,0 +1,146 @@
+{% extends "portal/base.html" %}
+{% load dashboard_extras %}
+{% block title %}Tiket #{{ ticket.pk }} — {{ ticket.title }} — Ifcoder{% endblock %}
+{% block page_title %}Tiket #{{ ticket.pk }}{% endblock %}
+{% block nav_tickets %}active{% endblock %}
+
+{% block extra_styles %}
+  .ticket-header-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px;
+  }
+  .priority-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700;
+  }
+  .priority-low { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+  .priority-medium { background: rgba(99, 102, 241, 0.15); color: var(--accent-2); }
+  .priority-high { background: rgba(245, 158, 11, 0.15); color: var(--yellow); }
+  .priority-urgent { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+  /* Thread messages */
+  .chat-thread { display: flex; flex-direction: column; gap: 18px; margin-bottom: 28px; }
+  .chat-msg {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 24px;
+    position: relative;
+  }
+  .chat-msg.admin-msg {
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(129,140,248,0.04));
+    border-color: rgba(99,102,241,0.3);
+    box-shadow: 0 4px 20px rgba(99,102,241,0.08);
+  }
+  .chat-msg-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; font-size: 13px;
+  }
+  .chat-msg-author {
+    display: flex; align-items: center; gap: 10px; font-weight: 700;
+  }
+  .chat-avatar {
+    width: 32px; height: 32px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; color: #fff;
+  }
+  .admin-avatar { background: linear-gradient(135deg, var(--accent), #818cf8); }
+  .client-avatar { background: var(--panel-3); color: var(--text-2); }
+  .chat-msg-body {
+    font-size: 14px; color: var(--text); line-height: 1.7;
+    white-space: pre-wrap; word-break: break-word;
+  }
+{% endblock %}
+
+{% block content %}
+<div style="max-width:840px;margin:0 auto;">
+  <div style="margin-bottom:20px;">
+    <a href="{% url 'tickets:portal_list' %}" style="font-size:13px;color:var(--muted);font-weight:600;">
+      ← Tiketlar ro'yxatiga qaytish
+    </a>
+  </div>
+
+  <!-- TICKET HEADER CARD -->
+  <div class="ticket-header-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:14px;font-weight:800;color:var(--muted);">#{{ ticket.pk }}</span>
+        <span class="badge {{ ticket.status }}">{{ ticket.get_status_display }}</span>
+        <span class="priority-badge priority-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
+      </div>
+      <div style="font-size:12.5px;color:var(--muted);">
+        📅 Yaratilgan: {{ ticket.created_at|date:"d.m.Y H:i" }}
+      </div>
+    </div>
+    <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:900;margin:0 0 10px;color:var(--text);">
+      {{ ticket.title }}
+    </h1>
+  </div>
+
+  <!-- THREAD -->
+  <div class="chat-thread">
+    <!-- ORIGINAL TICKET BODY -->
+    <div class="chat-msg">
+      <div class="chat-msg-head">
+        <div class="chat-msg-author">
+          <div class="chat-avatar client-avatar">{{ ticket.client.name|default:ticket.created_by.username|slice:":1"|upper }}</div>
+          <div>
+            <span style="color:var(--text);">{{ ticket.client.name|default:ticket.created_by.username }}</span>
+            <span style="font-size:11.5px;color:var(--muted);margin-left:6px;font-weight:500;">(Murojaat muallifi)</span>
+          </div>
+        </div>
+        <div style="color:var(--muted);font-size:12px;">{{ ticket.created_at|date:"d.m.Y H:i" }}</div>
+      </div>
+      <div class="chat-msg-body">{{ ticket.body }}</div>
+    </div>
+
+    <!-- REPLIES -->
+    {% for r in replies %}
+    <div class="chat-msg {% if r.is_staff %}admin-msg{% endif %}">
+      <div class="chat-msg-head">
+        <div class="chat-msg-author">
+          {% if r.is_staff %}
+            <div class="chat-avatar admin-avatar">🛠</div>
+            <div>
+              <span style="color:var(--accent-2);">Ifcoder Yordam Xizmati</span>
+              <span class="badge active" style="margin-left:6px;font-size:10.5px;">Admin</span>
+            </div>
+          {% else %}
+            <div class="chat-avatar client-avatar">{{ r.author.username|slice:":1"|upper }}</div>
+            <div>
+              <span style="color:var(--text);">Siz ({{ r.author.username }})</span>
+            </div>
+          {% endif %}
+        </div>
+        <div style="color:var(--muted);font-size:12px;">{{ r.created_at|date:"d.m.Y H:i" }}</div>
+      </div>
+      <div class="chat-msg-body">{{ r.body }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- REPLY FORM -->
+  {% if ticket.is_open %}
+  <div class="card" style="padding:24px;">
+    <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;margin:0 0 12px;">
+      💬 Javob Yozish
+    </h3>
+    <form method="post">
+      {% csrf_token %}
+      <div style="margin-bottom:16px;">
+        <textarea name="body" class="form-input" style="min-height:110px;resize:vertical;" placeholder="Javobingizni yozing..." required></textarea>
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button type="submit" class="btn btn-primary">
+          Javobni Yuborish →
+        </button>
+      </div>
+    </form>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:28px;">
+    <div style="font-size:24px;margin-bottom:8px;">🔒</div>
+    <div class="empty-title">Bu tiket yopilgan</div>
+    <div class="empty-sub">Agar qo'shimcha savolingiz bo'lsa, yangi tiket ochishingiz mumkin.</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

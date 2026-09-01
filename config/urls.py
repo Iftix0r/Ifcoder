@@ -45,6 +45,7 @@ urlpatterns = [
     path('panel/tasks/', include('tasks.urls')),
     path('panel/debts/', include('debts.urls')),
     path('panel/goals/', include('goals.urls')),
+    path('tickets/', include('tickets.urls')),
     path('panel/', include('dashboard.urls')),
     path('', landing_view, name='landing'),
 ]

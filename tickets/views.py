@@ -31,7 +31,11 @@ class PortalTicketListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["client"] = getattr(self.request.user, "client_profile", None)
-        ctx["open_count"] = self.get_queryset().filter(
+        qs = self.get_queryset()
+        ctx["open_count"] = qs.filter(
+            status__in=[Ticket.Status.OPEN, Ticket.Status.IN_PROGRESS]
+        ).count()
+        ctx["answered_count"] = qs.exclude(
             status__in=[Ticket.Status.OPEN, Ticket.Status.IN_PROGRESS]
         ).count()
         return ctx
@@ -153,6 +157,9 @@ class AdminTicketListView(ListView):
         ctx["current_status"] = self.request.GET.get("status", "")
         ctx["current_priority"] = self.request.GET.get("priority", "")
         ctx["open_count"] = Ticket.objects.filter(
+            status__in=[Ticket.Status.OPEN, Ticket.Status.IN_PROGRESS]
+        ).count()
+        ctx["answered_count"] = Ticket.objects.exclude(
             status__in=[Ticket.Status.OPEN, Ticket.Status.IN_PROGRESS]
         ).count()
         return ctx

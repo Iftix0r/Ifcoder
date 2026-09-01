@@ -1,0 +1,63 @@
+{% extends "portal/base.html" %}
+{% block title %}Yangi Tiket Ochish — Ifcoder{% endblock %}
+{% block page_title %}Yangi Tiket{% endblock %}
+{% block nav_tickets %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;margin:0 auto;">
+  <div style="margin-bottom:24px;">
+    <a href="{% url 'tickets:portal_list' %}" style="font-size:13px;color:var(--muted);font-weight:600;">
+      ← Tiketlar ro'yxatiga qaytish
+    </a>
+    <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:900;margin:8px 0 4px;">
+      📩 Yangi Tiket Ochish
+    </h1>
+    <p style="color:var(--muted);font-size:14px;margin:0;">
+      Muammo yoki savolingizni imkon qadar batafsilroq yozing. Mutaxassislarimiz tez orada javob berishadi.
+    </p>
+  </div>
+
+  <div class="card" style="padding:32px;">
+    <form method="post">
+      {% csrf_token %}
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;">
+          Tiket Mavzusi *
+        </label>
+        <input type="text" name="title" class="form-input" placeholder="Masalan: Vebsayt sahifasi sekin yuklanmoqda" required autofocus>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;">
+          Muhimlik Darajasi
+        </label>
+        <select name="priority" class="form-input" style="cursor:pointer;">
+          {% for val, label in priorities %}
+            <option value="{{ val }}" {% if val == 'medium' %}selected{% endif %}>
+              {% if val == 'urgent' %}🚨 Shoshilinch (Zudlik bilan)
+              {% elif val == 'high' %}⚠️ Yuqori
+              {% elif val == 'medium' %}🔹 O'rta (Standart)
+              {% else %}⚪ Past{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <label style="display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;">
+          Muammo Tavsifi / Savol *
+        </label>
+        <textarea name="body" class="form-input" style="min-height:160px;resize:vertical;" placeholder="Muammo haqida batafsilroq yozing (skrinshot yoki xatolik matni bor bo'lsa kiriting)..." required></textarea>
+      </div>
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;align-items:center;">
+        <a href="{% url 'tickets:portal_list' %}" class="btn btn-secondary">Bekor qilish</a>
+        <button type="submit" class="btn btn-primary" style="padding:11px 28px;">
+          🚀 Tiketni Ochish
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

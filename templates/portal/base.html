@@ -441,7 +441,10 @@
         <span class="nav-icon">💳</span> Hisob-fakturalar
       </a>
 
-      <div class="nav-section-label">Yordam</div>
+      <div class="nav-section-label">Yordam Tizimi</div>
+      <a href="{% url 'tickets:portal_list' %}" class="nav-link {% block nav_tickets %}{% endblock %}">
+        <span class="nav-icon">🎧</span> Yordam / Tiketlar
+      </a>
       <a href="https://t.me/iftix0r" target="_blank" class="nav-link">
         <span class="nav-icon">💬</span> Telegram Yordam
       </a>

@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'goals',
     'dashboard',
     'portal',
+    'tickets',
 ]
 
 MIDDLEWARE = [
