@@ -54,6 +54,12 @@
 <div class="toolbar">
   <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;flex:1;">
     <input type="text" name="q" value="{{ q }}" placeholder="Qidirish (tomon, sabab…)">
+    <select name="client">
+      <option value="">— Mijoz —</option>
+      {% for cl in clients %}
+        <option value="{{ cl.pk }}" {% if client_id == cl.pk|stringformat:"s" %}selected{% endif %}>{{ cl.name }}</option>
+      {% endfor %}
+    </select>
     <select name="direction">
       <option value="">— Yo'nalish —</option>
       {% for val, label in direction_choices %}
@@ -73,7 +79,7 @@
       {% endfor %}
     </select>
     <button type="submit" class="btn">Filtrlash</button>
-    {% if q or direction or status or currency %}
+    {% if q or client_id or direction or status or currency %}
       <a href="{% url 'debts:list' %}" class="btn">✕ Tozalash</a>
     {% endif %}
   </form>

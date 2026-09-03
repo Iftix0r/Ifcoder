@@ -77,9 +77,12 @@ class DebtListView(LoginRequiredMixin, CSVExportMixin, ListView):
         ctx["direction"] = self.request.GET.get("direction", "")
         ctx["status"] = self.request.GET.get("status", "")
         ctx["currency"] = self.request.GET.get("currency", "")
+        ctx["client_id"] = self.request.GET.get("client", "")
         ctx["direction_choices"] = Debt.Direction.choices
         ctx["status_choices"] = Debt.Status.choices
         ctx["currency_choices"] = Debt.Currency.choices
+        from clients.models import Client
+        ctx["clients"] = Client.objects.order_by("name")
 
         # Umumiy statistika (barcha qarzlar bo'yicha, filtrlanmagan)
         all_qs = Debt.objects.all()
