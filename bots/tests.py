@@ -93,3 +93,42 @@ class TelegramBotHandlerTests(TestCase):
         response = self.client.post(url, data=payload, content_type="application/json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
+
+
+from .models import UserbotConfig
+
+
+class UserbotConfigTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="adminuserbot", password="pass12345")
+        self.client.force_login(self.user)
+
+    def test_userbot_config_encryption(self):
+        config = UserbotConfig.get_solo()
+        config.phone_number = "+998901234567"
+        config.api_id = "123456"
+        config.set_api_hash("secret_hash_value")
+        config.save()
+
+        self.assertEqual(config.get_api_hash(), "secret_hash_value")
+        self.assertNotEqual(config.encrypted_api_hash, "secret_hash_value")
+
+    def test_userbot_settings_view(self):
+        url = reverse("bots:userbot")
+        res_get = self.client.get(url)
+        self.assertEqual(res_get.status_code, 200)
+
+        res_post = self.client.post(url, {
+            "phone_number": "+998901234567",
+            "api_id": "12345678",
+            "api_hash": "my_secret_hash",
+            "is_active": "on",
+            "auto_reply_message": "Salom! Men hozir bandman...",
+            "reply_once_per_user": "on",
+        }, follow=True)
+        self.assertEqual(res_post.status_code, 200)
+
+        config = UserbotConfig.get_solo()
+        self.assertTrue(config.is_active)
+        self.assertEqual(config.api_id, "12345678")
+        self.assertEqual(config.get_api_hash(), "my_secret_hash")

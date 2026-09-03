@@ -9,6 +9,7 @@
     <div class="sub">{{ page_obj.paginator.count|default:bots|length }} ta yaratilgan bot ro'yxati</div>
   </div>
   <div class="btn-row">
+    <a class="btn" href="{% url 'bots:userbot' %}">⚡ Userbot (Shaxsiy Telegram)</a>
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>
     <a class="btn btn-primary" href="{% url 'bots:add' %}">+ Yangi Bot</a>
   </div>

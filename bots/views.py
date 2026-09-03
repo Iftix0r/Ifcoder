@@ -103,3 +103,22 @@ def telegram_webhook(request):
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
     return JsonResponse({"status": "only POST allowed"}, status=405)
+
+
+from django.contrib import messages
+from .forms import UserbotConfigForm
+from .models import UserbotConfig
+
+
+class UserbotSettingsView(LoginRequiredMixin, UpdateView):
+    model = UserbotConfig
+    form_class = UserbotConfigForm
+    template_name = "bots/userbot.html"
+    success_url = reverse_lazy("bots:userbot")
+
+    def get_object(self, queryset=None):
+        return UserbotConfig.get_solo()
+
+    def form_valid(self, form):
+        messages.success(self.request, "Userbot (Shaxsiy akkaunt) sozlamalari muvaffaqiyatli saqlandi!")
+        return super().form_valid(form)

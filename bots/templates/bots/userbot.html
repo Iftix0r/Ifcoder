@@ -1,0 +1,97 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Userbot Sozlamalari — Ifcoder Panel{% endblock %}
+{% block page_title %}Userbot (Shaxsiy Akkaunt Avto-javobgich){% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>⚡ Userbot (Shaxsiy Telegram Akkaunt)</h1>
+    <div class="sub">Shaxsiy Telegram akkauntingizni CRM'ga ulash, 24/7 avtomatik javob berish va akkauntni onlayn ushlash</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn" href="{% url 'bots:list' %}">&larr; Botlar ro'yxatiga qaytish</a>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header">
+      <h3 style="margin:0;">🤖 Userbot Sozlamalari</h3>
+      <span class="badge {% if form.instance.is_active %}active{% else %}inactive{% endif %}" style="margin-left:auto;">
+        {% if form.instance.is_active %}🟢 FAOL (24/7 Avto-javob ochiq){% else %}🔴 FAOL EMAS{% endif %}
+      </span>
+    </div>
+    
+    <form method="post" class="form">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="id_phone_number">📱 Telegram Telefon Raqam</label>
+        {{ form.phone_number }}
+        <div class="help-text">Masalan: <code>+998901234567</code></div>
+      </div>
+
+      <div class="form-row" style="display: flex; gap: 15px;">
+        <div class="form-group" style="flex:1;">
+          <label for="id_api_id">🔑 API ID</label>
+          {{ form.api_id }}
+          <div class="help-text">my.telegram.org saytidan olingan raqam</div>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label for="id_api_hash">🔒 API Hash</label>
+          {{ form.api_hash }}
+          <div class="help-text">Fernet bilan shifrlangan saqlanadi</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="id_auto_reply_message">💬 Avto-javob Matni (DM uchun)</label>
+        {{ form.auto_reply_message }}
+        <div class="help-text">Sizga shaxsiy Telegram'ingizda kimdir birinchi marta yozganida yuboriladigan avtomatik javob.</div>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          {{ form.is_active }}
+          <span><strong>24/7 Avto-javob rejimini yoqish</strong></span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          {{ form.reply_once_per_user }}
+          <span>Bir foydalanuvchiga faqat 1 marta avto-javob yuborish</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          {{ form.ai_reply_enabled }}
+          <span>OpenAI (AI) orqali aqlli avtomatik javob berish</span>
+        </label>
+      </div>
+
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="submit" class="btn btn-primary">💾 Sozlamalarni Saqlash</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card" style="background: rgba(15, 23, 42, 0.4);">
+    <h3>ℹ️ API ID va API Hash olish bo'yicha qo'llanma</h3>
+    <ol style="line-height: 1.8; margin-left: 20px; color: var(--text-muted, #94a3b8);">
+      <li>Brauzeringizda <strong><a href="https://my.telegram.org" target="_blank" style="color: #6366f1;">my.telegram.org</a></strong> saytiga kiring.</li>
+      <li>Telegram telefon raqamingizni kiriting va Telegram ilovangizga kelgan tasdiqlash kodini kiriting.</li>
+      <li><strong>API development tools</strong> bo'limiga o'ting.</li>
+      <li>Yangi ilova yarating (masalan, App title: <code>IfcoderCRM</code>, Short name: <code>ifcrm</code>).</li>
+      <li>Hosil bo'lgan <code>App api_id</code> va <code>App api_hash</code> kodlarini nusxalab, ushbu formaga kiriting va saqlang.</li>
+    </ol>
+
+    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+
+    <h3>🚀 Serverda 24/7 Ishga Tushirish</h3>
+    <p style="color: var(--text-muted, #94a3b8);">Server terminalida Userbot fonda 24/7 ishlashi uchun quyidagi buyruqni bajaring:</p>
+    <pre style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px; font-family: monospace; color: #38bdf8;">python manage.py run_userbot</pre>
+  </div>
+</div>
+{% endblock %}
