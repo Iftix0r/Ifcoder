@@ -32,8 +32,11 @@ def robots_txt(request):
 from django.conf import settings
 from django.conf.urls.static import static
 
+from bots.views import telegram_webhook
+
 urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
+    path('bots/telegram/webhook/', telegram_webhook, name='telegram_webhook_root'),
     path('admin/', admin.site.urls),
     path('accounts/login/', ThrottledLoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
