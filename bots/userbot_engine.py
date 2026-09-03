@@ -62,11 +62,14 @@ async def start_userbot_service():
     print(f"🚀 Telegram Userbot ulanmoqda... ({phone_number or 'Akkaunt'})")
     await client.start(phone=phone_number if phone_number else None)
 
-    # Session kodi yaratilgan bo'lsa shifrlab saqlash
-    if isinstance(client.session, StringSession):
-        curr_str = client.session.save()
-        if curr_str != session_str:
-            await save_userbot_session(config, curr_str)
+    # Ulanishdan keyin StringSession formatida saqlash (fayl yoki StringSession bo'lishidan qat'iy nazar).
+    # Bu helpers.py ga fayl lock xatosi bo'lmasdan DB session orqali ulanish imkonini beradi.
+    from telethon.sessions import StringSession as _SS
+    exported = _SS.save(client.session)
+    if exported and exported != session_str:
+        await save_userbot_session(config, exported)
+        session_str = exported
+        print("💾 Session ma'lumotlari DB ga saqlandi (helpers uchun).")
 
     me = await client.get_me()
     print(f"✅ Userbot muvaffaqiyatli ulana oldi: {me.first_name} (@{me.username or 'username_yoq'}) [ID: {me.id}]")
