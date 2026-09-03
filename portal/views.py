@@ -1,3 +1,4 @@
+import html
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -6,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
 
+from bots.telegram import send_telegram_message
 from clients.models import Client
 from dashboard.views import ThrottledLoginView
 from finance.models import Invoice
@@ -34,6 +36,18 @@ def landing_view(request):
                 notes=f"Landing page orqali murojaat:\n{notes}",
                 lead_status=Client.LeadStatus.NEW,
             )
+            try:
+                msg = (
+                    f"📩 <b>Landing Page'dan Yangi Murojaat!</b>\n\n"
+                    f"👤 <b>Ism:</b> {html.escape(name)}\n"
+                    f"📞 <b>Tel:</b> {html.escape(phone)}\n"
+                    f"✈️ <b>Telegram:</b> {html.escape(telegram)}\n"
+                    f"📝 <b>Izoh:</b> {html.escape(notes[:300])}"
+                )
+                send_telegram_message(msg)
+            except Exception:
+                pass
+
             messages.success(
                 request,
                 "Arizangiz muvaffaqiyatli qabul qilindi! Tezzora mutaxassisimiz siz bilan bog'lanadi.",
@@ -147,6 +161,18 @@ class ClientPortalDashboardView(LoginRequiredMixin, TemplateView):
                 client=client,
                 status=Project.Status.PLANNING,
             )
+            try:
+                client_name = html.escape(str(client))
+                msg = (
+                    f"🚀 <b>Yangi Loyiha Buyurtmasi!</b>\n\n"
+                    f"<b>Loyiha:</b> {html.escape(name)}\n"
+                    f"<b>Mijoz:</b> {client_name}\n\n"
+                    f"<b>Tavsif:</b>\n{html.escape(desc[:300])}"
+                )
+                send_telegram_message(msg)
+            except Exception:
+                pass
+
             messages.success(
                 request,
                 f"'{name}' loyihasi bo'yicha buyurtmangiz qabul qilindi! Adminlarimiz ko'rib chiqmoqda.",

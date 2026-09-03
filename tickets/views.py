@@ -5,7 +5,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, TemplateView
 
+import html
 from auditlog.models import log_action, AuditLog
+from bots.telegram import send_telegram_message
 from clients.models import Client
 from projects.models import Project
 
@@ -89,6 +91,19 @@ class PortalTicketNewView(LoginRequiredMixin, TemplateView):
             created_by=request.user,
             status=Ticket.Status.OPEN,
         )
+        try:
+            client_name = html.escape(str(client or request.user))
+            msg = (
+                f"🎫 <b>YANGI TIKET Ochildi #{ticket.pk}</b>\n\n"
+                f"<b>Mavzu:</b> {html.escape(ticket.title)}\n"
+                f"<b>Mijoz:</b> {client_name}\n"
+                f"<b>Muhimlik:</b> {ticket.get_priority_display()}\n\n"
+                f"<b>Tavsif:</b>\n{html.escape(ticket.body[:300])}"
+            )
+            send_telegram_message(msg)
+        except Exception:
+            pass
+
         messages.success(request, f"✅ Tiket #{ticket.pk} muvaffaqiyatli ochildi! Adminlarimiz tez orada javob beradi.")
         return redirect("tickets:portal_detail", pk=ticket.pk)
 
@@ -142,6 +157,18 @@ class PortalTicketDetailView(LoginRequiredMixin, TemplateView):
             TicketAttachment.objects.create(
                 ticket=ticket, reply=reply, file=f, uploaded_by=request.user
             )
+        try:
+            client_name = html.escape(str(ticket.client or request.user))
+            msg = (
+                f"💬 <b>Tiketga yangi javob #{ticket.pk}</b>\n\n"
+                f"<b>Mavzu:</b> {html.escape(ticket.title)}\n"
+                f"<b>Mijoz:</b> {client_name}\n\n"
+                f"<b>Javob:</b>\n{html.escape(body[:300])}"
+            )
+            send_telegram_message(msg)
+        except Exception:
+            pass
+
         log_action(
             request=request, action=AuditLog.Action.UPDATE,
             model_name="Ticket", object_id=ticket.pk,

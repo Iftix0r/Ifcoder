@@ -175,6 +175,10 @@ VAULT_FERNET_KEY = os.environ.get(
 # OpenAI yordamchisi uchun kalit. Uni .env yoki production environment'da bering.
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
+# Telegram Bot sozlamalari (admin bildirishnomalari va bot boshqaruvi uchun)
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_ADMIN_CHAT_ID = os.environ.get('TELEGRAM_ADMIN_CHAT_ID', '')
+
 # Production (DEBUG=False) uchun xavfsizlik sozlamalari — cPanel'dagi
 # iftix0r.uz Let's Encrypt SSL bilan xizmat qilgani uchun HTTPS majburlanadi.
 # Lokal (DEBUG=True) rivojlantirishga ta'sir qilmaydi.

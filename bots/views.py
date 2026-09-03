@@ -81,3 +81,25 @@ class BotDeleteView(LoginRequiredMixin, DeleteView):
         ctx = super().get_context_data(**kwargs)
         ctx["cancel_url"] = self.success_url
         return ctx
+
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from bots.handler import process_telegram_update
+
+
+@csrf_exempt
+def telegram_webhook(request):
+    """
+    Telegram webhook so'rovlarini qabul qiluvchi API view.
+    """
+    if request.method == "POST":
+        try:
+            body = request.body.decode("utf-8")
+            update = json.loads(body)
+            process_telegram_update(update)
+            return JsonResponse({"status": "ok"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    return JsonResponse({"status": "only POST allowed"}, status=405)

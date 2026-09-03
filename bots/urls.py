@@ -10,4 +10,5 @@ urlpatterns = [
     path("<int:pk>/", views.BotDetailView.as_view(), name="detail"),
     path("<int:pk>/edit/", views.BotUpdateView.as_view(), name="edit"),
     path("<int:pk>/delete/", views.BotDeleteView.as_view(), name="delete"),
+    path("telegram/webhook/", views.telegram_webhook, name="telegram_webhook"),
 ]
