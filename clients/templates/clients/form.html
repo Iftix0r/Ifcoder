@@ -10,63 +10,152 @@
   </div>
 </div>
 
+<style>
+.tg-picker-wrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+.tg-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--panel-2);
+  border: 1.5px solid rgba(41,182,246,.4);
+  border-radius: 10px;
+  padding: 11px 44px 11px 42px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.tg-search-input:focus {
+  border-color: #29b6f6;
+  box-shadow: 0 0 0 3px rgba(41,182,246,.12);
+}
+.tg-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 17px;
+  pointer-events: none;
+  line-height: 1;
+}
+.tg-loader {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(41,182,246,.25);
+  border-top-color: #29b6f6;
+  border-radius: 50%;
+  animation: tgSpin .65s linear infinite;
+  display: none;
+}
+@keyframes tgSpin { to { transform: translateY(-50%) rotate(360deg); } }
+.tg-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 200;
+  box-shadow: 0 12px 40px rgba(0,0,0,.35);
+  display: none;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.tg-dropdown.open { display: block; }
+.tg-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .15s;
+  border-bottom: 1px solid var(--border);
+}
+.tg-item:last-child { border-bottom: none; }
+.tg-item:hover, .tg-item.focused { background: rgba(41,182,246,.07); }
+.tg-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: linear-gradient(135deg,#29b6f6,#0288d1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+  overflow: hidden;
+}
+.tg-avatar img { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+.tg-info { flex: 1; min-width: 0; }
+.tg-name { font-weight: 600; font-size: 13.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tg-meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tg-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: rgba(41,182,246,.1); color: #29b6f6; flex-shrink: 0; }
+.tg-empty { padding: 18px; text-align: center; color: var(--muted); font-size: 13px; }
+.tg-selected-bar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(76,175,80,.07);
+  border: 1px solid rgba(76,175,80,.25);
+  border-radius: 9px;
+}
+.tg-selected-bar.show { display: flex; }
+</style>
+
 <div class="form-card" style="max-width:800px;">
   <form method="post" enctype="multipart/form-data" id="clientForm">
     {% csrf_token %}
 
-    <!-- TELEGRAM KONTAKT TANLASH BLOKI -->
-    <div style="margin-bottom:24px;padding:18px;background:linear-gradient(135deg,rgba(41,182,246,.08),rgba(41,182,246,.02));border:1px solid rgba(41,182,246,.25);border-radius:12px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        <span style="font-size:20px;">✈️</span>
-        <div>
-          <div style="font-weight:700;font-size:14px;color:var(--text);">Telegram'dan yuklash</div>
-          <div style="font-size:12px;color:var(--muted);">Userbot orqali kontaktni topib, ma'lumotlarini avtomatik to'ldiring</div>
-        </div>
-        <button type="button" id="loadDialogsBtn" class="btn" style="margin-left:auto;background:rgba(41,182,246,.15);color:#29b6f6;border:1px solid rgba(41,182,246,.3);font-size:13px;padding:7px 14px;" onclick="loadDialogs()">
-          📋 Kontaktlarni yuklash
-        </button>
-      </div>
+    <!-- ── TELEGRAM REAL-VAQT QIDIRUV ── -->
+    <div style="margin-bottom:24px;">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-weight:600;letter-spacing:.4px;">
+        ✈️ TELEGRAM'DAN TANLASH
+      </label>
+      <div class="tg-picker-wrap" id="tgPickerWrap">
+        <span class="tg-search-icon">🔍</span>
+        <input
+          type="text"
+          id="tgSearchInput"
+          class="tg-search-input"
+          placeholder="Ism, @username yoki Telegram ID orqali qidiring..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <div class="tg-loader" id="tgLoader"></div>
 
-      <!-- Qidiruv (username yoki ID bo'yicha) -->
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <input type="text" id="tgSearchInput" placeholder="@username yoki Telegram ID kiriting..." style="flex:1;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;">
-        <button type="button" class="btn" style="background:rgba(41,182,246,.15);color:#29b6f6;border:1px solid rgba(41,182,246,.3);font-size:13px;white-space:nowrap;" onclick="searchTgUser()">
-          🔍 Qidirish
-        </button>
-      </div>
-
-      <!-- Dialog ro'yxati -->
-      <div id="dialogsPanel" style="display:none;">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">So'nggi yozishmalar (50 ta):</div>
-        <div id="dialogsList" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding-right:4px;">
-          <!-- JS bilan to'ldiriladi -->
+        <div class="tg-dropdown" id="tgDropdown">
+          <div class="tg-empty" id="tgEmptyMsg" style="display:none;">Hech narsa topilmadi</div>
         </div>
       </div>
 
-      <div id="dialogsLoader" style="display:none;text-align:center;padding:16px;color:var(--muted);font-size:13px;">
-        ⏳ Telegram kontaktlar yuklanmoqda...
-      </div>
-
-      <!-- Tanlangan foydalanuvchi preview -->
-      <div id="selectedPreview" style="display:none;margin-top:12px;padding:12px;background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.25);border-radius:8px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <img id="previewAvatar" src="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--panel-2);" onerror="this.src=''">
-          <div style="flex:1;">
-            <div id="previewName" style="font-weight:700;font-size:14px;color:var(--text);"></div>
-            <div id="previewMeta" style="font-size:12px;color:var(--muted);"></div>
-          </div>
-          <button type="button" class="btn" style="background:rgba(76,175,80,.15);color:#4caf50;border:1px solid rgba(76,175,80,.3);font-size:12px;padding:6px 12px;" onclick="applyContact()">
-            ✅ Qo'llash
-          </button>
+      <!-- Tanlangan kontakt ko'rsatkichi -->
+      <div class="tg-selected-bar" id="tgSelectedBar">
+        <div class="tg-avatar" id="selAvatar">👤</div>
+        <div class="tg-info">
+          <div class="tg-name" id="selName"></div>
+          <div class="tg-meta" id="selMeta"></div>
         </div>
+        <button type="button" style="margin-left:auto;font-size:12px;padding:5px 11px;" class="btn" onclick="clearContact()">✕ Bekor</button>
       </div>
     </div>
-    <!-- /TELEGRAM KONTAKT TANLASH -->
+    <!-- ── /TELEGRAM QIDIRUV ── -->
 
     <!-- Avatar preview -->
     <div style="display:flex;align-items:flex-start;gap:20px;margin-bottom:20px;">
       <div>
-        <div id="avatarPreviewWrap" style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:var(--panel-2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;">
+        <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:var(--panel-2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;">
           {% if object and object.avatar %}
             <img id="avatarPreviewImg" src="{{ object.avatar.url }}" style="width:80px;height:80px;object-fit:cover;" />
           {% else %}
@@ -135,6 +224,8 @@
       {{ form.notes.errors }}
     </div>
 
+    <input type="hidden" id="tgAvatarPath" name="tg_avatar_path">
+
     <div class="form-actions">
       <button class="btn btn-primary" type="submit">💾 Saqlash</button>
       <a class="btn" href="{% if object %}{% url 'clients:detail' object.pk %}{% else %}{% url 'clients:list' %}{% endif %}">Bekor qilish</a>
@@ -142,155 +233,241 @@
   </form>
 </div>
 
-<!-- Hidden input for avatar path from Telegram -->
-<input type="hidden" id="tgAvatarPath" name="tg_avatar_path">
-
 <script>
-const DIALOGS_API  = "{% url 'bots:userbot_dialogs_api' %}";
-const SYNC_API     = "{% url 'bots:userbot_sync_contact_api' %}";
-let pendingContact = null;
+const DIALOGS_API = "{% url 'bots:userbot_dialogs_api' %}";
+const SYNC_API    = "{% url 'bots:userbot_sync_contact_api' %}";
 
-// Avatar fayl tanlanganda preview ko'rsatish
-document.getElementById("{{ form.avatar.id_for_label }}").addEventListener("change", function(e) {
-  const file = e.target.files[0];
-  if (file) {
-    const url = URL.createObjectURL(file);
-    showAvatarPreview(url);
+let allDialogs   = null;   // bir marta yuklanadi
+let loadPromise  = null;   // parallel yuklamasin
+let debounceTimer = null;
+let focusIdx     = -1;
+
+const input    = document.getElementById("tgSearchInput");
+const dropdown = document.getElementById("tgDropdown");
+const loader   = document.getElementById("tgLoader");
+const emptyMsg = document.getElementById("tgEmptyMsg");
+const selBar   = document.getElementById("tgSelectedBar");
+
+// ── Dialog ro'yxatini bir marta yuklash ──────────────────────────────
+function ensureDialogsLoaded() {
+  if (allDialogs !== null) return Promise.resolve(allDialogs);
+  if (loadPromise) return loadPromise;
+
+  loader.style.display = "block";
+  loadPromise = fetch(DIALOGS_API)
+    .then(r => r.json())
+    .then(data => {
+      loader.style.display = "none";
+      allDialogs = (data.status === "ok" && data.dialogs) ? data.dialogs : [];
+      return allDialogs;
+    })
+    .catch(() => {
+      loader.style.display = "none";
+      allDialogs = [];
+      return allDialogs;
+    });
+  return loadPromise;
+}
+
+// ── Kirish hodisasi ─────────────────────────────────────────────────
+input.addEventListener("focus", () => {
+  ensureDialogsLoaded().then(list => {
+    const q = input.value.trim();
+    showResults(q ? filterDialogs(q, list) : list.slice(0, 30));
+  });
+});
+
+input.addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  const q = input.value.trim();
+
+  if (!q) {
+    ensureDialogsLoaded().then(list => showResults(list.slice(0, 30)));
+    return;
+  }
+
+  debounceTimer = setTimeout(async () => {
+    const list = await ensureDialogsLoaded();
+    const local = filterDialogs(q, list);
+
+    if (local.length > 0) {
+      showResults(local);
+    } else {
+      // Mahalliy natija yo'q — Telegram API dan qidirish
+      const isIdOrUser = /^[\d@]/.test(q) || q.length >= 4;
+      if (!isIdOrUser) { showResults([]); return; }
+
+      loader.style.display = "block";
+      try {
+        const r = await fetch(SYNC_API + "?target=" + encodeURIComponent(q.replace("@","")));
+        const d = await r.json();
+        loader.style.display = "none";
+        if (d.status === "ok" && d.user) showResults([d.user], true);
+        else showResults([]);
+      } catch {
+        loader.style.display = "none";
+        showResults([]);
+      }
+    }
+  }, 300);
+});
+
+// ── Klaviatura navigatsiyasi ─────────────────────────────────────────
+input.addEventListener("keydown", e => {
+  const items = dropdown.querySelectorAll(".tg-item");
+  if (!items.length) return;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    focusIdx = Math.min(focusIdx + 1, items.length - 1);
+    updateFocus(items);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    focusIdx = Math.max(focusIdx - 1, 0);
+    updateFocus(items);
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (focusIdx >= 0) items[focusIdx].click();
+  } else if (e.key === "Escape") {
+    closeDropdown();
   }
 });
 
-function showAvatarPreview(url) {
-  const img = document.getElementById("avatarPreviewImg");
-  const ph  = document.getElementById("avatarPlaceholder");
-  img.src = url;
-  img.style.display = "block";
-  if (ph) ph.style.display = "none";
+function updateFocus(items) {
+  items.forEach((el, i) => el.classList.toggle("focused", i === focusIdx));
+  if (items[focusIdx]) items[focusIdx].scrollIntoView({ block: "nearest" });
 }
 
-// Dialoglar ro'yxatini yuklash
-async function loadDialogs() {
-  const panel  = document.getElementById("dialogsPanel");
-  const loader = document.getElementById("dialogsLoader");
-  const btn    = document.getElementById("loadDialogsBtn");
+// ── Tashqariga bosish — yopish ───────────────────────────────────────
+document.addEventListener("click", e => {
+  if (!document.getElementById("tgPickerWrap").contains(e.target)) closeDropdown();
+});
 
-  panel.style.display  = "none";
-  loader.style.display = "block";
-  btn.disabled = true;
-  btn.textContent = "⏳ Yuklanmoqda...";
-
-  try {
-    const resp = await fetch(DIALOGS_API);
-    const data = await resp.json();
-
-    loader.style.display = "none";
-    btn.disabled = false;
-    btn.textContent = "🔄 Yangilash";
-
-    if (data.status === "ok" && data.dialogs.length > 0) {
-      renderDialogs(data.dialogs);
-      panel.style.display = "block";
-    } else {
-      showNotice("⚠️ Kontaktlar topilmadi. Userbot ishlab turganligini va admin panelda API ma'lumotlari kiritilganligini tekshiring.", "warn");
-    }
-  } catch(err) {
-    loader.style.display = "none";
-    btn.disabled = false;
-    btn.textContent = "📋 Kontaktlarni yuklash";
-    showNotice("❌ Xatolik: " + err.message, "error");
-  }
+// ── Filtr ────────────────────────────────────────────────────────────
+function filterDialogs(q, list) {
+  const lq = q.toLowerCase().replace("@","");
+  return list.filter(d =>
+    d.name.toLowerCase().includes(lq) ||
+    (d.username || "").toLowerCase().includes(lq) ||
+    (d.phone || "").includes(lq) ||
+    (d.id || "").includes(lq)
+  ).slice(0, 25);
 }
 
-function renderDialogs(dialogs) {
-  const list = document.getElementById("dialogsList");
-  list.innerHTML = "";
-  dialogs.forEach(d => {
+// ── Natijalarni ko'rsatish ───────────────────────────────────────────
+function showResults(list, fromApi = false) {
+  dropdown.innerHTML = "";
+  focusIdx = -1;
+  emptyMsg.style.display = "none";
+
+  if (!list.length) {
     const el = document.createElement("div");
-    el.style.cssText = "display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;background:var(--panel-2);border:1px solid var(--border);transition:border-color .2s;";
-    el.onmouseenter = () => el.style.borderColor = "rgba(41,182,246,.5)";
-    el.onmouseleave = () => el.style.borderColor = "var(--border)";
-    const avatar = d.avatar_url
-      ? `<img src="${d.avatar_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`
-      : `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#29b6f6,#0288d1);display:flex;align-items:center;justify-content:center;font-size:16px;">👤</div>`;
-    el.innerHTML = `
-      ${avatar}
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.name}</div>
-        <div style="font-size:11px;color:var(--muted);">${d.username ? '@' + d.username : ''}${d.phone ? ' · ' + d.phone : ''}</div>
-      </div>
-      <span style="font-size:11px;color:rgba(41,182,246,.7);padding:3px 8px;border-radius:20px;background:rgba(41,182,246,.1);">Tanlash</span>
-    `;
-    el.onclick = () => previewContact(d);
-    list.appendChild(el);
-  });
+    el.className = "tg-empty";
+    el.textContent = "Hech narsa topilmadi";
+    dropdown.appendChild(el);
+  } else {
+    list.forEach(d => dropdown.appendChild(buildItem(d, fromApi)));
+  }
+
+  dropdown.classList.add("open");
 }
 
-function previewContact(d) {
-  pendingContact = d;
-  document.getElementById("previewName").textContent = d.name;
-  document.getElementById("previewMeta").textContent =
-    (d.username ? "@" + d.username + "  " : "") +
-    (d.phone || "") +
-    (d.id ? "  [ID: " + d.id + "]" : "");
-  const img = document.getElementById("previewAvatar");
-  img.src = d.avatar_url || "";
-  img.style.display = d.avatar_url ? "block" : "none";
-  document.getElementById("selectedPreview").style.display = "block";
-  document.getElementById("selectedPreview").scrollIntoView({behavior:"smooth", block:"nearest"});
+function closeDropdown() {
+  dropdown.classList.remove("open");
+  focusIdx = -1;
 }
 
-function applyContact() {
-  if (!pendingContact) return;
-  const d = pendingContact;
+function buildItem(d, fromApi) {
+  const el = document.createElement("div");
+  el.className = "tg-item";
 
-  document.getElementById("{{ form.name.id_for_label }}").value     = d.name   || "";
-  document.getElementById("{{ form.phone.id_for_label }}").value    = d.phone  || "";
-  document.getElementById("{{ form.telegram.id_for_label }}").value = d.username || "";
-  document.getElementById("{{ form.telegram_id.id_for_label }}").value = d.id || "";
+  const avatarEl = document.createElement("div");
+  avatarEl.className = "tg-avatar";
+  if (d.avatar_url) {
+    const img = document.createElement("img");
+    img.src = d.avatar_url;
+    img.onerror = () => { avatarEl.textContent = (d.name || "?")[0].toUpperCase(); };
+    avatarEl.appendChild(img);
+  } else {
+    avatarEl.textContent = (d.name || "?")[0].toUpperCase();
+  }
+
+  const infoEl = document.createElement("div");
+  infoEl.className = "tg-info";
+
+  const nameEl = document.createElement("div");
+  nameEl.className = "tg-name";
+  nameEl.textContent = d.name;
+
+  const metaEl = document.createElement("div");
+  metaEl.className = "tg-meta";
+  metaEl.textContent = [d.username ? "@" + d.username : null, d.phone || null].filter(Boolean).join("  ·  ");
+
+  infoEl.appendChild(nameEl);
+  infoEl.appendChild(metaEl);
+
+  if (fromApi) {
+    const badge = document.createElement("span");
+    badge.className = "tg-badge";
+    badge.textContent = "Telegram";
+    el.appendChild(avatarEl);
+    el.appendChild(infoEl);
+    el.appendChild(badge);
+  } else {
+    el.appendChild(avatarEl);
+    el.appendChild(infoEl);
+  }
+
+  el.onclick = () => applyContact(d);
+  return el;
+}
+
+// ── Tanlangan kontaktni formaga qo'llash ─────────────────────────────
+function applyContact(d) {
+  closeDropdown();
+  input.value = d.name;
+
+  document.getElementById("{{ form.name.id_for_label }}").value        = d.name      || "";
+  document.getElementById("{{ form.phone.id_for_label }}").value       = d.phone     || "";
+  document.getElementById("{{ form.telegram.id_for_label }}").value    = d.username  || "";
+  document.getElementById("{{ form.telegram_id.id_for_label }}").value = d.id        || "";
 
   if (d.avatar_url) {
-    showAvatarPreview(d.avatar_url);
+    const img = document.getElementById("avatarPreviewImg");
+    const ph  = document.getElementById("avatarPlaceholder");
+    img.src = d.avatar_url;
+    img.style.display = "block";
+    if (ph) ph.style.display = "none";
     document.getElementById("tgAvatarPath").value = d.avatar_path || "";
   }
 
-  document.getElementById("selectedPreview").style.display = "none";
-  showNotice("✅ Ma'lumotlar muvaffaqiyatli to'ldirildi! Kerak bo'lsa tahrirlang va saqlang.", "ok");
+  // Ko'rsatish paneli
+  const avEl = document.getElementById("selAvatar");
+  avEl.innerHTML = d.avatar_url
+    ? `<img src="${d.avatar_url}" onerror="this.parentElement.textContent='${(d.name||"?")[0].toUpperCase()}'">`
+    : (d.name || "?")[0].toUpperCase();
+
+  document.getElementById("selName").textContent = d.name;
+  document.getElementById("selMeta").textContent =
+    [d.username ? "@" + d.username : null, d.phone || null, d.id ? "ID: " + d.id : null].filter(Boolean).join("  ·  ");
+  selBar.classList.add("show");
 }
 
-// Username yoki ID bo'yicha qidirish
-async function searchTgUser() {
-  const target = document.getElementById("tgSearchInput").value.trim().replace("@","");
-  if (!target) { showNotice("⚠️ Username yoki ID kiriting.", "warn"); return; }
-
-  showNotice("⏳ Qidirilmoqda...", "info");
-  try {
-    const resp = await fetch(SYNC_API + "?target=" + encodeURIComponent(target));
-    const data = await resp.json();
-    if (data.status === "ok" && data.user) {
-      previewContact(data.user);
-    } else {
-      showNotice("❌ Telegram foydalanuvchisi topilmadi: " + (data.message || ""), "error");
-    }
-  } catch(err) {
-    showNotice("❌ Xatolik: " + err.message, "error");
-  }
+function clearContact() {
+  input.value = "";
+  selBar.classList.remove("show");
+  document.getElementById("tgAvatarPath").value = "";
 }
 
-function showNotice(msg, type) {
-  let colors = {ok:"rgba(76,175,80,.15)", warn:"rgba(255,152,0,.15)", error:"rgba(244,67,54,.15)", info:"rgba(41,182,246,.15)"};
-  let borders = {ok:"rgba(76,175,80,.4)", warn:"rgba(255,152,0,.4)", error:"rgba(244,67,54,.4)", info:"rgba(41,182,246,.4)"};
-  let n = document.getElementById("tgNotice");
-  if (!n) {
-    n = document.createElement("div");
-    n.id = "tgNotice";
-    n.style.cssText = "margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13px;transition:all .3s;";
-    document.getElementById("selectedPreview").parentNode.insertBefore(n, document.getElementById("selectedPreview").nextSibling);
-  }
-  n.style.background  = colors[type]  || colors.info;
-  n.style.border      = `1px solid ${borders[type] || borders.info}`;
-  n.style.color       = "var(--text)";
-  n.textContent       = msg;
-  n.style.display     = "block";
-  if (type === "ok") setTimeout(() => { n.style.display = "none"; }, 4000);
-}
+// Avatar fayl tanlanganda preview
+document.getElementById("{{ form.avatar.id_for_label }}").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = document.getElementById("avatarPreviewImg");
+  const ph  = document.getElementById("avatarPlaceholder");
+  img.src = URL.createObjectURL(file);
+  img.style.display = "block";
+  if (ph) ph.style.display = "none";
+});
 </script>
 {% endblock %}
