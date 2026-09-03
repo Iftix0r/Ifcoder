@@ -36,14 +36,23 @@ class ClientListView(LoginRequiredMixin, CSVExportMixin, ListView):
         lead_status = self.request.GET.get("lead_status")
         if lead_status:
             qs = qs.filter(lead_status=lead_status)
+
+        has_telegram = self.request.GET.get("has_telegram")
+        if has_telegram == "yes":
+            qs = qs.filter(Q(telegram__gt="") | Q(telegram_id__gt=""))
+        elif has_telegram == "no":
+            qs = qs.filter(Q(telegram="") & Q(telegram_id=""))
+
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["q"] = self.request.GET.get("q", "")
         ctx["lead_status"] = self.request.GET.get("lead_status", "")
+        ctx["has_telegram"] = self.request.GET.get("has_telegram", "")
         ctx["lead_status_choices"] = Client.LeadStatus.choices
         return ctx
+
 
 
 class ClientDetailView(LoginRequiredMixin, DetailView):
@@ -170,4 +179,56 @@ def client_sync_tg_avatar(request, pk):
 
     avatar_url = f"{settings.MEDIA_URL.rstrip('/')}/{avatar_path.lstrip('/')}"
     return JsonResponse({"status": "ok", "avatar_url": avatar_url})
+
+
+@login_required
+@csrf_exempt
+def client_create_from_tg_api(request):
+    """
+    Userbot kontaktini 1-bosish bilan mijoz sifatida saqlaydi.
+    """
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        telegram = request.POST.get("telegram", "").strip()
+        telegram_id = request.POST.get("telegram_id", "").strip()
+        avatar_path = request.POST.get("avatar_path", "").strip()
+
+        if not name:
+            return JsonResponse({"status": "error", "message": "Ism kiritilishi shart"}, status=400)
+
+        # Tekshirish: Mavjud mijoz bo'lsa
+        existing = None
+        if telegram_id:
+            existing = Client.objects.filter(telegram_id=telegram_id).first()
+        if not existing and telegram:
+            existing = Client.objects.filter(telegram__iexact=telegram).first()
+
+        if existing:
+            return JsonResponse({"status": "exists", "client_id": existing.pk, "message": f"Bu mijoz allaqachon mavjud ({existing.name})"})
+
+        client = Client.objects.create(
+            name=name,
+            phone=phone,
+            telegram=telegram,
+            telegram_id=telegram_id,
+            lead_status="new"
+        )
+        if avatar_path:
+            import os
+            from django.conf import settings
+            full_path = os.path.join(settings.MEDIA_ROOT, avatar_path)
+            if os.path.exists(full_path):
+                client.avatar = avatar_path
+                client.save(update_fields=["avatar"])
+
+        return JsonResponse({
+            "status": "ok",
+            "client_id": client.pk,
+            "name": client.name,
+            "message": "Mijoz muvaffaqiyatli qo'shildi!"
+        })
+
+    return JsonResponse({"status": "error", "message": "Faqat POST so'rov"}, status=405)
+
 

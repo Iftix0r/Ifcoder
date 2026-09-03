@@ -11,4 +11,7 @@ urlpatterns = [
     path("<int:pk>/edit/", views.ClientUpdateView.as_view(), name="edit"),
     path("<int:pk>/delete/", views.ClientDeleteView.as_view(), name="delete"),
     path("<int:pk>/sync-tg-avatar/", views.client_sync_tg_avatar, name="sync_tg_avatar"),
+    path("add-from-tg/", views.client_create_from_tg_api, name="add_from_tg_api"),
 ]
+
+
