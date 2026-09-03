@@ -218,3 +218,140 @@ def fetch_telegram_user(target: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"fetch_telegram_user xatolik: {e}")
         return None
+
+
+async def _async_send_message(
+    target: str, text: str, api_id: int, api_hash: str, session_str: str, session_file: str
+) -> Optional[Dict[str, Any]]:
+    client = _build_client(api_id, api_hash, session_str, session_file)
+    try:
+        await client.connect()
+        if not await client.is_user_authorized():
+            await client.disconnect()
+            return None
+
+        try:
+            target_val: Any = int(target)
+        except ValueError:
+            target_val = target.lstrip("@")
+
+        sent_msg = await client.send_message(target_val, text)
+        chat_id = getattr(sent_msg, "chat_id", 0)
+        msg_id = getattr(sent_msg, "id", 0)
+
+        await client.disconnect()
+        return {"status": "ok", "message_id": msg_id, "chat_id": chat_id}
+    except Exception as e:
+        logger.error(f"Xabar yuborishda xatolik [{target}]: {e}")
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        return None
+
+
+async def _async_sync_chat_history(
+    target: str, limit: int, api_id: int, api_hash: str, session_str: str, session_file: str
+) -> List[Dict[str, Any]]:
+    client = _build_client(api_id, api_hash, session_str, session_file)
+    media_dir = Path(settings.MEDIA_ROOT) / "telegram_chat_media"
+    media_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        await client.connect()
+        if not await client.is_user_authorized():
+            await client.disconnect()
+            return []
+
+        try:
+            target_val: Any = int(target)
+        except ValueError:
+            target_val = target.lstrip("@")
+
+        entity = await client.get_entity(target_val)
+        me = await client.get_me()
+
+        msgs = []
+        async for msg in client.iter_messages(entity, limit=limit):
+            is_outgoing = msg.out or (msg.sender_id == me.id)
+            sender_id = msg.sender_id or (me.id if is_outgoing else entity.id)
+
+            media_type = "text"
+            rel_media_path = ""
+            if msg.photo:
+                media_type = "photo"
+                ext = ".jpg"
+            elif msg.voice:
+                media_type = "voice"
+                ext = ".ogg"
+            elif msg.video:
+                media_type = "video"
+                ext = ".mp4"
+            elif msg.document:
+                media_type = "document"
+                ext = ".bin"
+
+            if media_type != "text":
+                filename = f"media_{entity.id}_{msg.id}{ext}"
+                file_path = media_dir / filename
+                if not file_path.exists():
+                    try:
+                        downloaded = await client.download_media(msg, file=str(file_path))
+                        if downloaded:
+                            rel_media_path = f"telegram_chat_media/{filename}"
+                    except Exception:
+                        pass
+                else:
+                    rel_media_path = f"telegram_chat_media/{filename}"
+
+            msgs.append({
+                "message_id": msg.id,
+                "chat_id": entity.id,
+                "sender_id": sender_id,
+                "is_outgoing": is_outgoing,
+                "text": msg.raw_text or "",
+                "media_type": media_type,
+                "media_file": rel_media_path,
+                "date": msg.date.isoformat() if msg.date else "",
+            })
+
+        await client.disconnect()
+        return msgs
+    except Exception as e:
+        logger.error(f"Chat tarixini sinxronlashda xatolik [{target}]: {e}")
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        return []
+
+
+def send_userbot_message(target: str, text: str) -> Optional[Dict[str, Any]]:
+    """Django view'dan xabar yuborish wrapperi."""
+    if not target or not text:
+        return None
+    cfg = _get_config_sync()
+    if cfg is None:
+        return None
+    api_id, api_hash, session_str, session_file = cfg
+    try:
+        return asyncio.run(_async_send_message(target, text, api_id, api_hash, session_str, session_file))
+    except Exception as e:
+        logger.error(f"send_userbot_message xatolik: {e}")
+        return None
+
+
+def sync_client_chat_history(target: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Django view'dan chat tarixini sinxronlash wrapperi."""
+    if not target:
+        return []
+    cfg = _get_config_sync()
+    if cfg is None:
+        return []
+    api_id, api_hash, session_str, session_file = cfg
+    try:
+        return asyncio.run(_async_sync_chat_history(target, limit, api_id, api_hash, session_str, session_file))
+    except Exception as e:
+        logger.error(f"sync_client_chat_history xatolik: {e}")
+        return []
+

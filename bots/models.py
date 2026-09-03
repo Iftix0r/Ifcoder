@@ -101,3 +101,53 @@ class UserbotConfig(models.Model):
     def get_solo(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class TelegramMessage(models.Model):
+    class MediaType(models.TextChoices):
+        TEXT = "text", "Matn"
+        PHOTO = "photo", "Rasm"
+        VIDEO = "video", "Video"
+        VOICE = "voice", "Ovozli xabar"
+        DOCUMENT = "document", "Fayl"
+        OTHER = "other", "Boshqa"
+
+    message_id = models.BigIntegerField("Telegram Message ID")
+    chat_id = models.BigIntegerField("Telegram Chat ID", db_index=True)
+    sender_id = models.BigIntegerField("Sender ID", null=True, blank=True)
+    sender_name = models.CharField("Yuboruvchi ismi", max_length=200, blank=True)
+    is_outgoing = models.BooleanField("Chiquvchi xabar", default=False)
+    text = models.TextField("Xabar matni", blank=True)
+
+    media_type = models.CharField(
+        "Media turi", max_length=20, choices=MediaType.choices, default=MediaType.TEXT
+    )
+    media_file = models.FileField("Media fayli", upload_to="telegram_chat_media/", blank=True, null=True)
+
+    is_edited = models.BooleanField("Tahrirlangan", default=False)
+    original_text = models.TextField("Asl matn (tahrirdan oldingi)", blank=True)
+
+    is_deleted = models.BooleanField("Telegramda o'chirilgan", default=False)
+    deleted_at = models.DateTimeField("O'chirilgan vaqti", null=True, blank=True)
+
+    client = models.ForeignKey(
+        Client,
+        verbose_name="Mijoz",
+        related_name="telegram_messages",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField("Yaratilgan vaqti", auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "Telegram Xabari"
+        verbose_name_plural = "Telegram Xabarlari"
+        ordering = ["created_at"]
+        indexes = [
+            models.Index(fields=["chat_id", "message_id"]),
+        ]
+
+    def __str__(self):
+        return f"Msg #{self.message_id} in Chat {self.chat_id} ({self.sender_name})"
+

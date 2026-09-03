@@ -248,3 +248,120 @@ def client_create_from_tg_api(request):
     return JsonResponse({"status": "error", "message": "Faqat POST so'rov"}, status=405)
 
 
+@login_required
+def client_chat_messages_api(request, pk):
+    """
+    Mijozning Telegram chat yozishmalarini DB dan oladi.
+    Kerak bo'lsa Telegram userbot dan sinxronlaydi.
+    """
+    client = get_object_or_404(Client, pk=pk)
+    target = (client.telegram_id or client.telegram or "").strip().lstrip("@")
+
+    if not target:
+        return JsonResponse({"status": "error", "message": "Mijozda Telegram username yoki ID biriktirilmagan"}, status=400)
+
+    from bots.models import TelegramMessage
+    from django.db.models import Q
+
+    messages_qs = TelegramMessage.objects.filter(
+        Q(client=client) | Q(chat_id=target)
+    ).order_by("created_at")
+
+    do_sync = request.GET.get("sync") == "true" or not messages_qs.exists()
+    if do_sync:
+        try:
+            from bots.userbot_helpers import sync_client_chat_history
+            synced = sync_client_chat_history(target, limit=40)
+            if synced:
+                for item in synced:
+                    msg, created = TelegramMessage.objects.get_or_create(
+                        chat_id=item["chat_id"],
+                        message_id=item["message_id"],
+                        defaults={
+                            "sender_id": item["sender_id"],
+                            "is_outgoing": item["is_outgoing"],
+                            "text": item["text"],
+                            "media_type": item["media_type"],
+                            "media_file": item["media_file"],
+                            "client": client,
+                        }
+                    )
+                    if not msg.client:
+                        msg.client = client
+                        msg.save(update_fields=["client"])
+        except Exception as e:
+            pass
+
+    messages_qs = TelegramMessage.objects.filter(
+        Q(client=client) | Q(chat_id=target)
+    ).order_by("created_at")
+
+    message_list = []
+    from django.conf import settings
+    for m in messages_qs:
+        media_url = ""
+        if m.media_file:
+            media_url = f"{settings.MEDIA_URL.rstrip('/')}/{m.media_file.name.lstrip('/')}"
+
+        message_list.append({
+            "id": m.pk,
+            "message_id": m.message_id,
+            "sender_name": m.sender_name or (client.name if not m.is_outgoing else "Siz"),
+            "is_outgoing": m.is_outgoing,
+            "text": m.text,
+            "media_type": m.media_type,
+            "media_url": media_url,
+            "is_edited": m.is_edited,
+            "original_text": m.original_text,
+            "is_deleted": m.is_deleted,
+            "deleted_at": m.deleted_at.strftime("%d.%m.%Y %H:%M") if m.deleted_at else "",
+            "created_at": m.created_at.strftime("%d.%m %H:%M"),
+        })
+
+    return JsonResponse({
+        "status": "ok",
+        "client_name": client.name,
+        "telegram": client.telegram or client.telegram_id,
+        "messages": message_list
+    })
+
+
+@login_required
+@csrf_exempt
+def client_send_chat_message_api(request, pk):
+    """
+    CRM paneldan mijozga Telegram xabar yuborish.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Faqat POST"}, status=405)
+
+    client = get_object_or_404(Client, pk=pk)
+    target = (client.telegram_id or client.telegram or "").strip().lstrip("@")
+    text = request.POST.get("text", "").strip()
+
+    if not target:
+        return JsonResponse({"status": "error", "message": "Mijozda Telegram yo'q"}, status=400)
+    if not text:
+        return JsonResponse({"status": "error", "message": "Xabar matni bo'sh"}, status=400)
+
+    try:
+        from bots.userbot_helpers import send_userbot_message
+        res = send_userbot_message(target, text)
+        if res and res.get("status") == "ok":
+            from bots.models import TelegramMessage
+            TelegramMessage.objects.create(
+                message_id=res.get("message_id", 0),
+                chat_id=res.get("chat_id", target),
+                sender_name="Siz (Admin)",
+                is_outgoing=True,
+                text=text,
+                client=client
+            )
+            return JsonResponse({"status": "ok", "message": "Xabar yuborildi!"})
+        else:
+            return JsonResponse({"status": "error", "message": "Userbot orqali xabar yuborib bo'lmadi"}, status=500)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+
