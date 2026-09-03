@@ -1,12 +1,13 @@
 {% extends "dashboard/base.html" %}
+{% load dashboard_extras %}
 {% block title %}Mijozlar — Ifcoder Panel{% endblock %}
 {% block page_title %}Mijozlar{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="margin-bottom:20px;">
   <div>
     <h1>Mijozlar Ro'yxati</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:clients|length }} ta mijoz mavjud</div>
+    <div class="sub">Jami {{ total_clients_count }} ta mijoz ({% if clients %}{{ clients|length }}{% else %}0{% endif %} tasi ko'rsatilyapti)</div>
   </div>
   <div class="btn-row">
     <button type="button" class="btn" onclick="openTgModal()" style="background:rgba(41,182,246,.12);color:#29b6f6;border:1px solid rgba(41,182,246,.3);">
@@ -15,6 +16,45 @@
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>
     <a class="btn btn-primary" href="{% url 'clients:add' %}">+ Yangi Mijoz</a>
   </div>
+</div>
+
+<!-- STATS CARDS GRID -->
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+  <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:6px;">
+    <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Jami Mijozlar</div>
+    <div style="font-size:26px;font-weight:800;color:var(--text);">{{ total_clients_count }} <span style="font-size:13px;font-weight:500;color:var(--muted);">ta</span></div>
+    <div style="font-size:11.5px;color:#29b6f6;">✈️ {{ tg_clients_count }} ta Telegram bog'langan</div>
+  </div>
+
+  <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:6px;">
+    <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Faol Mijozlar</div>
+    <div style="font-size:26px;font-weight:800;color:#4caf50;">{{ active_clients_count }} <span style="font-size:13px;font-weight:500;color:var(--muted);">ta</span></div>
+    <div style="font-size:11.5px;color:var(--muted);">Shartnomalari faol</div>
+  </div>
+
+  <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:6px;">
+    <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Yangi Leadlar</div>
+    <div style="font-size:26px;font-weight:800;color:#29b6f6;">{{ new_leads_count }} <span style="font-size:13px;font-weight:500;color:var(--muted);">ta</span></div>
+    <div style="font-size:11.5px;color:var(--muted);">Ko'rib chiqilmoqda</div>
+  </div>
+
+  <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:6px;">
+    <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Keyingi Aloqa</div>
+    <div style="font-size:26px;font-weight:800;color:{% if follow_up_today_count > 0 %}#f44336{% else %}var(--text){% endif %};">{{ follow_up_today_count }} <span style="font-size:13px;font-weight:500;color:var(--muted);">ta</span></div>
+    <div style="font-size:11.5px;color:{% if follow_up_today_count > 0 %}#f44336{% else %}var(--muted){% endif %};">{% if follow_up_today_count > 0 %}⚠️ Aloqaga chiqish kerak!{% else %}Rejalashtirilgan aloqa yo'q{% endif %}</div>
+  </div>
+</div>
+
+<!-- LEAD STATUS FILTER PILLS -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+  <a href="{% url 'clients:list' %}" class="btn btn-sm" style="{% if not lead_status %}background:var(--accent);color:#fff;border-color:var(--accent);{% endif %}">
+    Barchasi ({{ total_clients_count }})
+  </a>
+  {% for st_val, st_label in lead_status_choices %}
+  <a href="?lead_status={{ st_val }}{% if q %}&q={{ q }}{% endif %}{% if has_telegram %}&has_telegram={{ has_telegram }}{% endif %}" class="btn btn-sm" style="{% if lead_status == st_val %}background:var(--accent);color:#fff;border-color:var(--accent);{% endif %}">
+    {{ st_label }} ({{ status_counts|get_dict_item:st_val }})
+  </a>
+  {% endfor %}
 </div>
 
 <div class="toolbar">
@@ -35,6 +75,7 @@
     {% if q or lead_status or has_telegram %}<a class="btn btn-sm" href="{% url 'clients:list' %}">Tozalash</a>{% endif %}
   </form>
 </div>
+
 
 {% if clients %}
 <div class="table-wrap">

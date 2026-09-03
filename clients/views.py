@@ -47,11 +47,27 @@ class ClientListView(LoginRequiredMixin, CSVExportMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        from django.utils import timezone
+        today = timezone.now().date()
+
+        all_clients = Client.objects.all()
+        ctx["total_clients_count"] = all_clients.count()
+        ctx["active_clients_count"] = all_clients.filter(lead_status="active").count()
+        ctx["new_leads_count"] = all_clients.filter(lead_status="new").count()
+        ctx["tg_clients_count"] = all_clients.filter(Q(telegram__gt="") | Q(telegram_id__gt="")).count()
+        ctx["follow_up_today_count"] = all_clients.filter(follow_up_date__lte=today).exclude(follow_up_date=None).count()
+
+        status_counts = {}
+        for st_val, _ in Client.LeadStatus.choices:
+            status_counts[st_val] = all_clients.filter(lead_status=st_val).count()
+        ctx["status_counts"] = status_counts
+
         ctx["q"] = self.request.GET.get("q", "")
         ctx["lead_status"] = self.request.GET.get("lead_status", "")
         ctx["has_telegram"] = self.request.GET.get("has_telegram", "")
         ctx["lead_status_choices"] = Client.LeadStatus.choices
         return ctx
+
 
 
 

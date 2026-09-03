@@ -52,3 +52,11 @@ def compact_num(value, symbol="UZS"):
     except (ValueError, TypeError):
         return f"{value} {symbol}".strip()
 
+
+@register.filter(name="get_dict_item")
+def get_dict_item(dictionary, key):
+    if isinstance(dictionary, dict):
+        return dictionary.get(key, 0)
+    return 0
+
+
