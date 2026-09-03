@@ -72,8 +72,11 @@ async def start_userbot_service():
     print(f"✅ Userbot muvaffaqiyatli ulana oldi: {me.first_name} (@{me.username or 'username_yoq'}) [ID: {me.id}]")
     print(f"🔄 24/7 Avto-javob rejimi: {'FAOL 🟢' if config.is_active else 'NOFAOL 🔴'}")
 
-    @client.on(events.NewMessage(incoming=True, private=True))
+    @client.on(events.NewMessage(incoming=True))
     async def incoming_private_handler(event):
+        if not event.is_private:
+            return
+
         fresh_config = await get_userbot_config()
         if not fresh_config.is_active:
             return
