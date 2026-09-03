@@ -71,6 +71,17 @@ class TelegramBotHandlerTests(TestCase):
         mock_send_msg.assert_called_once()
         mock_send_doc.assert_called_once()
 
+    @patch("bots.handler.send_telegram_message")
+    def test_process_telegram_update_tasks(self, mock_send):
+        update = {
+            "message": {
+                "chat": {"id": 123456789},
+                "text": "/tasks",
+            }
+        }
+        process_telegram_update(update)
+        mock_send.assert_called_once()
+
     def test_telegram_webhook_post(self):
         url = reverse("bots:telegram_webhook")
         payload = {

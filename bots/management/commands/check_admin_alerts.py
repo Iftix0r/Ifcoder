@@ -85,7 +85,17 @@ class Command(BaseCommand):
                 days_left = (proj.deadline - today).days
                 alerts.append(f"📌 <b>Loyiha deadline yaqinlashdi ({days_left} kun qoldi):</b> {html.escape(proj.name)}")
 
-        # 6. Tiketlar
+        # 6. Bugungi va muddati o'tgan Vazifalar
+        from tasks.models import Task
+        overdue_tasks = Task.objects.exclude(status=Task.Status.DONE).filter(due_date__lt=today)
+        today_tasks = Task.objects.exclude(status=Task.Status.DONE).filter(due_date=today)
+
+        if overdue_tasks.exists():
+            alerts.append(f"🚨 <b>MUDDATI O'TGAN VAZIFALAR:</b> {overdue_tasks.count()} ta bajarilmagan vazifa muddati o'tdi!")
+        if today_tasks.exists():
+            alerts.append(f"📌 <b>BUGUNGI VAZIFALAR:</b> {today_tasks.count()} ta bugun bajarilishi kerak bo'lgan vazifa mavjud (/tasks)")
+
+        # 7. Tiketlar
         urgent_tickets = Ticket.objects.filter(
             status__in=[Ticket.Status.OPEN, Ticket.Status.IN_PROGRESS],
             priority=Ticket.Priority.URGENT,

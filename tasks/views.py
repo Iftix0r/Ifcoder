@@ -7,7 +7,9 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+import html
 from dashboard.mixins import CSVExportMixin
+from bots.telegram import send_telegram_message
 
 from .forms import TaskForm, TimeEntryForm
 from .models import Task, TimeEntry
@@ -82,6 +84,23 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
     template_name = "tasks/form.html"
     success_url = reverse_lazy("tasks:list")
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        try:
+            t = self.object
+            due_str = t.due_date.strftime("%d.%m.%Y") if t.due_date else "Belgilanmagan"
+            proj_str = f" ({html.escape(str(t.project))})" if t.project else ""
+            msg = (
+                f"📋 <b>YANGI VAZIFA YARATILDI</b>\n\n"
+                f"📌 <b>Vazifa:</b> {html.escape(t.title)}{proj_str}\n"
+                f"⚠️ <b>Muhimlik:</b> {t.get_priority_display()}\n"
+                f"📅 <b>Muddat:</b> {due_str}"
+            )
+            send_telegram_message(msg)
+        except Exception:
+            pass
+        return response
+
 
 class TaskUpdateView(LoginRequiredMixin, UpdateView):
     model = Task
@@ -111,6 +130,16 @@ def task_set_status(request, pk):
     if status in Task.Status.values:
         task.status = status
         task.save(update_fields=["status"])
+        if status == Task.Status.DONE:
+            try:
+                msg = (
+                    f"✅ <b>VAZIFA BAJARILDI!</b>\n\n"
+                    f"📌 <b>Vazifa:</b> {html.escape(task.title)}\n"
+                    f"👤 <b>Bajaruvchi:</b> {html.escape(request.user.get_full_name() or request.user.username)}"
+                )
+                send_telegram_message(msg)
+            except Exception:
+                pass
         return JsonResponse({"ok": True, "status": task.status, "label": task.get_status_display()})
     return JsonResponse({"ok": False}, status=400)
 
