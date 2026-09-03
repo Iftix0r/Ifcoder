@@ -111,11 +111,34 @@ class DebtDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "debt"
 
 
+import html
+from bots.telegram import send_telegram_message
+
+
 class DebtCreateView(LoginRequiredMixin, CreateView):
     model = Debt
     form_class = DebtForm
     template_name = "debts/form.html"
     success_url = reverse_lazy("debts:list")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        try:
+            d = self.object
+            cp = html.escape(d.counterparty)
+            direction = "Men qarzdorman" if d.direction == Debt.Direction.I_OWE else "Menga qarzdor"
+            due_str = d.due_date.strftime("%d.%m.%Y") if d.due_date else "Belgilanmagan"
+            msg = (
+                f"💸 <b>YANGI QARZ YOZUVY QO'SHILDI</b>\n\n"
+                f"👤 <b>Tomon:</b> {cp} ({direction})\n"
+                f"💰 <b>Summa:</b> {d.amount:,.2f} {d.get_currency_display()}\n"
+                f"📅 <b>To'lov muddati:</b> {due_str}\n"
+                f"📝 <b>Sabab:</b> {html.escape(d.reason)}"
+            )
+            send_telegram_message(msg)
+        except Exception:
+            pass
+        return response
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

@@ -9,7 +9,9 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+import html
 from dashboard.mixins import CSVExportMixin
+from bots.telegram import send_telegram_message
 
 from .forms import ExpenseForm, IncomeForm, InvoiceForm
 from .models import Expense, Income, Invoice
@@ -118,6 +120,22 @@ class IncomeCreateView(LoginRequiredMixin, CreateView):
     form_class = IncomeForm
     template_name = "finance/income_form.html"
     success_url = reverse_lazy("finance:income_list")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        try:
+            client_name = html.escape(str(self.object.client or "Noma'lum"))
+            msg = (
+                f"💵 <b>YANGI DAROMAD KELIB TUSHDI!</b>\n\n"
+                f"💰 <b>Summa:</b> {self.object.amount:,.2f} UZS\n"
+                f"👤 <b>Mijoz:</b> {client_name}\n"
+                f"💳 <b>To'lov usuli:</b> {self.object.get_method_display()}\n"
+                f"📅 <b>Sana:</b> {self.object.date}"
+            )
+            send_telegram_message(msg)
+        except Exception:
+            pass
+        return response
 
 
 class IncomeUpdateView(LoginRequiredMixin, UpdateView):
@@ -254,6 +272,22 @@ class InvoiceCreateView(LoginRequiredMixin, CreateView):
     template_name = "finance/invoice_form.html"
     success_url = reverse_lazy("finance:invoice_list")
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        try:
+            client_name = html.escape(str(self.object.client))
+            msg = (
+                f"📄 <b>Yangi Hisob-Faktura (Invoys) Yaratildi</b>\n\n"
+                f"<b>Invoys:</b> №{self.object.number}\n"
+                f"👤 <b>Mijoz:</b> {client_name}\n"
+                f"💰 <b>Summa:</b> {self.object.amount:,.2f} UZS\n"
+                f"📅 <b>To'lov muddati:</b> {self.object.due_date}"
+            )
+            send_telegram_message(msg)
+        except Exception:
+            pass
+        return response
+
 
 class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
     model = Invoice
@@ -287,6 +321,16 @@ def invoice_mark_paid(request, pk):
     invoice = Invoice.objects.get(pk=pk)
     invoice.status = Invoice.Status.PAID
     invoice.save(update_fields=["status"])
+    try:
+        msg = (
+            f"✅ <b>INVOYS TO'LANDI!</b>\n\n"
+            f"📄 <b>Invoys:</b> №{invoice.number}\n"
+            f"👤 <b>Mijoz:</b> {html.escape(str(invoice.client))}\n"
+            f"💰 <b>Summa:</b> {invoice.amount:,.2f} UZS"
+        )
+        send_telegram_message(msg)
+    except Exception:
+        pass
     return JsonResponse({"ok": True, "label": invoice.get_status_display()})
 
 

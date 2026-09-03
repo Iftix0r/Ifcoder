@@ -57,7 +57,35 @@ class Command(BaseCommand):
                     f"{debt.remaining_amount:,.2f} {debt.get_currency_display()}"
                 )
 
-        # 4. Tiketlar
+        # 4. Invoyslar (Muddati o'tgan / tugayotgan to'lovlar)
+        from finance.models import Invoice
+        unpaid_invoices = Invoice.objects.exclude(status=Invoice.Status.PAID)
+        for inv in unpaid_invoices:
+            if inv.is_overdue:
+                alerts.append(
+                    f"📄 <b>MUDDATI O'TGAN INVOYS:</b> №{inv.number} ({html.escape(str(inv.client))}) — "
+                    f"{inv.amount:,.2f} UZS (Muddat: {inv.due_date})"
+                )
+            elif (inv.due_date - today).days <= 3:
+                days_left = (inv.due_date - today).days
+                alerts.append(
+                    f"⏰ <b>Invoys muddati yaqinlashdi ({days_left} kun qoldi):</b> №{inv.number} — {inv.amount:,.2f} UZS"
+                )
+
+        # 5. Loyiha Declaynlari
+        from projects.models import Project
+        active_projects = Project.objects.filter(
+            status__in=[Project.Status.IN_PROGRESS, Project.Status.PLANNING],
+            deadline__isnull=False,
+        )
+        for proj in active_projects:
+            if proj.deadline < today:
+                alerts.append(f"⏳ <b>LOYIHA MUDDATI O'TGAN:</b> {html.escape(proj.name)} (Deadline: {proj.deadline})")
+            elif (proj.deadline - today).days <= 3:
+                days_left = (proj.deadline - today).days
+                alerts.append(f"📌 <b>Loyiha deadline yaqinlashdi ({days_left} kun qoldi):</b> {html.escape(proj.name)}")
+
+        # 6. Tiketlar
         urgent_tickets = Ticket.objects.filter(
             status__in=[Ticket.Status.OPEN, Ticket.Status.IN_PROGRESS],
             priority=Ticket.Priority.URGENT,
