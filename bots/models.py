@@ -130,6 +130,8 @@ class TelegramMessage(models.Model):
     is_deleted = models.BooleanField("Telegramda o'chirilgan", default=False)
     deleted_at = models.DateTimeField("O'chirilgan vaqti", null=True, blank=True)
 
+    is_read = models.BooleanField("O'qilgan", default=False, db_index=True)
+
     client = models.ForeignKey(
         Client,
         verbose_name="Mijoz",

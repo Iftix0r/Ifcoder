@@ -19,11 +19,23 @@
 </div>
 
 <!-- STATS CARDS GRID -->
-<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px;">
   <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:6px;">
     <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Jami Mijozlar</div>
     <div style="font-size:26px;font-weight:800;color:var(--text);">{{ total_clients_count }} <span style="font-size:13px;font-weight:500;color:var(--muted);">ta</span></div>
     <div style="font-size:11.5px;color:#29b6f6;">✈️ {{ tg_clients_count }} ta Telegram bog'langan</div>
+  </div>
+
+  <div class="card" id="card-unread-tg" style="padding:16px;display:flex;flex-direction:column;gap:6px;{% if total_unread_tg_count > 0 %}background:rgba(0,136,204,0.08);border-color:rgba(0,136,204,0.4);{% endif %}">
+    <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+      ✈️ Telegram Xabarlar
+    </div>
+    <div style="font-size:26px;font-weight:800;color:{% if total_unread_tg_count > 0 %}#0088cc{% else %}var(--text){% endif %};">
+      <span id="stat-total-unread">{{ total_unread_tg_count }}</span> <span style="font-size:13px;font-weight:500;color:var(--muted);">o'qilmagan</span>
+    </div>
+    <div id="stat-unread-status" style="font-size:11.5px;color:{% if total_unread_tg_count > 0 %}#0088cc{% else %}var(--muted){% endif %};">
+      {% if total_unread_tg_count > 0 %}🟢 Yangi xabar kelgan!{% else %}Barcha xabarlar o'qilgan{% endif %}
+    </div>
   </div>
 
   <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:6px;">
@@ -78,6 +90,14 @@
 
 
 {% if clients %}
+<style>
+@keyframes pulseGlow {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 136, 204, 0.7); }
+  70% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(0, 136, 204, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 136, 204, 0); }
+}
+</style>
+
 <div class="table-wrap">
 <table>
   <thead>
@@ -96,12 +116,24 @@
     {% for c in clients %}
     <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
       <td style="display:flex;align-items:center;gap:12px;">
-        {% if c.avatar %}
-          <img src="{{ c.avatar.url }}" alt="{{ c.name }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0;">
-        {% else %}
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#29b6f6,#0288d1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:#fff;">👤</div>
-        {% endif %}
-        <strong style="color:var(--text);">{{ c.name }}</strong>
+        <div style="position:relative;flex-shrink:0;">
+          {% if c.avatar %}
+            <img src="{{ c.avatar.url }}" alt="{{ c.name }}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid var(--border);display:block;">
+          {% else %}
+            <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#29b6f6,#0288d1);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;">👤</div>
+          {% endif %}
+          <span class="tg-row-badge client-unread-badge-{{ c.pk }}" style="display:{% if c.unread_tg_count > 0 %}inline-flex{% else %}none{% endif %};position:absolute;top:-4px;right:-4px;background:linear-gradient(135deg,#0088cc,#00a8ff);color:#fff;font-size:11px;font-weight:800;border-radius:10px;padding:2px 6px;line-height:1;border:2px solid var(--panel);box-shadow:0 2px 8px rgba(0,136,204,0.6);animation:pulseGlow 2s infinite;">
+            {{ c.unread_tg_count }}
+          </span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <strong style="color:var(--text);font-size:14px;">{{ c.name }}</strong>
+            <span class="client-unread-pill-{{ c.pk }}" style="display:{% if c.unread_tg_count > 0 %}inline-flex{% else %}none{% endif %};background:rgba(0,136,204,0.12);color:#0088cc;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:12px;border:1px solid rgba(0,136,204,0.3);align-items:center;gap:4px;">
+              💬 <span class="client-unread-count-{{ c.pk }}">{{ c.unread_tg_count }}</span> yangi xabar
+            </span>
+          </div>
+        </div>
       </td>
       <td>
         <span class="badge {% if c.lead_status == 'active' %}paid{% elif c.lead_status == 'proposal' %}sent{% elif c.lead_status == 'contacted' %}in_progress{% elif c.lead_status == 'lost' %}overdue{% else %}pending{% endif %}">
@@ -288,6 +320,47 @@ async function addTgClient(btn, index) {
     btn.innerHTML = originalText;
   }
 }
+
+// Live Unread Counts Polling (Har 6 soniyada tekshiradi)
+async function pollUnreadCounts() {
+  try {
+    const res = await fetch("{% url 'clients:unread_counts_api' %}");
+    const data = await res.json();
+    if (data.status === 'ok') {
+      const total = data.total_unread || 0;
+      const totalEl = document.getElementById('stat-total-unread');
+      const statusEl = document.getElementById('stat-unread-status');
+      const cardEl = document.getElementById('card-unread-tg');
+
+      if (totalEl) totalEl.textContent = total;
+      if (statusEl) {
+        statusEl.textContent = total > 0 ? "🟢 Yangi xabar kelgan!" : "Barcha xabarlar o'qilgan";
+        statusEl.style.color = total > 0 ? "#0088cc" : "var(--muted)";
+      }
+      if (cardEl) {
+        cardEl.style.background = total > 0 ? "rgba(0,136,204,0.08)" : "var(--panel)";
+        cardEl.style.borderColor = total > 0 ? "rgba(0,136,204,0.4)" : "var(--border)";
+      }
+
+      const unreadMap = data.unread_per_client || {};
+      document.querySelectorAll('[class*="client-unread-badge-"]').forEach(el => {
+        const pk = el.className.match(/client-unread-badge-(\d+)/)?.[1];
+        if (pk) {
+          const cnt = unreadMap[pk] || 0;
+          el.textContent = cnt;
+          el.style.display = cnt > 0 ? 'inline-flex' : 'none';
+
+          const pill = document.querySelector(`.client-unread-pill-${pk}`);
+          const countSpan = document.querySelector(`.client-unread-count-${pk}`);
+          if (pill) pill.style.display = cnt > 0 ? 'inline-flex' : 'none';
+          if (countSpan) countSpan.textContent = cnt;
+        }
+      });
+    }
+  } catch (e) {}
+}
+
+setInterval(pollUnreadCounts, 6000);
 </script>
 {% endblock %}
 

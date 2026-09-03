@@ -14,6 +14,8 @@ urlpatterns = [
     path("add-from-tg/", views.client_create_from_tg_api, name="add_from_tg_api"),
     path("<int:pk>/chat-api/", views.client_chat_messages_api, name="chat_api"),
     path("<int:pk>/send-chat-api/", views.client_send_chat_message_api, name="send_chat_api"),
+    path("unread-counts/", views.client_unread_counts_api, name="unread_counts_api"),
+    path("<int:pk>/mark-read/", views.client_mark_chat_read_api, name="mark_read_api"),
 ]
 
 

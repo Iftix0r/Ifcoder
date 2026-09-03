@@ -45,8 +45,13 @@ def db_save_telegram_message(
     rel_media_path: str = "",
 ):
     try:
+        clean_sender = (sender_name or "").strip().lstrip("@")
         client_obj = Client.objects.filter(
-            models.Q(telegram_id=str(chat_id)) | models.Q(telegram_id=str(sender_id))
+            models.Q(telegram_id=str(chat_id)) |
+            models.Q(telegram_id=str(sender_id)) |
+            (models.Q(telegram__iexact=sender_name) if sender_name else models.Q(pk=0)) |
+            (models.Q(telegram__iexact=f"@{clean_sender}") if clean_sender else models.Q(pk=0)) |
+            (models.Q(telegram__iexact=clean_sender) if clean_sender else models.Q(pk=0))
         ).first()
 
         msg, created = TelegramMessage.objects.get_or_create(
@@ -56,6 +61,7 @@ def db_save_telegram_message(
                 "sender_id": sender_id,
                 "sender_name": sender_name,
                 "is_outgoing": is_outgoing,
+                "is_read": is_outgoing,
                 "text": text or "",
                 "media_type": media_type,
                 "media_file": rel_media_path,

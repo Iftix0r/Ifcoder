@@ -9,6 +9,28 @@ from .forms import ClientForm
 from .models import Client
 
 
+def auto_link_telegram_messages():
+    try:
+        from bots.models import TelegramMessage
+        unlinked = TelegramMessage.objects.filter(client__isnull=True)
+        if not unlinked.exists():
+            return
+        clients = Client.objects.all()
+        for c in clients:
+            tg_id = (c.telegram_id or "").strip()
+            tg_user = (c.telegram or "").strip().lstrip("@")
+            if not tg_id and not tg_user:
+                continue
+            q_filter = Q(pk=0)
+            if tg_id:
+                q_filter |= Q(chat_id=tg_id) | Q(sender_id=tg_id)
+            if tg_user:
+                q_filter |= Q(chat_id=tg_user) | Q(sender_name__iexact=tg_user) | Q(sender_name__iexact=f"@{tg_user}")
+            TelegramMessage.objects.filter(client__isnull=True).filter(q_filter).update(client=c)
+    except Exception:
+        pass
+
+
 class ClientListView(LoginRequiredMixin, CSVExportMixin, ListView):
     model = Client
     template_name = "clients/list.html"
@@ -21,9 +43,15 @@ class ClientListView(LoginRequiredMixin, CSVExportMixin, ListView):
         return [obj.name, obj.phone, obj.telegram, obj.email, obj.created_at]
 
     def get_queryset(self):
+        auto_link_telegram_messages()
         qs = super().get_queryset().annotate(
             project_count=Count("projects", distinct=True),
             bot_count=Count("bots", distinct=True),
+            unread_tg_count=Count(
+                "telegram_messages",
+                filter=Q(telegram_messages__is_outgoing=False, telegram_messages__is_read=False),
+                distinct=True,
+            ),
         )
         q = self.request.GET.get("q")
         if q:
@@ -48,6 +76,7 @@ class ClientListView(LoginRequiredMixin, CSVExportMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         from django.utils import timezone
+        from bots.models import TelegramMessage
         today = timezone.now().date()
 
         all_clients = Client.objects.all()
@@ -56,6 +85,7 @@ class ClientListView(LoginRequiredMixin, CSVExportMixin, ListView):
         ctx["new_leads_count"] = all_clients.filter(lead_status="new").count()
         ctx["tg_clients_count"] = all_clients.filter(Q(telegram__gt="") | Q(telegram_id__gt="")).count()
         ctx["follow_up_today_count"] = all_clients.filter(follow_up_date__lte=today).exclude(follow_up_date=None).count()
+        ctx["total_unread_tg_count"] = TelegramMessage.objects.filter(is_outgoing=False, is_read=False).count()
 
         status_counts = {}
         for st_val, _ in Client.LeadStatus.choices:
@@ -292,6 +322,13 @@ def client_chat_messages_api(request, pk):
         except Exception as e:
             pass
 
+    # Chat ochilganda o'qilmagan xabarlarni o'qilgan deb belgilaymiz
+    TelegramMessage.objects.filter(
+        Q(client=client) | Q(chat_id=target),
+        is_outgoing=False,
+        is_read=False
+    ).update(is_read=True)
+
     messages_qs = TelegramMessage.objects.filter(
         Q(client=client) | Q(chat_id=target)
     ).order_by("created_at")
@@ -354,6 +391,7 @@ def client_send_chat_message_api(request, pk):
                 chat_id=res.get("chat_id", target),
                 sender_name="Siz (Admin)",
                 is_outgoing=True,
+                is_read=True,
                 text=text,
                 client=client
             )
@@ -362,6 +400,60 @@ def client_send_chat_message_api(request, pk):
             return JsonResponse({"status": "error", "message": "Userbot orqali xabar yuborib bo'lmadi"}, status=500)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@login_required
+def client_unread_counts_api(request):
+    """
+    Mijozlar bo'limidagi barcha o'qilmagan Telegram xabarlar sonini qaytaradi.
+    """
+    auto_link_telegram_messages()
+    from bots.models import TelegramMessage
+    from django.db.models import Count, Q
+
+    unread_per_client = {}
+    clients_unread = Client.objects.filter(
+        telegram_messages__is_outgoing=False,
+        telegram_messages__is_read=False
+    ).annotate(
+        c_unread=Count(
+            "telegram_messages",
+            filter=Q(telegram_messages__is_outgoing=False, telegram_messages__is_read=False),
+            distinct=True
+        )
+    )
+    for c in clients_unread:
+        unread_per_client[str(c.pk)] = c.c_unread
+
+    total_unread = TelegramMessage.objects.filter(is_outgoing=False, is_read=False).count()
+
+    return JsonResponse({
+        "status": "ok",
+        "total_unread": total_unread,
+        "unread_per_client": unread_per_client,
+    })
+
+
+@login_required
+@csrf_exempt
+def client_mark_chat_read_api(request, pk):
+    """
+    Mijozning Telegram xabarlarini o'qilgan deb belgilaydi.
+    """
+    client = get_object_or_404(Client, pk=pk)
+    target = (client.telegram_id or client.telegram or "").strip().lstrip("@")
+
+    from bots.models import TelegramMessage
+    from django.db.models import Q
+
+    updated = TelegramMessage.objects.filter(
+        Q(client=client) | (Q(chat_id=target) if target else Q(pk=0)),
+        is_outgoing=False,
+        is_read=False
+    ).update(is_read=True)
+
+    return JsonResponse({"status": "ok", "marked_read_count": updated})
+
 
 
 
