@@ -272,5 +272,47 @@ function syncTgAvatar() {
     {% endif %}
   </div>
 </div>
+
+<script>
+async function syncTgAvatar() {
+  const btn = document.getElementById('syncAvatarBtn');
+  if (!btn) return;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⌛ Yuklanmoqda...';
+
+  try {
+    const response = await fetch("{% url 'clients:sync_tg_avatar' client.pk %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+    const data = await response.json();
+
+    if (data.status === 'ok') {
+      const circle = document.getElementById('avatarCircle');
+      if (circle) {
+        circle.innerHTML = `<img src="${data.avatar_url}?t=${new Date().getTime()}" alt="{{ client.name }}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">`;
+      }
+      btn.innerHTML = '✅ Yuklandi!';
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }, 2000);
+    } else {
+      alert(data.message || 'Rasm yuklab bo\'lmadi');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  } catch (err) {
+    alert('Xatolik yuz berdi: ' + err);
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+</script>
 {% endblock %}
+
 

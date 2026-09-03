@@ -132,9 +132,11 @@ class ClientDeleteView(LoginRequiredMixin, DeleteView):
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 
 
 @login_required
+@csrf_exempt
 def client_sync_tg_avatar(request, pk):
     """
     Mijozning Telegram profilidan rasmini yuklab, avatar ga saqlaydi.
@@ -153,7 +155,7 @@ def client_sync_tg_avatar(request, pk):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
     if not user_info or not user_info.get("avatar_path"):
-        return JsonResponse({"status": "error", "message": "Telegram dan rasm yuklab bo'lmadi"}, status=404)
+        return JsonResponse({"status": "error", "message": "Telegram dan rasm yuklab bo'lmadi (rasm topilmadi yoki shaxsiy)"}, status=404)
 
     import os
     from django.conf import settings
@@ -166,7 +168,6 @@ def client_sync_tg_avatar(request, pk):
     client.avatar = avatar_path
     client.save(update_fields=["avatar"])
 
-    from django.templatetags.static import static
-    from django.conf import settings as s
-    avatar_url = f"{s.MEDIA_URL}{avatar_path}"
+    avatar_url = f"{settings.MEDIA_URL.rstrip('/')}/{avatar_path.lstrip('/')}"
     return JsonResponse({"status": "ok", "avatar_url": avatar_url})
+
