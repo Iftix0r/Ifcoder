@@ -46,7 +46,14 @@
   <tbody>
     {% for c in clients %}
     <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
-      <td><strong style="color:var(--text);">{{ c.name }}</strong></td>
+      <td style="display:flex;align-items:center;gap:12px;">
+        {% if c.avatar %}
+          <img src="{{ c.avatar.url }}" alt="{{ c.name }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0;">
+        {% else %}
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#29b6f6,#0288d1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:#fff;">👤</div>
+        {% endif %}
+        <strong style="color:var(--text);">{{ c.name }}</strong>
+      </td>
       <td>
         <span class="badge {% if c.lead_status == 'active' %}paid{% elif c.lead_status == 'proposal' %}sent{% elif c.lead_status == 'contacted' %}in_progress{% elif c.lead_status == 'lost' %}overdue{% else %}pending{% endif %}">
           {{ c.get_lead_status_display }}
