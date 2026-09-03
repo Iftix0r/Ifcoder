@@ -36,7 +36,12 @@ class DebtListView(LoginRequiredMixin, CSVExportMixin, ListView):
         ]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().select_related("client", "project")
+
+        # Mijoz filtri
+        client_id = self.request.GET.get("client")
+        if client_id:
+            qs = qs.filter(client_id=client_id)
 
         # Yo'nalish filtri
         direction = self.request.GET.get("direction")
@@ -120,6 +125,17 @@ class DebtCreateView(LoginRequiredMixin, CreateView):
     form_class = DebtForm
     template_name = "debts/form.html"
     success_url = reverse_lazy("debts:list")
+
+    def get_initial(self):
+        initial = super().get_initial()
+        client_id = self.request.GET.get("client")
+        if client_id:
+            initial["client"] = client_id
+            from clients.models import Client
+            c = Client.objects.filter(pk=client_id).first()
+            if c:
+                initial["counterparty"] = c.name
+        return initial
 
     def form_valid(self, form):
         response = super().form_valid(form)

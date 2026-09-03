@@ -30,16 +30,29 @@
         {% endif %}
       </div>
 
-      <!-- Qarama-qarshi tomon -->
-      <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
-          {{ form.counterparty.label }} <span style="color:var(--red);">*</span>
-        </label>
-        {{ form.counterparty }}
-        {% if form.counterparty.errors %}
-          <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.counterparty.errors.0 }}</div>
-        {% endif %}
-        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Kim bergan / kimga berganingiz (ism yoki kompaniya nomi)</div>
+      <!-- Mijoz tanlash & Qarama-qarshi tomon -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--text);">
+            👤 Mijozni tanlash (Mavjud mijozlardan)
+          </label>
+          {{ form.client }}
+          {% if form.client.errors %}
+            <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.client.errors.0 }}</div>
+          {% endif %}
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Agar qarz mijozga tegishli bo'lsa tanlang</div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--text);">
+            {{ form.counterparty.label }} <span style="color:var(--red);">*</span>
+          </label>
+          {{ form.counterparty }}
+          {% if form.counterparty.errors %}
+            <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.counterparty.errors.0 }}</div>
+          {% endif %}
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Mijoz tanlansa avtomatik to'ldiriladi</div>
+        </div>
       </div>
 
       <!-- Sabab -->
@@ -73,28 +86,34 @@
         </div>
       </div>
 
-      <!-- To'langan summa -->
-      <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
-          {{ form.paid_amount.label }}
-        </label>
-        {{ form.paid_amount }}
-        {% if form.paid_amount.errors %}
-          <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.paid_amount.errors.0 }}</div>
-        {% endif %}
-        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Hozircha to'langan bo'lsa kiriting (0 bo'lsa bo'sh qoldiring)</div>
-      </div>
-
-      <!-- Holat -->
-      <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
-          {{ form.status.label }}
-        </label>
-        {{ form.status }}
-      </div>
-
-      <!-- Sanalar -->
+      <!-- To'langan summa va Holat -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.paid_amount.label }}
+          </label>
+          {{ form.paid_amount }}
+          {% if form.paid_amount.errors %}
+            <div style="color:var(--red);font-size:12px;margin-top:4px;">{{ form.paid_amount.errors.0 }}</div>
+          {% endif %}
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Hozircha to'langan bo'lsa kiriting</div>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.status.label }}
+          </label>
+          {{ form.status }}
+        </div>
+      </div>
+
+      <!-- Loyiha va Sanalar -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
+            {{ form.project.label }}
+          </label>
+          {{ form.project }}
+        </div>
         <div>
           <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
             {{ form.debt_date.label }}
@@ -106,23 +125,6 @@
             {{ form.due_date.label }}
           </label>
           {{ form.due_date }}
-          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Ixtiyoriy — to'lov muddati</div>
-        </div>
-      </div>
-
-      <!-- Mijoz va Loyiha (ixtiyoriy) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-        <div>
-          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
-            {{ form.client.label }}
-          </label>
-          {{ form.client }}
-        </div>
-        <div>
-          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);">
-            {{ form.project.label }}
-          </label>
-          {{ form.project }}
         </div>
       </div>
 
@@ -167,4 +169,20 @@
   }
   form select { appearance: auto; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const clientSelect = document.getElementById('id_client');
+  const cpInput = document.getElementById('id_counterparty');
+
+  if (clientSelect && cpInput) {
+    clientSelect.addEventListener('change', function() {
+      const selectedText = clientSelect.options[clientSelect.selectedIndex]?.text || '';
+      if (selectedText && !selectedText.includes('---')) {
+        cpInput.value = selectedText.trim();
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

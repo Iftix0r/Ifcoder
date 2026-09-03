@@ -124,6 +124,7 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         ctx["unpaid_invoiced"] = ctx["total_invoiced"] - ctx["paid_invoiced"]
         ctx["invoices"] = invoices[:10]
         ctx["tickets"] = client.tickets.select_related("project").all()[:10]
+        ctx["debts"] = client.debts.all()[:10]
         return ctx
 
 

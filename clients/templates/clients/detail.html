@@ -40,6 +40,7 @@
       🎧 Tiketlar ({{ tickets|length }})
     </a>
     <a class="btn" href="{% url 'projects:add' %}?client={{ client.pk }}">+ Loyiha</a>
+    <a class="btn" href="{% url 'debts:add' %}?client={{ client.pk }}">💸 + Qarz qo'shish</a>
     <a class="btn" href="{% url 'clients:edit' client.pk %}">✏️ Tahrirlash</a>
     <a class="btn btn-danger" href="{% url 'clients:delete' client.pk %}">🗑️ O'chirish</a>
   </div>
@@ -202,6 +203,41 @@ function syncTgAvatar() {
     </table>
     </div>
     {% else %}<div class="empty">Ochiq vazifalar yo'q.</div>{% endif %}
+
+    <!-- DEBTS SECTION -->
+    <h2 class="section-title" style="margin-top:28px;">
+      💸 Mijozning Qarzlari
+    </h2>
+    {% if debts %}
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Yo'nalish</th><th>Sabab</th><th>Summa</th><th>Holati</th><th style="text-align:right;">Amal</th></tr>
+      </thead>
+      <tbody>
+        {% for d in debts %}
+        <tr class="row-link" onclick="location.href='{% url 'debts:detail' d.pk %}'">
+          <td>
+            {% if d.direction == 'i_owe' %}
+              <span class="badge overdue">Men olganman</span>
+            {% else %}
+              <span class="badge active">Men berganman</span>
+            {% endif %}
+          </td>
+          <td><strong style="color:var(--text);">{{ d.reason }}</strong></td>
+          <td><strong>{{ d.amount|floatformat:0 }}</strong> {{ d.get_currency_display }}</td>
+          <td><span class="badge {{ d.status }}">{{ d.get_status_display }}</span></td>
+          <td style="text-align:right;">
+            <a href="{% url 'debts:detail' d.pk %}" class="btn btn-sm" onclick="event.stopPropagation()">Batafsil →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">Hozircha qarz yozuvlari yo'q. <a href="{% url 'debts:add' %}?client={{ client.pk }}">Qarz qo'shish</a></div>
+    {% endif %}
 
     <!-- TICKETS SECTION -->
     <h2 class="section-title" style="margin-top:28px;">
