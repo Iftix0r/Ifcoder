@@ -127,3 +127,46 @@ class ClientDeleteView(LoginRequiredMixin, DeleteView):
         ctx = super().get_context_data(**kwargs)
         ctx["cancel_url"] = self.success_url
         return ctx
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+
+
+@login_required
+def client_sync_tg_avatar(request, pk):
+    """
+    Mijozning Telegram profilidan rasmini yuklab, avatar ga saqlaydi.
+    Telegram username yoki telegram_id ishlatiladi.
+    """
+    client = get_object_or_404(Client, pk=pk)
+    target = (client.telegram_id or client.telegram or "").strip().lstrip("@")
+
+    if not target:
+        return JsonResponse({"status": "error", "message": "Mijozda Telegram ID yoki username yo'q"}, status=400)
+
+    try:
+        from bots.userbot_helpers import fetch_telegram_user
+        user_info = fetch_telegram_user(target)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    if not user_info or not user_info.get("avatar_path"):
+        return JsonResponse({"status": "error", "message": "Telegram dan rasm yuklab bo'lmadi"}, status=404)
+
+    import os
+    from django.conf import settings
+    avatar_path = user_info["avatar_path"]
+    full_path = os.path.join(settings.MEDIA_ROOT, avatar_path)
+
+    if not os.path.exists(full_path):
+        return JsonResponse({"status": "error", "message": "Rasm fayli topilmadi"}, status=404)
+
+    client.avatar = avatar_path
+    client.save(update_fields=["avatar"])
+
+    from django.templatetags.static import static
+    from django.conf import settings as s
+    avatar_url = f"{s.MEDIA_URL}{avatar_path}"
+    return JsonResponse({"status": "ok", "avatar_url": avatar_url})

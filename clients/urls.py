@@ -10,4 +10,5 @@ urlpatterns = [
     path("<int:pk>/", views.ClientDetailView.as_view(), name="detail"),
     path("<int:pk>/edit/", views.ClientUpdateView.as_view(), name="edit"),
     path("<int:pk>/delete/", views.ClientDeleteView.as_view(), name="delete"),
+    path("<int:pk>/sync-tg-avatar/", views.client_sync_tg_avatar, name="sync_tg_avatar"),
 ]
