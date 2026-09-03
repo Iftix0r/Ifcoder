@@ -122,3 +122,33 @@ class UserbotSettingsView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, "Userbot (Shaxsiy akkaunt) sozlamalari muvaffaqiyatli saqlandi!")
         return super().form_valid(form)
+
+
+from django.contrib.auth.decorators import login_required
+from bots.userbot_helpers import fetch_telegram_user, get_userbot_dialogs
+
+
+@login_required
+def userbot_dialogs_api(request):
+    """
+    Userbot'dagi so'nggi Telegram yozishmalar/kontaktlar ro'yxatini qaytaruvchi API.
+    """
+    dialogs = get_userbot_dialogs()
+    return JsonResponse({"status": "ok", "dialogs": dialogs})
+
+
+@login_required
+def userbot_sync_contact_api(request):
+    """
+    Berilgan telegram_id yoki username bo'yicha Telegram profili va rasmini yuklab beruvchi API.
+    """
+    target = request.GET.get("target", "").strip()
+    if not target:
+        return JsonResponse({"status": "error", "message": "Target parametr topilmadi"}, status=400)
+
+    user_info = fetch_telegram_user(target)
+    if not user_info:
+        return JsonResponse({"status": "error", "message": "Telegram foydalanuvchisi topilmadi"}, status=404)
+
+    return JsonResponse({"status": "ok", "user": user_info})
+

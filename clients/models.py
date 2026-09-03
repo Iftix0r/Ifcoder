@@ -21,6 +21,8 @@ class Client(models.Model):
     name = models.CharField("Ism / kompaniya", max_length=200)
     phone = models.CharField("Telefon", max_length=30, blank=True)
     telegram = models.CharField("Telegram username", max_length=100, blank=True)
+    telegram_id = models.CharField("Telegram User ID", max_length=50, blank=True)
+    avatar = models.ImageField("Rasm / Avatar", upload_to="clients/avatars/", blank=True, null=True)
     email = models.EmailField("Email", blank=True)
     notes = models.TextField("Izoh", blank=True)
     lead_status = models.CharField(

@@ -78,6 +78,21 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
     template_name = "clients/form.html"
     success_url = reverse_lazy("clients:list")
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self._apply_tg_avatar(self.object)
+        return response
+
+    def _apply_tg_avatar(self, client):
+        tg_path = self.request.POST.get("tg_avatar_path", "").strip()
+        if tg_path and not client.avatar:
+            from django.conf import settings
+            import os
+            full_path = os.path.join(settings.MEDIA_ROOT, tg_path)
+            if os.path.exists(full_path):
+                client.avatar = tg_path
+                client.save(update_fields=["avatar"])
+
 
 class ClientUpdateView(LoginRequiredMixin, UpdateView):
     model = Client
@@ -86,6 +101,21 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse("clients:detail", args=[self.object.pk])
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self._apply_tg_avatar(self.object)
+        return response
+
+    def _apply_tg_avatar(self, client):
+        tg_path = self.request.POST.get("tg_avatar_path", "").strip()
+        if tg_path and not client.avatar:
+            from django.conf import settings
+            import os
+            full_path = os.path.join(settings.MEDIA_ROOT, tg_path)
+            if os.path.exists(full_path):
+                client.avatar = tg_path
+                client.save(update_fields=["avatar"])
 
 
 class ClientDeleteView(LoginRequiredMixin, DeleteView):

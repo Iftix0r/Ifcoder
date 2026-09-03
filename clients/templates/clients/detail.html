@@ -6,13 +6,22 @@
 {% block content %}
 <div class="page-header" style="margin-bottom:24px;">
   <div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-      <h1 style="margin:0;font-size:26px;font-weight:800;">{{ client.name }}</h1>
-      <span class="badge {% if client.lead_status == 'active' %}paid{% elif client.lead_status == 'proposal' %}sent{% elif client.lead_status == 'contacted' %}in_progress{% elif client.lead_status == 'lost' %}overdue{% else %}pending{% endif %}" style="font-size:12.5px;padding:4px 10px;">
-        {{ client.get_lead_status_display }}
-      </span>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px;">
+      {% if client.avatar %}
+        <img src="{{ client.avatar.url }}" alt="{{ client.name }}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+      {% else %}
+        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#29b6f6,#0288d1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">👤</div>
+      {% endif %}
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <h1 style="margin:0;font-size:24px;font-weight:800;">{{ client.name }}</h1>
+          <span class="badge {% if client.lead_status == 'active' %}paid{% elif client.lead_status == 'proposal' %}sent{% elif client.lead_status == 'contacted' %}in_progress{% elif client.lead_status == 'lost' %}overdue{% else %}pending{% endif %}" style="font-size:12.5px;padding:4px 10px;">
+            {{ client.get_lead_status_display }}
+          </span>
+        </div>
+        <div class="sub">Tizimga qo'shilgan sana: {{ client.created_at|date:"d.m.Y H:i" }}</div>
+      </div>
     </div>
-    <div class="sub">Tizimga qo'shilgan sana: {{ client.created_at|date:"d.m.Y H:i" }}</div>
   </div>
   <div class="btn-row">
     {% if client.telegram %}
