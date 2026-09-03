@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Set
 
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
@@ -15,11 +16,22 @@ logger = logging.getLogger(__name__)
 replied_user_ids: Set[int] = set()
 
 
+@sync_to_async
+def get_userbot_config():
+    return UserbotConfig.get_solo()
+
+
+@sync_to_async
+def save_userbot_session(config: UserbotConfig, session_str: str):
+    config.set_session(session_str)
+    config.save(update_fields=["encrypted_session"])
+
+
 async def start_userbot_service():
     """
     Shaxsiy Telegram akkaunt Userbot xizmatini ishga tushiradi.
     """
-    config = UserbotConfig.get_solo()
+    config = await get_userbot_config()
 
     api_id_str = config.api_id.strip()
     api_hash = config.get_api_hash().strip()
@@ -54,8 +66,7 @@ async def start_userbot_service():
     if isinstance(client.session, StringSession):
         curr_str = client.session.save()
         if curr_str != session_str:
-            config.set_session(curr_str)
-            config.save(update_fields=["encrypted_session"])
+            await save_userbot_session(config, curr_str)
 
     me = await client.get_me()
     print(f"✅ Userbot muvaffaqiyatli ulana oldi: {me.first_name} (@{me.username or 'username_yoq'}) [ID: {me.id}]")
@@ -63,7 +74,7 @@ async def start_userbot_service():
 
     @client.on(events.NewMessage(incoming=True, private=True))
     async def incoming_private_handler(event):
-        fresh_config = UserbotConfig.get_solo()
+        fresh_config = await get_userbot_config()
         if not fresh_config.is_active:
             return
 
