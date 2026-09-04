@@ -55,6 +55,7 @@ urlpatterns = [
     path('panel/goals/', include('goals.urls')),
     path('tickets/', include('tickets.urls')),
     path('panel/audit/', include('auditlog.urls')),
+    path('panel/learning/', include('learning.urls')),
     path('panel/', include('dashboard.urls')),
     path('', landing_view, name='landing'),
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),

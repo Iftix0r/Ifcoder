@@ -1,0 +1,70 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Shaxsiy Qaydlar — Learning Hub{% endblock %}
+{% block page_title %}Shaxsiy Ta'lim Qaydlari{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>📝 Shaxsiy Qaydlar</h1>
+    <div class="sub">O'rgangan bilimlar, kod parchalari va biznes g'oyalaringiz jamlanmasi</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="document.getElementById('new-note-modal').style.display='block'">+ Yangi Qayd</button>
+    <a class="btn" href="{% url 'learning:index' %}">← Qaytish</a>
+  </div>
+</div>
+
+<div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+  <a href="{% url 'learning:notes' %}" class="btn btn-sm {% if not selected_category %}btn-primary{% endif %}">Barchasi</a>
+  {% for code, label in category_choices %}
+  <a href="{% url 'learning:notes' %}?category={{ code }}" class="btn btn-sm {% if selected_category == code %}btn-primary{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if notes %}
+<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">
+  {% for note in notes %}
+  <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+    <div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <span class="badge">{{ note.get_category_display }}</span>
+        <span style="font-size:11px; color:var(--muted);">{{ note.updated_at|date:"d.m.Y H:i" }}</span>
+      </div>
+      <h3 style="margin:0 0 8px; font-size:16px; font-weight:800; color:var(--text);">{{ note.title }}</h3>
+      <div style="color:var(--muted); font-size:13.5px; line-height:1.6; white-space:pre-wrap; margin-bottom:12px;">{{ note.content }}</div>
+      {% if note.tags %}
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <span style="font-size:11px; color:var(--accent); background:var(--accent-dim); padding:2px 8px; border-radius:4px; font-weight:600;">🏷️ {{ note.tags }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:10px; display:flex; justify-content:flex-end;">
+      <a href="{% url 'learning:delete_note' note.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Haqiqatdan ham ushbu qaydni o\'chirmoqchimisiz?')">🗑️ O'chirish</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">Hali hech qanday shaxsiy qayd yaratilmagan. "+ Yangi Qayd" tugmasi orqali yaratishingiz mumkin.</div>
+{% endif %}
+
+<!-- NEW NOTE MODAL -->
+<div id="new-note-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:100; padding:20px; overflow-y:auto;">
+  <div class="form-card" style="max-width:550px; margin:40px auto; position:relative;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="margin:0; font-size:18px; font-weight:800;">+ Yangi Qayd Yaratish</h2>
+      <button onclick="document.getElementById('new-note-modal').style.display='none'" style="background:none; border:none; color:var(--text); font-size:20px; cursor:pointer;">✕</button>
+    </div>
+
+    <form method="post" action="{% url 'learning:notes' %}">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Saqlash</button>
+        <button type="button" class="btn" onclick="document.getElementById('new-note-modal').style.display='none'">Bekor qilish</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

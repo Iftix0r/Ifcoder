@@ -1,0 +1,217 @@
+{% extends "dashboard/base.html" %}
+{% block title %}AI Learning Tutor — Ifcoder{% endblock %}
+{% block page_title %}AI Learning Tutor{% endblock %}
+
+{% block content %}
+<style>
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 220px);
+    min-height: 480px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--panel-2);
+  }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .msg-bubble {
+    max-width: 82%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+  .msg-user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--accent), #6366f1);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg-ai {
+    align-self: flex-start;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+  .chat-input-row {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    background: var(--panel-2);
+    display: flex;
+    gap: 10px;
+  }
+  .shortcut-btn {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .shortcut-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+</style>
+
+<div class="page-header">
+  <div>
+    <h1>🤖 AI Learning Tutor</h1>
+    <div class="sub">OpenAI / Smart AI Assistant Orqali Ingliz tili, Dasturlash va Biznesni Mashq Qiling</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn" href="{% url 'learning:index' %}">← Qaytish</a>
+  </div>
+</div>
+
+<!-- REJIM ALMASHTIRISH -->
+<div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+  <a href="{% url 'learning:ai_tutor' %}?mode=english" class="btn {% if mode == 'english' %}btn-primary{% endif %}">🇬🇧 English Conversation &amp; Grammar</a>
+  <a href="{% url 'learning:ai_tutor' %}?mode=coding" class="btn {% if mode == 'coding' %}btn-primary{% endif %}">💻 Code Review &amp; Architecture</a>
+  <a href="{% url 'learning:ai_tutor' %}?mode=business" class="btn {% if mode == 'business' %}btn-primary{% endif %}">💼 Business &amp; Client Negotiation</a>
+</div>
+
+<!-- PROMPT SHORTCUTS -->
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+  <span style="font-size:12.5px; font-weight:700; color:var(--muted); align-self:center;">Tezkor Savollar:</span>
+  {% if mode == 'english' %}
+  <button class="shortcut-btn" onclick="setPrompt('Simulate a client meeting in English about project scope and timelines.')">👥 Client Meeting Senariysi</button>
+  <button class="shortcut-btn" onclick="setPrompt('Correct my English email grammar: Dear client, we have finished the task and uploaded files.')">📧 Email Grammatika Tekshirish</button>
+  <button class="shortcut-btn" onclick="setPrompt('Give me 5 professional phrases to use when discussing code bugs with international clients.')">💬 5 ta Muhim IT Ibora</button>
+  {% elif mode == 'coding' %}
+  <button class="shortcut-btn" onclick="setPrompt('Explain Django select_related vs prefetch_related with clear real-life code examples.')">⚡️ select_related vs prefetch_related</button>
+  <button class="shortcut-btn" onclick="setPrompt('How do I apply Single Responsibility Principle (SRP) to Django views and models?')">📐 SRP Tamoyilini Qo\'llash</button>
+  <button class="shortcut-btn" onclick="setPrompt('What is the best way to secure financial transactions in Python/Django?')">🔒 Moliya Xavfsizligi</button>
+  {% else %}
+  <button class="shortcut-btn" onclick="setPrompt('How do I transition from hourly rates ($25/hr) to project-based pricing ($3,000+)?')">💰 Value-Based Pricing Strategy</button>
+  <button class="shortcut-btn" onclick="setPrompt('What is the best script to pitch monthly maintenance contracts to custom CRM clients?')">📝 Monthly Maintenance Pitch</button>
+  <button class="shortcut-btn" onclick="setPrompt('How should I handle a client asking for a discount on a software quote?')">🤝 Chegirma So'ragan Mijozga Javob</button>
+  {% endif %}
+</div>
+
+<!-- MAIN CHAT CONTAINER -->
+<div class="chat-container">
+  <div class="chat-header">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:20px;">🤖</span>
+      <div>
+        <strong style="color:var(--text); font-size:14.5px;">AI Learning Tutor</strong>
+        <div style="font-size:11.5px; color:var(--muted);" id="ai-status">Rejim: {{ mode|title }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-messages" id="chat-messages">
+    <!-- WELCOME BUBBLE -->
+    <div class="msg-bubble msg-ai">
+      👋 Assalomu alaykum! Men sizning shaxsiy AI Tutor yordamchingizman. 
+      {% if mode == 'english' %}
+      Bugun Ingliz tilida muloqot qilish, grammatikani yaxshilash va IT iboralarni mashq qilamiz. Savolingizni yoki gap ingizni yozing!
+      {% elif mode == 'coding' %}
+      Dasturlash, Django kodingiz, arxitektura yoki DB optimizatsiyasi bo'yicha savollaringizni bering.
+      {% else %}
+      Dasturiy mahsulotlar sotish, mijozlar bilan muzokara va narx belgisi strategiyalari bo'yicha maslahat berishga tayyorman.
+      {% endif %}
+    </div>
+
+    {% for msg in messages_history %}
+    <div class="msg-bubble msg-user">
+      {{ msg.user_prompt }}
+    </div>
+    <div class="msg-bubble msg-ai">
+      <div style="white-space:pre-wrap;">{{ msg.ai_response }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <form id="chat-form" class="chat-input-row" onsubmit="submitAiAsk(event)">
+    <input type="hidden" id="chat-mode" value="{{ mode }}">
+    <input type="text" id="chat-input" placeholder="Savolingiz yoki mashq gap ingizni yozing..." style="flex:1; padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg); color:var(--text); font-size:14px; outline:none;">
+    <button type="submit" id="send-btn" class="btn btn-primary" style="padding:12px 20px;">Yuborish ➔</button>
+  </form>
+</div>
+
+<script>
+function setPrompt(text) {
+  document.getElementById('chat-input').value = text;
+  document.getElementById('chat-input').focus();
+}
+
+function submitAiAsk(e) {
+  e.preventDefault();
+  var input = document.getElementById('chat-input');
+  var prompt = input.value.trim();
+  var mode = document.getElementById('chat-mode').value;
+  var sendBtn = document.getElementById('send-btn');
+  var messagesBox = document.getElementById('chat-messages');
+
+  if(!prompt) return;
+
+  // Append user bubble
+  var userDiv = document.createElement('div');
+  userDiv.className = 'msg-bubble msg-user';
+  userDiv.textContent = prompt;
+  messagesBox.appendChild(userDiv);
+
+  input.value = '';
+  sendBtn.disabled = true;
+  sendBtn.textContent = 'O\'ylanmoqda...';
+
+  // Temporary loading bubble
+  var loadingDiv = document.createElement('div');
+  loadingDiv.className = 'msg-bubble msg-ai';
+  loadingDiv.textContent = '⏳ AI javob tayyorlamoqda...';
+  messagesBox.appendChild(loadingDiv);
+  messagesBox.scrollTop = messagesBox.scrollHeight;
+
+  fetch('{% url "learning:ai_tutor_ask" %}', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: 'prompt=' + encodeURIComponent(prompt) + '&mode=' + encodeURIComponent(mode)
+  }).then(function(r){ return r.json(); }).then(function(data){
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Yuborish ➔';
+    messagesBox.removeChild(loadingDiv);
+
+    if(data.ok) {
+      var aiDiv = document.createElement('div');
+      aiDiv.className = 'msg-bubble msg-ai';
+      aiDiv.style.whiteSpace = 'pre-wrap';
+      aiDiv.textContent = data.reply;
+      messagesBox.appendChild(aiDiv);
+    } else {
+      var errDiv = document.createElement('div');
+      errDiv.className = 'msg-bubble msg-ai';
+      errDiv.style.color = 'var(--red)';
+      errDiv.textContent = '❌ Xatolik yuz berdi: ' + (data.error || 'Server bilan aloqa uzildi.');
+      messagesBox.appendChild(errDiv);
+    }
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+  });
+}
+</script>
+{% endblock %}

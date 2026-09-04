@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'portal',
     'tickets',
     'auditlog',
+    'learning',
 ]
 
 MIDDLEWARE = [

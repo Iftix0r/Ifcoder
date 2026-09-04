@@ -1,0 +1,146 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Ta'lim va Rivojlanish Hub — Ifcoder{% endblock %}
+{% block page_title %}Ta'lim va Rivojlanish (Learning Hub){% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>🎓 Ta'lim &amp; Rivojlanish Hub</h1>
+    <div class="sub">Ingliz tili, Dasturlash arxitekturasi va Dasturchilar uchun Biznes Ko'nikmalari</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-primary" href="{% url 'learning:ai_tutor' %}">🤖 AI Tutor Chat</a>
+    <a class="btn" href="{% url 'learning:flashcards' %}">🗂️ Kartochkalar</a>
+    <a class="btn" href="{% url 'learning:quiz' %}">⚡️ Bilimni Sinash</a>
+  </div>
+</div>
+
+<!-- TOP STATS -->
+<div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
+  <div class="card" style="display:flex; align-items:center; gap:16px;">
+    <div style="width:48px; height:48px; border-radius:12px; background:var(--accent-dim); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800;">
+      📚
+    </div>
+    <div>
+      <div style="font-size:24px; font-weight:800; color:var(--text); line-height:1.2;">{{ total_cards }}</div>
+      <div style="font-size:12.5px; color:var(--muted); font-weight:600;">Jami Lug'at va Tushunchalar</div>
+    </div>
+  </div>
+
+  <div class="card" style="display:flex; align-items:center; gap:16px;">
+    <div style="width:48px; height:48px; border-radius:12px; background:rgba(34, 197, 94, 0.15); color:var(--green); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800;">
+      ✅
+    </div>
+    <div>
+      <div style="font-size:24px; font-weight:800; color:var(--text); line-height:1.2;">{{ mastered_cards }} ({{ progress_percent }}%)</div>
+      <div style="font-size:12.5px; color:var(--muted); font-weight:600;">O'zlashtirilgan Kod va Iboralar</div>
+    </div>
+  </div>
+
+  <div class="card" style="display:flex; align-items:center; gap:16px;">
+    <div style="width:48px; height:48px; border-radius:12px; background:rgba(245, 158, 11, 0.15); color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800;">
+      🤖
+    </div>
+    <div>
+      <div style="font-size:24px; font-weight:800; color:var(--text); line-height:1.2;">OpenAI / AI</div>
+      <div style="font-size:12.5px; color:var(--muted); font-weight:600;">Smart AI Tutor Tayyor</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 MAIN LEARNING TRACKS -->
+<h2 class="section-title">🚀 3 Ta Asosiy O'rganish Yo'nalishi</h2>
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 32px;">
+  
+  <!-- TRACK 1: ENGLISH -->
+  <div class="card" style="border-top:4px solid var(--accent); position:relative; overflow:hidden;">
+    <div style="font-size:32px; margin-bottom:12px;">🇬🇧</div>
+    <h3 style="margin:0 0 8px; font-size:18px; font-weight:800;">IT &amp; Business English</h3>
+    <p style="color:var(--muted); font-size:13.5px; line-height:1.6; margin-bottom:16px;">
+      Mijozlar bilan erkin muloqot qilish, shartnoma shartlarini kelishish, remote jamoalar bilan ishlash uchun professional iboralar va terminlar.
+    </p>
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span class="badge" style="background:var(--accent-dim); color:var(--accent);">{{ english_count }} ta Lug'at</span>
+      <a href="{% url 'learning:flashcards' %}?category=english" class="btn btn-sm btn-primary">O'rganish →</a>
+    </div>
+  </div>
+
+  <!-- TRACK 2: CODING & ARCHITECTURE -->
+  <div class="card" style="border-top:4px solid #10b981;">
+    <div style="font-size:32px; margin-bottom:12px;">💻</div>
+    <h3 style="margin:0 0 8px; font-size:18px; font-weight:800;">Dasturlash &amp; Clean Architecture</h3>
+    <p style="color:var(--muted); font-size:13.5px; line-height:1.6; margin-bottom:16px;">
+      Django, Python, DB optimizatsiyasi, N+1 problem, Clean Code, DRY tamoyillari va senior darajadagi dasturlash ko'nikmalari.
+    </p>
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span class="badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981;">{{ coding_count }} ta Tushuncha</span>
+      <a href="{% url 'learning:flashcards' %}?category=coding" class="btn btn-sm btn-primary">O'rganish →</a>
+    </div>
+  </div>
+
+  <!-- TRACK 3: BUSINESS & MONETIZATION -->
+  <div class="card" style="border-top:4px solid #f59e0b;">
+    <div style="font-size:32px; margin-bottom:12px;">💼</div>
+    <h3 style="margin:0 0 8px; font-size:18px; font-weight:800;">Biznes &amp; Monetizatsiya</h3>
+    <p style="color:var(--muted); font-size:13.5px; line-height:1.6; margin-bottom:16px;">
+      Dasturiy mahsulotlardan ko'proq pul topish, Value-Based Pricing, Invoys strategiyalari va frilans / studiya savdosini oshirish.
+    </p>
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span class="badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b;">{{ business_count }} ta Strategiya</span>
+      <a href="{% url 'learning:flashcards' %}?category=business" class="btn btn-sm btn-primary">O'rganish →</a>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK AI TUTOR BANNER -->
+<div class="card" style="background: linear-gradient(135deg, var(--panel), var(--accent-dim)); border: 1px solid var(--accent); padding: 24px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; margin-bottom:32px;">
+  <div>
+    <h3 style="margin:0 0 6px; font-size:18px; font-weight:800; color:var(--text);">🤖 AI Learning Tutor Bilan Suhbat Qiling</h3>
+    <p style="margin:0; color:var(--muted); font-size:13.5px;">
+      Ingliz tili dialoglarini mashq qiling, kodingizni tekshirtiring yoki mijozlar bilan muloqot senariysini sinab ko'ring!
+    </p>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <a href="{% url 'learning:ai_tutor' %}?mode=english" class="btn btn-primary">🇬🇧 English Practice</a>
+    <a href="{% url 'learning:ai_tutor' %}?mode=coding" class="btn">💻 Code Review</a>
+    <a href="{% url 'learning:ai_tutor' %}?mode=business" class="btn">💼 Business Pitch</a>
+  </div>
+</div>
+
+<!-- RECENT NOTES & RECENT AI SESSIONS -->
+<div class="detail-grid">
+  <div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h2 class="section-title" style="margin:0;">📝 Shaxsiy Qaydlarim</h2>
+      <a href="{% url 'learning:notes' %}" style="font-size:13px; font-weight:700; color:var(--accent);">Barchasi →</a>
+    </div>
+    {% if recent_notes %}
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        {% for note in recent_notes %}
+        <div class="card" style="padding:14px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <strong style="color:var(--text); font-size:14px;">{{ note.title }}</strong>
+            <span class="badge" style="font-size:10.5px;">{{ note.get_category_display }}</span>
+          </div>
+          <div style="color:var(--muted); font-size:13px; white-space:pre-wrap;">{{ note.content|truncatewords:20 }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">Hali shaxsiy qaydlar qo'shilmagan. <a href="{% url 'learning:notes' %}">Qayd yaratish</a></div>
+    {% endif %}
+  </div>
+
+  <div>
+    <h2 class="section-title">⚡️ Tezkor Mashq va Test</h2>
+    <div class="card" style="text-align:center; padding:32px 20px;">
+      <div style="font-size:40px; margin-bottom:12px;">🎯</div>
+      <h3 style="margin:0 0 8px; font-size:17px; font-weight:800;">Bilimingizni Sinab Ko'ring</h3>
+      <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">
+        O'rgangan lug'atlaringiz va dasturlash tushunchalaringizni interaktiv kartochkalar orqali sinang.
+      </p>
+      <a href="{% url 'learning:quiz' %}" class="btn btn-primary" style="width:100%;">⚡️ Quizni Boshlash</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
