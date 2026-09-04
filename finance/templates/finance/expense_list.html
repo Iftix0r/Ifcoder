@@ -63,7 +63,7 @@
     </thead>
     <tbody>
       {% for exp in expenses %}
-      <tr class="row-link" onclick="location.href='{% url 'finance:expense_detail' exp.pk %}'">
+      <tr class="row-link" data-href="{% url 'finance:expense_detail' exp.pk %}">
         <td><strong>{{ exp.amount|floatformat:0 }}</strong></td>
         <td><span class="badge">{{ exp.get_category_display }}</span></td>
         <td>

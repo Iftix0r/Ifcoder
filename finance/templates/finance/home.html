@@ -87,7 +87,7 @@
   </thead>
   <tbody>
     {% for i in outstanding_invoices %}
-    <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' i.pk %}'">
+    <tr class="row-link" data-href="{% url 'finance:invoice_detail' i.pk %}">
       <td><strong>{{ i.number }}</strong></td>
       <td>{{ i.client }}</td>
       <td><strong>${{ i.amount }}</strong></td>
@@ -114,7 +114,7 @@
   </thead>
   <tbody>
     {% for inc in recent_income %}
-    <tr class="row-link" onclick="location.href='{% url 'finance:income_detail' inc.pk %}'">
+    <tr class="row-link" data-href="{% url 'finance:income_detail' inc.pk %}">
       <td><strong style="color:var(--green);">+${{ inc.amount }}</strong></td>
       <td>{{ inc.get_method_display }}</td>
       <td>{{ inc.client|default:"—" }}</td>

@@ -67,7 +67,7 @@
       </thead>
       <tbody>
         {% for b in project.bots.all %}
-        <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+        <tr class="row-link" data-href="{% url 'bots:detail' b.pk %}">
           <td><strong>{{ b.name }}</strong></td>
           <td>{{ b.get_platform_display }}</td>
           <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
@@ -93,13 +93,13 @@
       </thead>
       <tbody>
         {% for t in tickets %}
-        <tr class="row-link" onclick="location.href='{% url 'tickets:admin_detail' t.pk %}'">
+        <tr class="row-link" data-href="{% url 'tickets:admin_detail' t.pk %}">
           <td><strong style="color:var(--text);">#{{ t.pk }} {{ t.title }}</strong></td>
           <td>{{ t.client.name|default:"—" }}</td>
           <td><span class="badge {{ t.status }}">{{ t.get_status_display }}</span></td>
           <td><span class="badge {% if t.priority == 'urgent' %}overdue{% elif t.priority == 'high' %}pending{% else %}active{% endif %}">{{ t.get_priority_display }}</span></td>
           <td style="text-align:right;">
-            <a href="{% url 'tickets:admin_detail' t.pk %}" class="btn btn-sm" onclick="event.stopPropagation()">Javob berish →</a>
+            <a href="{% url 'tickets:admin_detail' t.pk %}" class="btn btn-sm">Javob berish →</a>
           </td>
         </tr>
         {% endfor %}

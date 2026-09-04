@@ -35,7 +35,7 @@
   <thead><tr><th>Raqami</th><th>Mijoz</th><th>Summa</th><th>Muddat</th><th>Holati</th></tr></thead>
   <tbody>
   {% for i in invoices %}
-  <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' i.pk %}'">
+  <tr class="row-link" data-href="{% url 'finance:invoice_detail' i.pk %}">
     <td><strong>{{ i.number }}</strong></td>
     <td>{{ i.client }}</td>
     <td>{{ i.amount }}</td>

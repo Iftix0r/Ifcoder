@@ -36,7 +36,7 @@
   <thead><tr><th>Sarlavha</th><th>Platforma</th><th>Holati</th></tr></thead>
   <tbody>
   {% for i in ideas %}
-  <tr class="row-link" onclick="location.href='{% url 'content:idea_detail' i.pk %}'">
+  <tr class="row-link" data-href="{% url 'content:idea_detail' i.pk %}">
     <td>{{ i.title }}</td>
     <td>{{ i.get_platform_display }}</td>
     <td><span class="badge {{ i.status }}">{{ i.get_status_display }}</span></td>

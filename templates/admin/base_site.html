@@ -13,10 +13,12 @@
     --admin-panel: #131b2e;
     --admin-panel-2: #1e293b;
     --admin-border: rgba(51, 65, 85, 0.6);
-    --admin-accent: #6366f1;
-    --admin-accent-hover: #4f46e5;
+    --admin-accent: #818cf8;
+    --admin-accent-hover: #6366f1;
     --admin-text: #f8fafc;
     --admin-muted: #94a3b8;
+    --admin-green: #34d399;
+    --admin-red: #f87171;
   }
 
   body {
@@ -57,9 +59,10 @@
 
   #content {
     padding: 24px !important;
+    background: var(--admin-bg) !important;
   }
 
-  .module, div.breadcrumbs, #header {
+  .module, div.breadcrumbs, #header, #changelist-filter, .inline-group, .submit-row {
     border-radius: 12px !important;
   }
 
@@ -71,7 +74,7 @@
     overflow: hidden !important;
   }
 
-  .module h2, .module caption, header {
+  .module h2, .module caption, header, fieldset.module h2 {
     background: var(--admin-panel-2) !important;
     color: var(--admin-text) !important;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
@@ -83,14 +86,46 @@
     border-bottom: 1px solid var(--admin-border) !important;
   }
 
+  /* TABLES & CHANGELIST */
+  #changelist {
+    display: flex !important;
+    flex-wrap: wrap-reverse !important;
+    gap: 20px !important;
+  }
+  #changelist #changelist-form {
+    flex: 1 1 600px !important;
+    min-width: 0 !important;
+  }
+  #changelist-filter {
+    flex: 0 0 240px !important;
+    background: var(--admin-panel) !important;
+    border: 1px solid var(--admin-border) !important;
+    padding: 16px !important;
+  }
+  #changelist-filter h2 {
+    background: transparent !important;
+    padding: 0 0 10px 0 !important;
+    border-bottom: 1px solid var(--admin-border) !important;
+    color: var(--admin-text) !important;
+  }
+  #changelist-filter a {
+    color: var(--admin-muted) !important;
+  }
+  #changelist-filter li.selected a {
+    color: var(--admin-accent) !important;
+    font-weight: 700 !important;
+  }
+
   table {
     width: 100% !important;
     border-collapse: collapse !important;
+    background: var(--admin-panel) !important;
   }
 
   th, td {
     padding: 12px 16px !important;
     border-bottom: 1px solid var(--admin-border) !important;
+    color: var(--admin-text) !important;
   }
 
   thead th {
@@ -105,8 +140,9 @@
     background: var(--admin-panel-2) !important;
   }
 
-  .button, input[type=submit], input[type=button], .submit-row input, a.button {
-    background: linear-gradient(135deg, var(--admin-accent), #4f46e5) !important;
+  /* BUTTONS & ACTIONS */
+  .button, input[type=submit], input[type=button], .submit-row input, a.button, .object-tools a {
+    background: linear-gradient(135deg, var(--admin-accent), #6366f1) !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 8px !important;
@@ -116,13 +152,21 @@
     cursor: pointer !important;
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
     transition: all 0.2s ease !important;
+    text-decoration: none !important;
   }
 
-  .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover {
+  .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, .object-tools a:hover {
     filter: brightness(1.1) !important;
     transform: translateY(-1px) !important;
   }
 
+  .submit-row {
+    background: var(--admin-panel) !important;
+    border: 1px solid var(--admin-border) !important;
+    padding: 16px !important;
+  }
+
+  /* FORMS & INPUTS */
   input[type=text], input[type=password], input[type=email], input[type=url], input[type=number], select, textarea {
     background: var(--admin-bg) !important;
     border: 1px solid var(--admin-border) !important;
@@ -136,7 +180,34 @@
     border-color: var(--admin-accent) !important;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
   }
+
+  .form-row {
+    border-bottom: 1px solid var(--admin-border) !important;
+    padding: 14px 16px !important;
+  }
+
+  /* MESSAGES */
+  ul.messagelist li {
+    background: var(--admin-panel) !important;
+    border: 1px solid var(--admin-accent) !important;
+    color: var(--admin-text) !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 12px !important;
+  }
+  ul.messagelist li.error {
+    border-color: var(--admin-red) !important;
+  }
+
+  .paginator {
+    background: var(--admin-panel) !important;
+    border-top: 1px solid var(--admin-border) !important;
+    color: var(--admin-muted) !important;
+    padding: 12px 16px !important;
+    border-radius: 0 0 12px 12px !important;
+  }
 </style>
+
 {% endblock %}
 
 {% block branding %}

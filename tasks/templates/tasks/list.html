@@ -48,7 +48,7 @@
   </thead>
   <tbody>
     {% for t in tasks %}
-    <tr class="row-link" onclick="location.href='{% url 'tasks:detail' t.pk %}'">
+    <tr class="row-link" data-href="{% url 'tasks:detail' t.pk %}">
       <td><strong>{{ t.title }}</strong></td>
       <td>{{ t.project|default:"—" }}</td>
       <td><span class="badge">{{ t.get_priority_display }}</span></td>

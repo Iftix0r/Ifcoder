@@ -17,7 +17,7 @@
     <table>
       <tr><th>Beruvchi</th><th>Tugash sanasi</th></tr>
       {% for c in domain.certificates.all %}
-      <tr class="row-link" onclick="location.href='{% url 'infrastructure:ssl_detail' c.pk %}'">
+      <tr class="row-link" data-href="{% url 'infrastructure:ssl_detail' c.pk %}">
         <td>{{ c.issuer|default:"—" }}</td>
         <td>
           {% if c.is_expired %}<span class="badge expired">{{ c.expiration_date }}</span>

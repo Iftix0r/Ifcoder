@@ -139,7 +139,7 @@ function syncTgAvatar() {
       </thead>
       <tbody>
         {% for p in projects %}
-        <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
+        <tr class="row-link" data-href="{% url 'projects:detail' p.pk %}">
           <td><strong style="color:var(--text);">{{ p.name }}</strong></td>
           <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
           <td style="text-align:right;">{{ p.deadline|default:"Belgilanmagan" }}</td>
@@ -169,7 +169,7 @@ function syncTgAvatar() {
         </thead>
         <tbody>
           {% for inv in invoices %}
-          <tr class="row-link" onclick="location.href='{% url 'finance:invoice_detail' inv.pk %}'">
+          <tr class="row-link" data-href="{% url 'finance:invoice_detail' inv.pk %}">
             <td><strong>{{ inv.number }}</strong></td>
             <td>{{ inv.project.name|default:"—" }}</td>
             <td>
@@ -197,7 +197,7 @@ function syncTgAvatar() {
       </thead>
       <tbody>
         {% for b in bots %}
-        <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+        <tr class="row-link" data-href="{% url 'bots:detail' b.pk %}">
           <td><strong style="color:var(--text);">{{ b.name }}</strong></td>
           <td>{{ b.get_platform_display }}</td>
           <td style="text-align:right;"><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
@@ -217,7 +217,7 @@ function syncTgAvatar() {
       <thead><tr><th>Vazifa</th><th>Loyiha</th><th style="text-align:right;">Muddat</th></tr></thead>
       <tbody>
         {% for task in tasks %}
-        <tr class="row-link" onclick="location.href='{% url 'tasks:detail' task.pk %}'">
+        <tr class="row-link" data-href="{% url 'tasks:detail' task.pk %}">
           <td><strong style="color:var(--text);">{{ task.title }}</strong></td>
           <td>{{ task.project.name|default:"—" }}</td>
           <td style="text-align:right;">
@@ -242,7 +242,7 @@ function syncTgAvatar() {
       </thead>
       <tbody>
         {% for d in debts %}
-        <tr class="row-link" onclick="location.href='{% url 'debts:detail' d.pk %}'">
+        <tr class="row-link" data-href="{% url 'debts:detail' d.pk %}">
           <td>
             {% if d.direction == 'i_owe' %}
               <span class="badge overdue">Men olganman</span>
@@ -254,7 +254,7 @@ function syncTgAvatar() {
           <td><strong>{{ d.amount|floatformat:0 }}</strong> {{ d.get_currency_display }}</td>
           <td><span class="badge {{ d.status }}">{{ d.get_status_display }}</span></td>
           <td style="text-align:right;">
-            <a href="{% url 'debts:detail' d.pk %}" class="btn btn-sm" onclick="event.stopPropagation()">Batafsil →</a>
+            <a href="{% url 'debts:detail' d.pk %}" class="btn btn-sm">Batafsil →</a>
           </td>
         </tr>
         {% endfor %}
@@ -278,7 +278,7 @@ function syncTgAvatar() {
       </thead>
       <tbody>
         {% for t in tickets %}
-        <tr class="row-link" onclick="location.href='{% url 'tickets:admin_detail' t.pk %}'">
+        <tr class="row-link" data-href="{% url 'tickets:admin_detail' t.pk %}">
           <td><strong style="color:var(--text);">#{{ t.pk }} {{ t.title }}</strong></td>
           <td><span class="badge {{ t.status }}">{{ t.get_status_display }}</span></td>
           <td><span class="badge {% if t.priority == 'urgent' %}overdue{% elif t.priority == 'high' %}pending{% else %}active{% endif %}">{{ t.get_priority_display }}</span></td>

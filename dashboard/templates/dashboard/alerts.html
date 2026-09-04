@@ -18,7 +18,7 @@
   </thead>
   <tbody>
     {% for a in alerts %}
-    <tr class="row-link" onclick="location.href='{{ a.link }}'">
+    <tr class="row-link" data-href="{{ a.link }}">
       <td><span class="badge {% if a.level == 'critical' %}overdue{% else %}expiring{% endif %}">{% if a.level == 'critical' %}Muhim{% else %}Ogohlantirish{% endif %}</span></td>
       <td><strong>{{ a.title }}</strong></td>
       <td>{{ a.detail }}</td>

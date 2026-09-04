@@ -114,7 +114,7 @@
   </thead>
   <tbody>
     {% for c in clients %}
-    <tr class="row-link" onclick="location.href='{% url 'clients:detail' c.pk %}'">
+    <tr class="row-link" data-href="{% url 'clients:detail' c.pk %}">
       <td style="display:flex;align-items:center;gap:12px;">
         <div style="position:relative;flex-shrink:0;">
           {% if c.avatar %}

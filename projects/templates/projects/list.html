@@ -36,7 +36,7 @@
   </thead>
   <tbody>
     {% for p in projects %}
-    <tr class="row-link" onclick="location.href='{% url 'projects:detail' p.pk %}'">
+    <tr class="row-link" data-href="{% url 'projects:detail' p.pk %}">
       <td><strong>{{ p.name }}</strong></td>
       <td>{{ p.client|default:"—" }}</td>
       <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>

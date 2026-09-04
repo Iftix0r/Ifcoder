@@ -24,7 +24,7 @@
   <thead><tr><th>Nomi</th><th>Domen</th><th>Beruvchi</th><th>Tugash sanasi</th></tr></thead>
   <tbody>
   {% for c in certificates %}
-  <tr class="row-link" onclick="location.href='{% url 'infrastructure:ssl_detail' c.pk %}'">
+  <tr class="row-link" data-href="{% url 'infrastructure:ssl_detail' c.pk %}">
     <td><strong>{{ c }}</strong></td>
     <td>{% if c.domain %}{{ c.domain }}{% else %}—{% endif %}</td>
     <td>{{ c.issuer|default:"—" }}</td>

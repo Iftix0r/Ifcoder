@@ -31,7 +31,7 @@
   </thead>
   <tbody>
     {% for d in domains %}
-    <tr class="row-link" onclick="location.href='{% url 'infrastructure:domain_detail' d.pk %}'">
+    <tr class="row-link" data-href="{% url 'infrastructure:domain_detail' d.pk %}">
       <td><strong>{{ d.name }}</strong></td>
       <td>{{ d.registrar|default:"—" }}</td>
       <td>

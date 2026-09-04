@@ -102,7 +102,7 @@
     </thead>
     <tbody>
       {% for debt in debts %}
-      <tr class="row-link" onclick="location.href='{% url 'debts:detail' debt.pk %}'">
+      <tr class="row-link" data-href="{% url 'debts:detail' debt.pk %}">
         <td>
           {% if debt.direction == 'i_owe' %}
             <span class="badge overdue">Men olganman</span>

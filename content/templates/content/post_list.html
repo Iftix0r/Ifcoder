@@ -36,7 +36,7 @@
   </thead>
   <tbody>
     {% for p in posts %}
-    <tr class="row-link" onclick="location.href='{% url 'content:post_detail' p.pk %}'">
+    <tr class="row-link" data-href="{% url 'content:post_detail' p.pk %}">
       <td><strong>{{ p.title }}</strong></td>
       <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
       <td>{{ p.published_at|date:"d.m.Y H:i"|default:"—" }}</td>

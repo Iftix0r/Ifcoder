@@ -43,7 +43,7 @@
   </thead>
   <tbody>
     {% for b in bots %}
-    <tr class="row-link" onclick="location.href='{% url 'bots:detail' b.pk %}'">
+    <tr class="row-link" data-href="{% url 'bots:detail' b.pk %}">
       <td><strong>{{ b.name }}</strong></td>
       <td><span class="badge">{{ b.get_platform_display }}</span></td>
       <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>

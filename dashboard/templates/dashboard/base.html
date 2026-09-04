@@ -627,10 +627,10 @@
     color: var(--accent);
   }
   .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  .badge.completed, .badge.paid, .badge.published, .badge.done, .badge.active { background: var(--green-dim); color: var(--green); }
-  .badge.paused, .badge.expiring, .badge.sent, .badge.in_progress { background: var(--yellow-dim); color: var(--yellow); }
-  .badge.inactive, .badge.draft, .badge.new, .badge.pending { background: var(--gray-dim); color: var(--gray); }
-  .badge.overdue, .badge.expired, .badge.canceled { background: var(--red-dim); color: var(--red); }
+  .badge.completed, .badge.paid, .badge.published, .badge.done, .badge.active, .badge.resolved, .badge.approved, .badge.low { background: var(--green-dim); color: var(--green); }
+  .badge.paused, .badge.expiring, .badge.sent, .badge.in_progress, .badge.answered, .badge.medium, .badge.pending_approval { background: var(--yellow-dim); color: var(--yellow); }
+  .badge.inactive, .badge.draft, .badge.new, .badge.pending, .badge.closed, .badge.archived { background: var(--gray-dim); color: var(--gray); }
+  .badge.overdue, .badge.expired, .badge.canceled, .badge.urgent, .badge.critical, .badge.high, .badge.open { background: var(--red-dim); color: var(--red); }
 
   /* MESSAGES / TOASTS */
   .messages { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 10px; }
@@ -755,11 +755,11 @@
     transition: all 0.15s ease;
   }
   .cmd-item svg { color: var(--muted); }
-  .cmd-item:hover {
+  .cmd-item:hover, .cmd-item.active-nav {
     background: var(--accent-dim);
     color: var(--accent);
   }
-  .cmd-item:hover svg { color: var(--accent); }
+  .cmd-item:hover svg, .cmd-item.active-nav svg { color: var(--accent); }
   .cmd-item .cmd-tag {
     margin-left: auto;
     font-size: 11px;
@@ -1068,13 +1068,13 @@
 
   document.addEventListener('DOMContentLoaded', function () {
 
-    // Row-link: ichidagi a/button/form bosilganda tr navigatsiyasi ishlamasin
-    document.querySelectorAll('tr.row-link[data-href]').forEach(function (tr) {
-      tr.addEventListener('click', function (e) {
-        if (e.target.closest('a, button, form, input, select, textarea')) return;
-        window.location.href = tr.dataset.href;
-      });
-      tr.style.cursor = 'pointer';
+
+    // Row-link: Delegated click event for data-href rows (handles dynamic rows & stops propagation for interactive buttons)
+    document.addEventListener('click', function (e) {
+      var tr = e.target.closest('tr.row-link[data-href]');
+      if (!tr) return;
+      if (e.target.closest('a, button, form, input, select, textarea, [data-confirm-delete]')) return;
+      window.location.href = tr.dataset.href;
     });
 
     // Tashqi click — quick-add menyusini yopish
@@ -1083,7 +1083,7 @@
       if (wrap && !wrap.contains(e.target)) wrap.classList.remove('show');
     });
 
-    // Mobile sidebar overlay bosilganda yopish
+    // Mobile sidebar overlay va linklar bosilganda yopish
     var overlay = document.getElementById('sidebar-overlay');
     if (overlay) {
       overlay.addEventListener('click', function () {
@@ -1092,19 +1092,35 @@
         overlay.classList.remove('visible');
       });
     }
+    document.querySelectorAll('.sidebar nav a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        if (window.innerWidth <= 860) {
+          var sb = document.querySelector('.sidebar');
+          var ov = document.getElementById('sidebar-overlay');
+          if (sb) sb.classList.remove('open');
+          if (ov) ov.classList.remove('visible');
+        }
+      });
+    });
 
-    // Messages: 4.5 soniyadan keyin avtomatik yo'qolish
+    // Messages: hover bo'lganda pauza bilan avtomatik yo'qolish
     document.querySelectorAll('.messages li').forEach(function (li) {
-      setTimeout(function () {
-        li.style.transition = 'opacity 0.45s ease, transform 0.45s ease, max-height 0.45s ease, margin 0.45s ease, padding 0.45s ease';
-        li.style.opacity = '0';
-        li.style.transform = 'translateY(-8px)';
-        li.style.maxHeight = '0';
-        li.style.marginBottom = '0';
-        li.style.paddingTop = '0';
-        li.style.paddingBottom = '0';
-        setTimeout(function () { li.remove(); }, 480);
-      }, 4500);
+      var timer = null;
+      function startDismiss() {
+        timer = setTimeout(function () {
+          li.style.transition = 'opacity 0.45s ease, transform 0.45s ease, max-height 0.45s ease, margin 0.45s ease, padding 0.45s ease';
+          li.style.opacity = '0';
+          li.style.transform = 'translateY(-8px)';
+          li.style.maxHeight = '0';
+          li.style.marginBottom = '0';
+          li.style.paddingTop = '0';
+          li.style.paddingBottom = '0';
+          setTimeout(function () { li.remove(); }, 480);
+        }, 4500);
+      }
+      li.addEventListener('mouseenter', function() { if (timer) clearTimeout(timer); });
+      li.addEventListener('mouseleave', function() { startDismiss(); });
+      startDismiss();
     });
 
     // Form dirty check — o'zgartirilgan formdan chiqishda bitta ogohlantirish
@@ -1117,7 +1133,9 @@
       if (formsDirty) { e.preventDefault(); e.returnValue = ''; }
     });
 
-    // Command Palette Modal JS
+    // Command Palette Modal JS (With Full Keyboard Navigation: ArrowUp / ArrowDown / Enter)
+    var cmdSelectedIndex = -1;
+
     function openCmdPalette() {
       var modal = document.getElementById('cmd-palette');
       var input = document.getElementById('cmd-input');
@@ -1130,12 +1148,33 @@
     function closeCmdPalette() {
       var modal = document.getElementById('cmd-palette');
       if (modal) modal.classList.remove('show');
+      cmdSelectedIndex = -1;
+    }
+    function getVisibleCmdItems() {
+      return Array.from(document.querySelectorAll('#cmd-list .cmd-item')).filter(function(item) {
+        return item.style.display !== 'none';
+      });
+    }
+    function updateCmdSelection(visibleItems) {
+      visibleItems.forEach(function(item, idx) {
+        if (idx === cmdSelectedIndex) {
+          item.classList.add('active-nav');
+          item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } else {
+          item.classList.remove('active-nav');
+        }
+      });
     }
     function filterCmdList(q) {
+      var visibleItems = [];
       document.querySelectorAll('#cmd-list .cmd-item').forEach(function(item) {
         var txt = item.textContent.toLowerCase();
-        item.style.display = txt.includes(q) ? 'flex' : 'none';
+        var match = txt.includes(q);
+        item.style.display = match ? 'flex' : 'none';
+        if (match) visibleItems.push(item);
       });
+      cmdSelectedIndex = visibleItems.length > 0 ? 0 : -1;
+      updateCmdSelection(visibleItems);
     }
 
     document.querySelector('.global-search input')?.addEventListener('focus', function(e) {
@@ -1151,12 +1190,39 @@
       if (e.target === this) closeCmdPalette();
     });
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts & arrow navigation inside Command Palette
     document.addEventListener('keydown', function(e) {
+      var modal = document.getElementById('cmd-palette');
+      var isCmdOpen = modal && modal.classList.contains('show');
+
+      if (isCmdOpen) {
+        var visibleItems = getVisibleCmdItems();
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (visibleItems.length > 0) {
+            cmdSelectedIndex = (cmdSelectedIndex + 1) % visibleItems.length;
+            updateCmdSelection(visibleItems);
+          }
+          return;
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (visibleItems.length > 0) {
+            cmdSelectedIndex = (cmdSelectedIndex - 1 + visibleItems.length) % visibleItems.length;
+            updateCmdSelection(visibleItems);
+          }
+          return;
+        } else if (e.key === 'Enter') {
+          if (cmdSelectedIndex >= 0 && cmdSelectedIndex < visibleItems.length) {
+            e.preventDefault();
+            visibleItems[cmdSelectedIndex].click();
+            return;
+          }
+        }
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        var modal = document.getElementById('cmd-palette');
-        if (modal?.classList.contains('show')) { closeCmdPalette(); } else { openCmdPalette(); }
+        if (isCmdOpen) { closeCmdPalette(); } else { openCmdPalette(); }
         return;
       }
       var tag = document.activeElement.tagName;
@@ -1177,6 +1243,7 @@
         }
       }
     });
+
 
     // Delete modal — data-confirm-url yoki href bilan ishlaydi
     document.querySelectorAll('[data-confirm-delete]').forEach(function(trigger) {

@@ -68,7 +68,7 @@
     </thead>
     <tbody>
       {% for t in tickets %}
-      <tr style="border-bottom:1px solid var(--border);" class="ticket-row">
+      <tr style="border-bottom:1px solid var(--border);" class="row-link" data-href="{% url 'tickets:admin_detail' t.pk %}">
         <td style="padding:14px 18px;font-weight:800;color:var(--muted);">#{{ t.pk }}</td>
         <td style="padding:14px 18px;font-weight:700;">
           {{ t.client.name|default:t.created_by.username|default:"Noma'lum" }}

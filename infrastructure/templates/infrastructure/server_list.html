@@ -24,7 +24,7 @@
   <thead><tr><th>Nomi</th><th>IP manzil</th><th>Provayder</th><th>SSH port</th></tr></thead>
   <tbody>
   {% for s in servers %}
-  <tr class="row-link" onclick="location.href='{% url 'infrastructure:server_detail' s.pk %}'">
+  <tr class="row-link" data-href="{% url 'infrastructure:server_detail' s.pk %}">
     <td><strong>{{ s.name }}</strong></td>
     <td><code>{{ s.ip_address }}</code></td>
     <td>{{ s.provider|default:"—" }}</td>
