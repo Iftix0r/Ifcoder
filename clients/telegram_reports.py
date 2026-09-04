@@ -13,73 +13,85 @@ logger = logging.getLogger(__name__)
 
 def generate_project_report(client: Client) -> str:
     """Mijoz uchun faol va yaqindagi loyihalar va vazifalar hisoboti."""
+    lines = [
+        f"👋 <b>Assalomu alaykum, {html.escape(client.name)}!</b>\n",
+        f"📊 <b>LOYIHALAR VA VAZIFALAR HISOBOTI</b>",
+    ]
     projects = client.projects.all()
     if not projects.exists():
-        return f"📋 <b>{html.escape(client.name)}</b>\n\nHozirda sizga biriktirilgan faol loyihalar mavjud emas."
-
-    lines = [f"📊 <b>LOYIHALAR VA VAZIFALAR HISOBOTI</b>", f"👤 Mijoz: <b>{html.escape(client.name)}</b>\n"]
-
-    for p in projects:
-        st_label = p.get_status_display()
-        deadline_str = p.deadline.strftime("%d.%m.%Y") if p.deadline else "Belgilanmagan"
-        lines.append(f"📁 <b>{html.escape(p.name)}</b> [{st_label}]")
-        lines.append(f"   📈 Progress: <b>{p.progress_percent}%</b> ({p.completed_task_count}/{p.task_count} vazifa)")
-        lines.append(f"   📅 Muddat: {deadline_str}")
-
-        # Loyihaga tegishli vazifalar
-        tasks = p.tasks.all()[:5]
-        if tasks.exists():
-            lines.append("   📌 <i>Vazifalar:</i>")
-            for t in tasks:
-                icon = "✅" if t.status == "done" else ("⏳" if t.status == "in_progress" else "🔲")
-                lines.append(f"     {icon} {html.escape(t.title)} ({t.get_status_display()})")
+        lines.append("ℹ️ <i>Hozirda tizimda sizga biriktirilgan faol loyihalar mavjud emas.</i>")
+    else:
         lines.append("")
+        for p in projects:
+            st_label = p.get_status_display()
+            deadline_str = p.deadline.strftime("%d.%m.%Y") if p.deadline else "Belgilanmagan"
+            lines.append(f"📁 <b>{html.escape(p.name)}</b> — [{st_label}]")
+            lines.append(f"   📈 Progress: <b>{p.progress_percent}%</b> ({p.completed_task_count}/{p.task_count} vazifa)")
+            lines.append(f"   📅 Topshirish muddati: {deadline_str}")
+
+            tasks = p.tasks.all()[:5]
+            if tasks.exists():
+                lines.append("   📌 <i>So'nggi vazifalar:</i>")
+                for t in tasks:
+                    icon = "✅" if t.status == "done" else ("⏳" if t.status == "in_progress" else "🔲")
+                    lines.append(f"     {icon} {html.escape(t.title)} ({t.get_status_display()})")
+            lines.append("")
 
     return "\n".join(lines).strip()
 
 
 def generate_debt_report(client: Client) -> str:
     """Mijoz uchun qarzlar va to'lovlar holati bo'yicha hisobot/eslatma."""
+    lines = [
+        f"👋 <b>Assalomu alaykum, {html.escape(client.name)}!</b>\n",
+        f"💸 <b>MOLIYAVIY HISOB-KITOB VA TO'LOVLAR HOLATI</b>",
+    ]
+
     debts = client.debts.all()
     if not debts.exists():
-        return f"💸 <b>{html.escape(client.name)}</b>\n\nHozirda moliyaviy qarzlar/hisob-kitoblar mavjud emas."
-
-    lines = [f"💸 <b>MOLIYAVIY HISOB-KITOB VA QARZLAR</b>", f"👤 Mijoz: <b>{html.escape(client.name)}</b>\n"]
-
-    total_they_owe = 0
-    total_i_owe = 0
-
-    for d in debts:
-        rem = float(d.remaining_amount)
-        curr = d.get_currency_display()
-        due_str = d.due_date.strftime("%d.%m.%Y") if d.due_date else "Belgilanmagan"
-
-        if d.direction == "they_owe":
-            total_they_owe += rem
-        else:
-            total_i_owe += rem
-
-        lines.append(f"🔹 <b>{html.escape(d.reason or 'Qarz')}</b>")
-        lines.append(f"   • Summa: {d.amount:,.0f} {curr} | To'langan: {d.paid_amount:,.0f} {curr}")
-        lines.append(f"   • Qoldi: <b>{rem:,.0f} {curr}</b> ({d.get_status_display()})")
-        lines.append(f"   • Muddat: {due_str}")
+        lines.append("✅ <i>Hozirda moliyaviy qarzdorlik yoki kutilayotgan to'lovlar mavjud emas. Hamkorligingiz uchun rahmat!</i>")
+    else:
         lines.append("")
+        total_they_owe = 0
+        total_i_owe = 0
 
-    if total_they_owe > 0:
-        lines.append(f"💵 <b>To'lanishi kutilayotgan jami:</b> {total_they_owe:,.0f} so'm/USD")
-    if total_i_owe > 0:
-        lines.append(f"🔻 <b>Biz tomonidan to'lanishi kerak bo'lgan jami:</b> {total_i_owe:,.0f} so'm/USD")
+        for d in debts:
+            rem = float(d.remaining_amount)
+            curr = d.get_currency_display()
+            due_str = d.due_date.strftime("%d.%m.%Y") if d.due_date else "Belgilanmagan"
+
+            if d.direction == "they_owe":
+                total_they_owe += rem
+            else:
+                total_i_owe += rem
+
+            lines.append(f"🔹 <b>{html.escape(d.reason or 'Moliyaviy hisob-kitob')}</b>")
+            lines.append(f"   • Summa: {d.amount:,.0f} {curr} | To'langan: {d.paid_amount:,.0f} {curr}")
+            lines.append(f"   • Qolgan balans: <b>{rem:,.0f} {curr}</b> ({d.get_status_display()})")
+            lines.append(f"   • To'lov muddati: {due_str}")
+            lines.append("")
+
+        if total_they_owe > 0:
+            lines.append(f"💵 <b>Jami kutilayotgan to'lov:</b> {total_they_owe:,.0f} so'm/USD")
+        if total_i_owe > 0:
+            lines.append(f"🔻 <b>Biz tomonidan to'lanishi kerak bo'lgan jami:</b> {total_i_owe:,.0f} so'm/USD")
 
     return "\n".join(lines).strip()
 
 
 def generate_summary_report(client: Client) -> str:
     """Loyihalar hamda qarzlar bo'yicha jamlangan to'liq hisobot."""
-    p_report = generate_project_report(client)
-    d_report = generate_debt_report(client)
+    p_body = generate_project_report(client)
+    d_body = generate_debt_report(client)
+
+    # Hisobot ikkinchi qismidagi takroriy salomlashuvni olib tashlash
+    d_lines = d_body.split("\n")
+    if d_lines and "Assalomu alaykum" in d_lines[0]:
+        d_body = "\n".join(d_lines[2:]).strip()
+
     sep = "─" * 28
 
-    return f"{p_report}\n\n{sep}\n\n{d_report}"
+    return f"{p_body}\n\n{sep}\n\n{d_body}\n\n💬 <i>Savol yoki murojaatlaringiz bo'lsa, bemalol javob xabari qoldirishingiz mumkin!</i>"
 
 
 def send_report_to_client(client: Client, report_type: str, custom_text: Optional[str] = None) -> Dict[str, Any]:
