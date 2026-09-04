@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from django.utils import timezone
 
 from clients.models import Client
@@ -102,6 +103,9 @@ class Invoice(models.Model):
         "Holati", max_length=20, choices=Status.choices, default=Status.DRAFT
     )
     notes = models.TextField("Izoh", blank=True)
+    payment_url = models.URLField(
+        "To'lov havolasi (Click/Payme)", max_length=500, blank=True
+    )
     created_at = models.DateTimeField("Yaratilgan sana", auto_now_add=True)
 
     class Meta:
@@ -115,3 +119,47 @@ class Invoice(models.Model):
     @property
     def is_overdue(self):
         return self.status != self.Status.PAID and self.due_date < timezone.localdate()
+
+    @property
+    def overdue_days(self):
+        if self.is_overdue:
+            return (timezone.localdate() - self.due_date).days
+        return 0
+
+    @property
+    def lines_total(self):
+        """InvoiceLine lardan hisoblangan jami summa."""
+        return self.lines.aggregate(total=Sum("total"))["total"] or 0
+
+
+class InvoiceLine(models.Model):
+    """Invoys satrlari — xizmat turi, soat va narx bilan."""
+    invoice = models.ForeignKey(
+        Invoice,
+        verbose_name="Invoys",
+        related_name="lines",
+        on_delete=models.CASCADE,
+    )
+    description = models.CharField("Xizmat tavsifi", max_length=255)
+    quantity = models.DecimalField(
+        "Miqdor (soat yoki dona)", max_digits=10, decimal_places=2, default=1
+    )
+    unit_price = models.DecimalField(
+        "Birlik narxi (UZS)", max_digits=12, decimal_places=2
+    )
+    total = models.DecimalField(
+        "Jami", max_digits=14, decimal_places=2, editable=False, default=0
+    )
+    order = models.PositiveSmallIntegerField("Tartib", default=0)
+
+    class Meta:
+        verbose_name = "Invoys satri"
+        verbose_name_plural = "Invoys satrlari"
+        ordering = ["order", "id"]
+
+    def save(self, *args, **kwargs):
+        self.total = self.quantity * self.unit_price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.description} × {self.quantity} = {self.total}"

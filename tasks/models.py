@@ -76,8 +76,11 @@ class TimeEntry(models.Model):
         User, verbose_name="Dasturchi", related_name="time_entries", on_delete=models.PROTECT
     )
     date = models.DateField("Sana", default=timezone.localdate)
-    hours = models.DecimalField("Ishlangan soat", max_digits=7, decimal_places=2)
+    hours = models.DecimalField("Ishlangan soat", max_digits=7, decimal_places=2, default=0)
     note = models.CharField("Izoh", max_length=255, blank=True)
+    # Live timer support
+    started_at = models.DateTimeField("Boshlangan vaqt", null=True, blank=True)
+    is_running = models.BooleanField("Ishlayaptimi?", default=False)
     created_at = models.DateTimeField("Yaratilgan sana", auto_now_add=True)
 
     class Meta:
@@ -87,3 +90,13 @@ class TimeEntry(models.Model):
 
     def __str__(self):
         return f"{self.task} — {self.hours} soat"
+
+    def stop_timer(self):
+        """Timerni to'xtatadi va ishlangan soatni hisoblaydi."""
+        if self.is_running and self.started_at:
+            elapsed = timezone.now() - self.started_at
+            self.hours += round(elapsed.total_seconds() / 3600, 2)
+            self.is_running = False
+            self.started_at = None
+            self.save(update_fields=["hours", "is_running", "started_at"])
+

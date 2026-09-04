@@ -12,4 +12,9 @@ urlpatterns = [
     path("<int:pk>/delete/", views.TaskDeleteView.as_view(), name="delete"),
     path("<int:pk>/set-status/", views.task_set_status, name="set_status"),
     path("<int:pk>/add-time/", views.task_add_time, name="add_time"),
+    # Live timer endpoints
+    path("<int:pk>/timer/start/", views.timer_start, name="timer_start"),
+    path("<int:pk>/timer/stop/", views.timer_stop, name="timer_stop"),
+    path("timer/status/", views.timer_status, name="timer_status"),
 ]
+

@@ -156,3 +156,56 @@ def task_add_time(request, pk):
         entry.save()
         return JsonResponse({"ok": True, "hours": str(entry.hours)})
     return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+
+
+@login_required
+@require_POST
+def timer_start(request, pk):
+    """Vazifa uchun live timerni boshlaydi."""
+    task = Task.objects.get(pk=pk)
+    # Avval shu foydalanuvchining boshqa running timerini to'xtat
+    running = TimeEntry.objects.filter(user=request.user, is_running=True)
+    for entry in running:
+        entry.stop_timer()
+    # Yangi timer
+    entry = TimeEntry.objects.create(
+        task=task,
+        user=request.user,
+        started_at=timezone.now(),
+        is_running=True,
+        hours=0,
+    )
+    return JsonResponse({
+        "ok": True,
+        "entry_id": entry.pk,
+        "started_at": entry.started_at.isoformat(),
+        "task_id": task.pk,
+        "task_title": task.title,
+    })
+
+
+@login_required
+@require_POST
+def timer_stop(request, pk):
+    """Vazifa uchun running timerni to'xtatadi."""
+    entry = TimeEntry.objects.filter(task__pk=pk, user=request.user, is_running=True).first()
+    if entry:
+        entry.stop_timer()
+        return JsonResponse({"ok": True, "hours": str(entry.hours)})
+    return JsonResponse({"ok": False, "message": "Aktiv timer topilmadi"}, status=404)
+
+
+@login_required
+def timer_status(request):
+    """Foydalanuvchining hozirgi aktiv timerini qaytaradi."""
+    entry = TimeEntry.objects.filter(user=request.user, is_running=True).select_related("task").first()
+    if entry:
+        return JsonResponse({
+            "running": True,
+            "entry_id": entry.pk,
+            "task_id": entry.task.pk,
+            "task_title": entry.task.title,
+            "started_at": entry.started_at.isoformat(),
+        })
+    return JsonResponse({"running": False})
+
