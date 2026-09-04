@@ -34,6 +34,28 @@
       💬 Telegram Chat & Tarix
       <span id="detailChatUnreadBadge" style="display:none;background:#ff3d00;color:#fff;font-size:11px;font-weight:800;border-radius:10px;padding:2px 7px;line-height:1;box-shadow:0 2px 6px rgba(255,61,0,0.5);">0</span>
     </button>
+
+    <!-- Telegram Hisobot Dropdown Menu -->
+    <div style="position:relative;display:inline-block;" id="reportMenuWrap">
+      <button class="btn" onclick="toggleReportMenu()" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+        ✈️ Telegram Hisobot ▾
+      </button>
+      <div id="reportDropdown" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--card-bg,#1e293b);border:1px solid var(--border,#334155);border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,0.4);z-index:99;min-width:250px;overflow:hidden;padding:6px 0;">
+        <button onclick="sendTgReport('projects')" class="report-menu-item">
+          📊 Loyihalar & Vazifalar hisoboti
+        </button>
+        <button onclick="sendTgReport('debts')" class="report-menu-item">
+          💸 Qarzlar & To'lovlar eslatmasi
+        </button>
+        <button onclick="sendTgReport('summary')" class="report-menu-item">
+          📋 Jamlangan To'liq Hisobot
+        </button>
+        <div style="border-top:1px solid var(--border,#334155);margin:4px 0;"></div>
+        <button onclick="openCustomReportModal()" class="report-menu-item" style="color:#38bdf8;">
+          💬 Maxsus xabar yuborish...
+        </button>
+      </div>
+    </div>
     {% endif %}
 
     <a class="btn" href="{% url 'tickets:admin_list' %}?client={{ client.pk }}">
@@ -502,6 +524,110 @@ async function sendChatMessage() {
     btn.disabled = false;
     btn.innerHTML = 'Yuborish ✈️';
   }
+}
+<style>
+.report-menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s ease;
+}
+.report-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+</style>
+
+<!-- MAXSUS XABAR MODALI -->
+<div id="customReportModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--card-bg,#1e293b);border:1px solid var(--border,#334155);border-radius:14px;padding:24px;width:100%;max-width:480px;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+    <h3 style="margin-top:0;margin-bottom:12px;font-size:18px;">💬 Maxsus Telegram Xabar Yuborish</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+      Mijoz <b>{{ client.name }}</b> Telegramiga shaxsiy xabarni yuboring:
+    </p>
+    <textarea id="customReportText" rows="4" style="width:100%;background:var(--panel,#0f172a);border:1px solid var(--border,#334155);border-radius:8px;padding:12px;color:var(--text);font-family:inherit;font-size:14px;box-sizing:border-box;resize:vertical;" placeholder="Xabar matnini kiriting…"></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+      <button onclick="closeCustomReportModal()" class="btn">Bekor qilish</button>
+      <button onclick="submitCustomReport()" class="btn btn-primary" style="background:linear-gradient(135deg,#10b981,#059669);border:none;">
+        Yuborish ✈️
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleReportMenu() {
+  const dropdown = document.getElementById('reportDropdown');
+  if (!dropdown) return;
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('reportMenuWrap');
+  const dropdown = document.getElementById('reportDropdown');
+  if (wrap && dropdown && !wrap.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});
+
+async function sendTgReport(reportType, customText = null) {
+  const dropdown = document.getElementById('reportDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+
+  if (!customText && !confirm("Rostdan ham mijoz Telegramiga hisobot yubormoqchimisiz?")) return;
+
+  try {
+    const res = await fetch("{% url 'clients:send_report_api' client.pk %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify({
+        report_type: reportType,
+        custom_text: customText
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'ok' || data.status === 'warning') {
+      alert("✅ " + (data.message || "Hisobot yuborildi!"));
+    } else {
+      alert("❌ " + (data.message || data.error || "Xatolik yuz berdi"));
+    }
+  } catch (err) {
+    alert("❌ Server bilan aloqada xatolik yuz berdi");
+  }
+}
+
+function openCustomReportModal() {
+  const dropdown = document.getElementById('reportDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+  const modal = document.getElementById('customReportModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeCustomReportModal() {
+  const modal = document.getElementById('customReportModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitCustomReport() {
+  const input = document.getElementById('customReportText');
+  const text = input.value.trim();
+  if (!text) {
+    alert("Iltimos, xabar matnini kiriting!");
+    return;
+  }
+  closeCustomReportModal();
+  await sendTgReport('custom', text);
+  input.value = '';
 }
 </script>
 {% endblock %}

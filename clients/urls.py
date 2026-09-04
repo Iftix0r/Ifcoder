@@ -16,6 +16,7 @@ urlpatterns = [
     path("<int:pk>/send-chat-api/", views.client_send_chat_message_api, name="send_chat_api"),
     path("unread-counts/", views.client_unread_counts_api, name="unread_counts_api"),
     path("<int:pk>/mark-read/", views.client_mark_chat_read_api, name="mark_read_api"),
+    path("<int:pk>/send-report/", views.client_send_telegram_report_api, name="send_report_api"),
 ]
 
 

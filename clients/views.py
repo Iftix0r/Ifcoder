@@ -456,5 +456,40 @@ def client_mark_chat_read_api(request, pk):
     return JsonResponse({"status": "ok", "marked_read_count": updated})
 
 
+@login_required
+@csrf_exempt
+def client_send_telegram_report_api(request, pk):
+    """
+    Mijozga Telegram Userbot orqali hisobot (loyiha, qarz, jamlangan yoki maxsus xabar) yuboradi.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Faqat POST so'rovi qabul qilinadi"}, status=405)
+
+    client = get_object_or_404(Client, pk=pk)
+    import json
+    report_type = "summary"
+    custom_text = None
+
+    if request.content_type == "application/json":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            report_type = data.get("report_type", "summary")
+            custom_text = data.get("custom_text", "")
+        except Exception:
+            pass
+    else:
+        report_type = request.POST.get("report_type", "summary")
+        custom_text = request.POST.get("custom_text", "")
+
+    from .telegram_reports import send_report_to_client
+    result = send_report_to_client(client, report_type, custom_text)
+
+    if result.get("status") == "error":
+        return JsonResponse({"status": "error", "message": result.get("error", "Xatolik yuz berdi")}, status=400)
+
+    return JsonResponse(result)
+
+
+
 
 
