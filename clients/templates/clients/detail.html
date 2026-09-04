@@ -56,6 +56,10 @@
         </button>
       </div>
     </div>
+    {% else %}
+    <button class="btn" onclick="alert('⚠️ Ushbu mijoz profiliga Telegram username yoki Telegram ID kiritilmagan. Mijozni tahrirlash orqali Telegram ma\'lumotini qo\'shing.')" style="opacity:0.75;">
+      💬 ✈️ Telegram (Sozlanmagan)
+    </button>
     {% endif %}
 
     <a class="btn" href="{% url 'tickets:admin_list' %}?client={{ client.pk }}">
@@ -525,6 +529,8 @@ async function sendChatMessage() {
     btn.innerHTML = 'Yuborish ✈️';
   }
 }
+</script>
+
 <style>
 .report-menu-item {
   width: 100%;
