@@ -1,0 +1,75 @@
+{% extends "dashboard/base.html" %}
+{% load dashboard_extras %}
+{% block title %}{{ document.title }} — Ifcoder Panel{% endblock %}
+{% block page_title %}{{ document.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+  <a href="{% url 'projects:document_list' %}" style="font-size:13px;color:var(--muted);font-weight:600;">
+    ← Shartnomalar va Takliflar ro'yxatiga qaytish
+  </a>
+  <div style="display:flex;gap:10px;">
+    <a href="{% url 'projects:document_print' document.pk %}" target="_blank" class="btn btn-primary">
+      🖨 Print / PDF Versiya
+    </a>
+    <a href="{% url 'projects:document_edit' document.pk %}" class="btn">
+      ✏️ Tahrirlash
+    </a>
+    <a href="{% url 'projects:document_delete' document.pk %}" class="btn btn-danger">
+      🗑 O'chirish
+    </a>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <!-- DOCUMENT CONTENT PREVIEW -->
+  <div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px;box-shadow:var(--shadow-sm);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+        <div>
+          <span class="badge" style="margin-bottom:8px;">{{ document.get_doc_type_display }}</span>
+          <h1 style="font-size:24px;font-weight:800;margin:0;color:var(--text);">{{ document.title }}</h1>
+        </div>
+        <span class="badge {{ document.status }}" style="font-size:13px;padding:6px 14px;">{{ document.get_status_display }}</span>
+      </div>
+
+      <div style="font-size:14.5px;line-height:1.8;color:var(--text);">
+        {{ document.content|safe }}
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR METADATA -->
+  <div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">
+      <h2 style="font-size:16px;font-weight:800;margin:0 0 16px;">📋 Hujjat Tafsilotlari</h2>
+      <ul class="detail-list">
+        <li>
+          <span class="k">Mijoz:</span>
+          <span><a href="{% url 'clients:detail' document.client.pk %}">{{ document.client.name }}</a></span>
+        </li>
+        <li>
+          <span class="k">Loyiha:</span>
+          <span>{% if document.project %}<a href="{% url 'projects:detail' document.project.pk %}">{{ document.project.name }}</a>{% else %}—{% endif %}</span>
+        </li>
+        <li>
+          <span class="k">Summa:</span>
+          <span style="color:var(--green);font-weight:800;">{{ document.amount|currency:"" }} UZS</span>
+        </li>
+        <li>
+          <span class="k">Holat:</span>
+          <span><span class="badge {{ document.status }}">{{ document.get_status_display }}</span></span>
+        </li>
+        <li>
+          <span class="k">Yaratilgan:</span>
+          <span>{{ document.created_at|date:"d.m.Y H:i" }}</span>
+        </li>
+        <li>
+          <span class="k">Yangilangan:</span>
+          <span>{{ document.updated_at|date:"d.m.Y H:i" }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "dashboard/base.html" %}
+{% load dashboard_extras %}
+{% block title %}Shartnomalar va Tijorat Takliflari — Ifcoder Panel{% endblock %}
+{% block page_title %}Shartnomalar va Tijorat Takliflari{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+  <div>
+    <h1 style="font-size:24px;font-weight:800;margin:0 0 4px;display:flex;align-items:center;gap:10px;">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="22" height="22" style="color:var(--accent);"><path d="M4 1.75C4 .784 4.784 0 5.75 0h5.5c.38 0 .742.124 1.037.351l3.363 2.593c.31.239.49.61.49 1.002V14.25A1.75 1.75 0 0114.387 16H5.75A1.75 1.75 0 014 14.25V1.75zM5.75 1.5a.25.25 0 00-.25.25v12.5c0 .138.112.25.25.25h8.637a.25.25 0 00.25-.25V4.25h-3.137A1.75 1.75 0 019.75 2.5V1.5H5.75z"/></svg>
+      Shartnomalar va Tijorat Takliflari
+    </h1>
+    <p style="color:var(--muted);font-size:14px;margin:0;">Mijozlar bilan rasmiylashtirilgan barcha shartnoma, tijorat takliflari hamda smetalar</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="{% url 'projects:document_add' %}?template=contract" class="btn btn-primary">+ Yangi Shartnoma</a>
+    <a href="{% url 'projects:document_add' %}?template=proposal" class="btn">+ Tijorat Taklifi / Smeta</a>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="toolbar" style="margin-bottom:24px;">
+  <form method="get" action="">
+    <input type="text" name="q" value="{{ q }}" placeholder="Hujjat sarlavhasi yoki matni bo'yicha qidiruv...">
+    <select name="doc_type" onchange="this.form.submit()">
+      <option value="">Barcha Hujjat Turlari</option>
+      {% for val, label in doc_type_choices %}
+        <option value="{{ val }}" {% if current_doc_type == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn">Qidirish</button>
+  </form>
+</div>
+
+{% if documents %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Hujjat Nomi</th>
+        <th>Turi</th>
+        <th>Mijoz</th>
+        <th>Loyiha</th>
+        <th>Summa</th>
+        <th>Holat</th>
+        <th>Yaratilgan</th>
+        <th style="text-align:right;">Amallar</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doc in documents %}
+      <tr class="row-link" data-href="{% url 'projects:document_detail' doc.pk %}">
+        <td><strong style="color:var(--text);">{{ doc.title }}</strong></td>
+        <td><span class="badge">{{ doc.get_doc_type_display }}</span></td>
+        <td>{{ doc.client.name }}</td>
+        <td>{{ doc.project.name|default:"—" }}</td>
+        <td><strong>{{ doc.amount|currency:"" }} UZS</strong></td>
+        <td><span class="badge {{ doc.status }}">{{ doc.get_status_display }}</span></td>
+        <td style="font-size:12.5px;color:var(--muted);">{{ doc.created_at|date:"d.m.Y" }}</td>
+        <td style="text-align:right;">
+          <a href="{% url 'projects:document_print' doc.pk %}" class="btn btn-sm" target="_blank">🖨 Print / PDF</a>
+          <a href="{% url 'projects:document_detail' doc.pk %}" class="btn btn-sm">Ko'rish &rarr;</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "dashboard/_pagination.html" %}
+{% else %}
+<div class="empty">
+  Hozircha hech qanday shartnoma yoki tijorat taklifi mavjud emas.<br>
+  <a href="{% url 'projects:document_add' %}" style="margin-top:8px;display:inline-block;" class="btn btn-primary">+ Birinchi hujjatni yaratish</a>
+</div>
+{% endif %}
+{% endblock %}

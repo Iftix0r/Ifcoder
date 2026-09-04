@@ -1,0 +1,65 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if object %}Hujjatni Tahrirlash — {{ object.title }}{% else %}Yangi Hujjat Yaratish{% endif %} — Ifcoder Panel{% endblock %}
+{% block page_title %}{% if object %}Hujjatni Tahrirlash{% else %}Yangi Hujjat Yaratish{% endif %}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:20px;">
+  <a href="{% url 'projects:document_list' %}" style="font-size:13px;color:var(--muted);font-weight:600;">
+    ← Shartnomalar va Takliflar ro'yxatiga qaytish
+  </a>
+</div>
+
+<div class="form-card" style="max-width:840px;">
+  <h2 style="font-size:20px;font-weight:800;margin:0 0 6px;">
+    {% if object %}Hujjatni Tahrirlash{% else %}Yangi Shartnoma / Taklif Yaratish{% endif %}
+  </h2>
+  <p class="sub" style="margin-bottom:24px;">Hujjat ma'lumotlarini kiriting yoki shablon matnini tahrirlang</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.errors }}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div>
+        <label for="{{ form.title.id_for_label }}">Hujjat Sarlavhasi *</label>
+        {{ form.title }}
+      </div>
+      <div>
+        <label for="{{ form.doc_type.id_for_label }}">Hujjat Turi</label>
+        {{ form.doc_type }}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div>
+        <label for="{{ form.client.id_for_label }}">Mijoz *</label>
+        {{ form.client }}
+      </div>
+      <div>
+        <label for="{{ form.project.id_for_label }}">Loyiha (Ixtiyoriy)</label>
+        {{ form.project }}
+      </div>
+      <div>
+        <label for="{{ form.amount.id_for_label }}">Hujjat Summasi (UZS)</label>
+        {{ form.amount }}
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label for="{{ form.status.id_for_label }}">Holati</label>
+      {{ form.status }}
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <label for="{{ form.content.id_for_label }}">Hujjat Matni (HTML / Plain Text) *</label>
+      {{ form.content }}
+      <p class="sub" style="margin-top:4px;">HTML belgilari va jadval kodlaridan foydalanishingiz mumkin.</p>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">💾 Hujjatni Saqlash</button>
+      <a href="{% url 'projects:document_list' %}" class="btn">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
