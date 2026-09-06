@@ -345,7 +345,7 @@
           </td>
           <td style="text-align:right;">
             <button class="btn btn-secondary btn-sm"
-              onclick="document.getElementById('payment-modal').classList.add('show')">
+              onclick="openPaymentModal('{{ inv.number|escapejs }}', '{{ inv.amount|currency:""|escapejs }}')">
               <svg class="svg-icon" style="width:13px;height:13px;" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Rekvizitlar
             </button>
           </td>
@@ -406,16 +406,22 @@
   <p style="color:var(--muted);font-size:13.5px;margin-bottom:24px;">
     Yangi vebsayt, Telegram bot yoki CRM tizimi bo'yicha g'oyangizni qoldiring. Mutaxassisimiz smeta va muddatlarni tayyorlaydi.
   </p>
-  <form method="post" action="{% url 'portal:dashboard' %}">
+  <form method="post" action="{% url 'portal:dashboard' %}#new-project-section">
     {% csrf_token %}
     <input type="hidden" name="action" value="request_project">
     <div class="form-group">
       <label class="form-label">Loyiha Nomi *</label>
       {{ request_form.name }}
+      {% if request_form.name.errors %}
+        <div style="color:var(--red);font-size:12.5px;margin-top:6px;font-weight:600;">{{ request_form.name.errors.0 }}</div>
+      {% endif %}
     </div>
     <div class="form-group" style="margin-bottom:24px;">
       <label class="form-label">Loyiha haqida batafsil / Talablar</label>
       {{ request_form.description }}
+      {% if request_form.description.errors %}
+        <div style="color:var(--red);font-size:12.5px;margin-top:6px;font-weight:600;">{{ request_form.description.errors.0 }}</div>
+      {% endif %}
     </div>
     <button type="submit" class="btn btn-primary" style="padding:12px 28px;">
       Buyurtmani Yuborish →
@@ -433,8 +439,9 @@
       </h3>
       <button class="modal-close" onclick="document.getElementById('payment-modal').classList.remove('show')">✕</button>
     </div>
+    <p id="payment-modal-context" style="display:none;color:var(--accent-2);font-size:13.5px;font-weight:800;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:10px;padding:10px 14px;margin-bottom:16px;"></p>
     <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">
-      To'lovni quyidagi karta yoki bank hisob raqamiga o'tkazishingiz mumkin:
+      To'lovni quyidagi karta yoki bank hisob raqamiga o'tkazishingiz mumkin. To'lov izohiga invoys raqamini ko'rsatishni unutmang:
     </p>
 
     <div class="requis-card">
@@ -478,6 +485,16 @@
       el.style.resize = 'vertical';
     }
   });
+
+  // Rekvizitlar modalini qaysi invoys uchun ochilganini ko'rsatib chiqarish
+  function openPaymentModal(invNumber, amount) {
+    var ctx = document.getElementById('payment-modal-context');
+    if (ctx) {
+      ctx.textContent = 'To\'lov: Invoys ' + invNumber + ' — ' + amount + ' UZS';
+      ctx.style.display = 'block';
+    }
+    document.getElementById('payment-modal').classList.add('show');
+  }
 
   // Copy text to clipboard
   function copyText(text, el) {

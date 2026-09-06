@@ -1245,27 +1245,29 @@
     });
 
 
-    // Delete modal — data-confirm-url yoki href bilan ishlaydi
+    // Delete modal — data-confirm-url yoki href bilan ishlaydi.
+    // Tasdiqlash to'g'ridan-to'g'ri POST qiladi (Django DeleteView'ning GET-confirm
+    // sahifasiga qayta yo'naltirmaydi — aks holda foydalanuvchi ikki marta
+    // tasdiqlashga majbur bo'lardi: avval bu modalda, keyin yana o'sha sahifada).
+    function openDeleteModal(url) {
+      var modal = document.getElementById('delete-modal');
+      var form = document.getElementById('delete-confirm-form');
+      if (!modal || !form || !url) return;
+      form.action = url;
+      modal.style.display = 'flex';
+      requestAnimationFrame(function() { modal.style.opacity = '1'; });
+    }
     document.querySelectorAll('[data-confirm-delete]').forEach(function(trigger) {
       trigger.addEventListener('click', function(e) {
         e.preventDefault();
-        var modal = document.getElementById('delete-modal');
-        var confirmBtn = document.getElementById('delete-confirm-btn');
-        if (!modal || !confirmBtn) return;
-        confirmBtn.href = trigger.dataset.confirmDelete || trigger.href || '#';
-        modal.style.display = 'flex';
-        requestAnimationFrame(function() { modal.style.opacity = '1'; });
+        openDeleteModal(trigger.dataset.confirmDelete || trigger.href);
       });
     });
     // Orqaga uyg'unlik: href*=delete saqlanadi
     document.querySelectorAll('a.btn-danger[href*="delete"]:not([data-confirm-delete])').forEach(function(link) {
       link.addEventListener('click', function(e) {
         e.preventDefault();
-        var modal = document.getElementById('delete-modal');
-        var confirmBtn = document.getElementById('delete-confirm-btn');
-        if (!modal || !confirmBtn) return;
-        confirmBtn.href = link.href;
-        modal.style.display = 'flex';
+        openDeleteModal(link.href);
       });
     });
     document.getElementById('delete-modal-cancel')?.addEventListener('click', function() {
@@ -1380,10 +1382,13 @@
   <div class="delete-modal-box">
     <h3>O'chirishni tasdiqlang</h3>
     <p>Bu amalni ortga qaytarib bo'lmaydi. Davom etasizmi?</p>
-    <div class="btn-row">
-      <button class="btn" id="delete-modal-cancel">Bekor qilish</button>
-      <a class="btn btn-danger" id="delete-confirm-btn" href="#">Ha, o'chirish</a>
-    </div>
+    <form method="post" id="delete-confirm-form" action="#">
+      {% csrf_token %}
+      <div class="btn-row">
+        <button class="btn" type="button" id="delete-modal-cancel">Bekor qilish</button>
+        <button class="btn btn-danger" type="submit" id="delete-confirm-btn">Ha, o'chirish</button>
+      </div>
+    </form>
   </div>
 </div>
 {% if user.is_authenticated %}
