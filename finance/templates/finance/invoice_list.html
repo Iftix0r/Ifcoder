@@ -1,11 +1,12 @@
 {% extends "dashboard/base.html" %}
+{% load dashboard_extras %}
 {% block title %}Hisob-fakturalar — Ifcoder{% endblock %}
 {% block page_title %}Hisob-fakturalar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
     <h1>Hisob-fakturalar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:invoices|length }} ta hisob-faktura</div>
+    <div class="sub">{{ page_obj.paginator.count|default:invoices.count }} ta hisob-faktura</div>
   </div>
   <div class="btn-row">
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV</a>
@@ -38,7 +39,7 @@
   <tr class="row-link" data-href="{% url 'finance:invoice_detail' i.pk %}">
     <td><strong>{{ i.number }}</strong></td>
     <td>{{ i.client }}</td>
-    <td>{{ i.amount }}</td>
+    <td>{{ i.amount|currency:"" }} UZS</td>
     <td>{{ i.due_date }}</td>
     <td><span class="badge {% if i.is_overdue %}overdue{% else %}{{ i.status }}{% endif %}">{% if i.is_overdue %}Muddati o'tgan{% else %}{{ i.get_status_display }}{% endif %}</span></td>
   </tr>

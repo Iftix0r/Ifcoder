@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1>Blog Postlar Boshqaruvi</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:posts|length }} ta post mavjud</div>
+    <div class="sub">{{ page_obj.paginator.count|default:posts.count }} ta post mavjud</div>
   </div>
   <div class="btn-row">
     <a class="btn" href="{% url 'content:idea_list' %}">G'oyalar</a>

@@ -22,7 +22,7 @@
 
   <a class="card {% if has_2fa %}stat-green{% else %}stat-yellow{% endif %}" href="{% if has_2fa %}{% url 'vault:totp_disable' %}{% else %}{% url 'vault:totp_setup' %}{% endif %}">
     <div class="card-top">
-      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a1.5 1.5 0 01.94.328l5.25 4.2A1.5 1.5 0 0115 5.68v.32a1 1 0 01-1 1v6.5a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 01-1-1v-.32a1.5 1.5 0 01.81-1.331l5.25-4.2A1.5 1.5 0 018 0z"/></svg></div>
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 4a4 4 0 118 0v2h.25c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25v-5.5C2 6.784 2.784 6 3.75 6H4V4zm8.25 3.5h-8.5a.25.25 0 00-.25.25v5.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25v-5.5a.25.25 0 00-.25-.25zM5.5 4v2h5V4a2.5 2.5 0 00-5 0z"/></svg></div>
       <span class="trend {% if has_2fa %}up{% else %}down{% endif %}">{% if has_2fa %}Faol{% else %}Yoqilmagan{% endif %}</span>
     </div>
     <div class="value">{% if has_2fa %}Yoqilgan{% else %}O'chirilgan{% endif %}</div>
@@ -31,7 +31,7 @@
 
   <a class="card" href="{% url 'vault:backup_list' %}">
     <div class="card-top">
-      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1z"/></svg></div>
+      <div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg></div>
       <span class="trend up">Baza</span>
     </div>
     <div class="value">{{ backup_count }}</div>

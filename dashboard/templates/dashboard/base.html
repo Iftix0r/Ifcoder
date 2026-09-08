@@ -783,7 +783,7 @@
   .chart-legend { display: flex; gap: 16px; margin-bottom: 20px; font-size: 13px; font-weight: 600; color: var(--muted); }
   .chart-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
   .chart-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; font-size: 13.5px; }
-  .chart-row .chart-label { width: 100px; flex: 0 0 auto; color: var(--muted); font-weight: 600; }
+  .chart-row .chart-label { width: 130px; flex: 0 0 auto; color: var(--muted); font-weight: 600; overflow-wrap: break-word; }
   .chart-row .chart-track { flex: 1; background: var(--panel-2); border-radius: 99px; height: 12px; overflow: hidden; position: relative; }
   .chart-row .chart-fill { height: 100%; border-radius: 99px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
   .chart-row .chart-value { width: 110px; flex: 0 0 auto; text-align: right; color: var(--text); font-weight: 700; }
@@ -847,6 +847,7 @@
   .search-result-main small { color: var(--muted); font-size: 13px; }
   
   .ai-layout { display: grid; grid-template-columns: minmax(280px, 520px) minmax(280px, 1fr); gap: 24px; align-items: start; }
+  .home-split-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
   .ai-form { max-width: none; }
   .ai-form textarea { min-height: 155px; }
   .ai-form select { width: 100%; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: var(--radius-sm); font: inherit; margin-top: 6px; outline: none; }
@@ -1010,6 +1011,7 @@
 
     .detail-grid { grid-template-columns: 1fr; }
     .ai-layout { grid-template-columns: 1fr; }
+    .home-split-grid { grid-template-columns: 1fr; }
 
     .quick-add-menu { right: auto; left: 0; width: 190px; }
     .global-search-form { flex-direction: column; }
@@ -1455,6 +1457,9 @@
       <a href="{% url 'debts:list' %}" class="{% if 'debts' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 2A1.75 1.75 0 000 3.75v.75h16v-.75A1.75 1.75 0 0014.25 2H1.75zM16 6H0v6.25C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0016 12.25V6zm-5 4.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z"/></svg>
         Qarzlar</a>
+      <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 000 2.75v2.5C0 6.216.784 7 1.75 7h12.5A1.75 1.75 0 0016 5.25v-2.5A1.75 1.75 0 0014.25 1H1.75zM3 4a1 1 0 100-2 1 1 0 000 2zm2-1a1 1 0 100 2 1 1 0 000-2zM1.75 9A1.75 1.75 0 000 10.75v2.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-2.5A1.75 1.75 0 0014.25 9H1.75zM3 12a1 1 0 100-2 1 1 0 000 2zm2-1a1 1 0 100 2 1 1 0 000-2z"/></svg>
+        Infrastruktura</a>
 
       <div class="nav-section">Ta'lim &amp; Rivojlanish</div>
       <a href="{% url 'learning:index' %}" class="{% if 'learning' in request.resolver_match.namespace %}active{% endif %}">

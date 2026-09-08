@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1>Botlar Boshqaruvi</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:bots|length }} ta yaratilgan bot ro'yxati</div>
+    <div class="sub">{{ page_obj.paginator.count|default:bots.count }} ta yaratilgan bot ro'yxati</div>
   </div>
   <div class="btn-row">
     <a class="btn" href="{% url 'bots:userbot' %}">⚡ Userbot (Shaxsiy Telegram)</a>

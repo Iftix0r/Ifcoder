@@ -105,7 +105,7 @@ class ClientPortalDashboardView(LoginRequiredMixin, TemplateView):
         elif user.is_staff:
             projects = Project.objects.all()[:10]
             invoices = Invoice.objects.all()[:10]
-            tasks = Task.objects.all()[:10]
+            tasks = Task.objects.all()
         else:
             projects = Project.objects.none()
             invoices = Invoice.objects.none()

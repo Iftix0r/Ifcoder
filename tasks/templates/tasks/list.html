@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1>Vazifalar Boshqaruvi</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:tasks|length }} ta vazifa mavjud</div>
+    <div class="sub">{{ page_obj.paginator.count|default:tasks.count }} ta vazifa mavjud</div>
   </div>
   <div class="btn-row">
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>

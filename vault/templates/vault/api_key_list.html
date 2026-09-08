@@ -5,7 +5,7 @@
 <div class="page-header">
   <div>
     <h1>API kalitlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:api_keys|length }} ta kalit — shifrlangan saqlash</div>
+    <div class="sub">{{ page_obj.paginator.count|default:api_keys.count }} ta kalit — shifrlangan saqlash</div>
   </div>
   <a class="btn btn-primary" href="{% url 'vault:api_key_add' %}">+ Kalit qo'shish</a>
 </div>

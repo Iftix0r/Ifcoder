@@ -5,7 +5,7 @@
 <div class="page-header">
   <div>
     <h1>SSL sertifikatlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:certificates|length }} ta sertifikat</div>
+    <div class="sub">{{ page_obj.paginator.count|default:certificates.count }} ta sertifikat</div>
   </div>
   <a class="btn btn-primary" href="{% url 'infrastructure:ssl_add' %}">+ Sertifikat qo'shish</a>
 </div>

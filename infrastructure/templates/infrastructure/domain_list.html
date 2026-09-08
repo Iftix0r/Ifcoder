@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1>Domenlar Boshqaruvi</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:domains|length }} ta ro'yxatdan o'tgan domen</div>
+    <div class="sub">{{ page_obj.paginator.count|default:domains.count }} ta ro'yxatdan o'tgan domen</div>
   </div>
   <div class="btn-row">
     <a class="btn" href="{% url 'infrastructure:server_list' %}">Serverlar</a>

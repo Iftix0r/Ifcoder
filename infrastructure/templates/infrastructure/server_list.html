@@ -5,7 +5,7 @@
 <div class="page-header">
   <div>
     <h1>Serverlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:servers|length }} ta server</div>
+    <div class="sub">{{ page_obj.paginator.count|default:servers.count }} ta server</div>
   </div>
   <a class="btn btn-primary" href="{% url 'infrastructure:server_add' %}">+ Server qo'shish</a>
 </div>

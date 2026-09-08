@@ -1,11 +1,12 @@
 {% extends "dashboard/base.html" %}
+{% load dashboard_extras %}
 {% block title %}Daromadlar — Ifcoder{% endblock %}
 {% block page_title %}Daromadlar{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
     <h1>Daromadlar</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:incomes|length }} ta yozuv — jami {{ total }}</div>
+    <div class="sub">{{ page_obj.paginator.count|default:incomes.count }} ta yozuv — jami {{ total|currency:"" }} UZS</div>
   </div>
   <div class="btn-row">
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">CSV yuklab olish</a>
@@ -28,7 +29,7 @@
   <tbody>
   {% for inc in incomes %}
   <tr class="row-link" data-href="{% url 'finance:income_detail' inc.pk %}">
-    <td><strong>{{ inc.amount }}</strong></td>
+    <td><strong>{{ inc.amount|currency:"" }} UZS</strong></td>
     <td>{{ inc.get_method_display }}</td>
     <td>{{ inc.client|default:"—" }}</td>
     <td>{{ inc.project|default:"—" }}</td>

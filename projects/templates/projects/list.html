@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1>Loyihalar Boshqaruvi</h1>
-    <div class="sub">{{ page_obj.paginator.count|default:projects|length }} ta loyiha ro'yxati</div>
+    <div class="sub">{{ page_obj.paginator.count|default:projects.count }} ta loyiha ro'yxati</div>
   </div>
   <div class="btn-row">
     <a class="btn" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}export=csv">📥 CSV Yuklab olish</a>

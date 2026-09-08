@@ -1,11 +1,12 @@
 {% extends "dashboard/base.html" %}
+{% load dashboard_extras %}
 {% block page_title %}Xarajatlar{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
     <h1>Xarajatlar</h1>
-    <p class="sub">Jami {{ page_obj.paginator.count|default:expenses|length }} ta yozuv</p>
+    <p class="sub">Jami {{ page_obj.paginator.count|default:expenses.count }} ta yozuv</p>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
     <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}export=csv" class="btn btn-sm">
@@ -27,7 +28,7 @@
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
       </div>
     </div>
-    <div class="value">{{ total|floatformat:0 }}</div>
+    <div class="value">{{ total|currency:"" }} <span style="font-size:13px;font-weight:600;color:var(--muted);">UZS</span></div>
     <div class="label">Jami xarajat (filtrlangan)</div>
   </div>
 </div>
@@ -64,7 +65,7 @@
     <tbody>
       {% for exp in expenses %}
       <tr class="row-link" data-href="{% url 'finance:expense_detail' exp.pk %}">
-        <td><strong>{{ exp.amount|floatformat:0 }}</strong></td>
+        <td><strong>{{ exp.amount|currency:"" }} UZS</strong></td>
         <td><span class="badge">{{ exp.get_category_display }}</span></td>
         <td>
           {% if exp.project %}
@@ -87,7 +88,7 @@
 
 {% else %}
 <div class="empty">
-  <svg viewBox="0 0 16 16" fill="currentColor" width="32" height="32" style="margin-bottom:10px;opacity:.4;"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1z"/></svg>
+  <svg viewBox="0 0 16 16" fill="currentColor" width="32" height="32" style="margin-bottom:10px;opacity:.4;"><path d="M1.75 1h12.5c.966 0 1.75.784 1.75 1.75v4c0 .372-.116.717-.315 1 .199.283.315.628.315 1v4A1.75 1.75 0 0114.25 14.5H1.75A1.75 1.75 0 010 12.75v-4c0-.372.116-.717.315-1A1.744 1.744 0 010 6.75v-4C0 1.784.784 1 1.75 1zM1.5 2.75v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25zm.25 5.75a.25.25 0 00-.25.25v4c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-4a.25.25 0 00-.25-.25H1.75zM3 4.5a1 1 0 100 2 1 1 0 000-2zm0 6a1 1 0 100 2 1 1 0 000-2z"/></svg>
   <p>Hali xarajatlar yo'q.</p>
   <a href="{% url 'finance:expense_add' %}" class="btn btn-primary" style="margin-top:10px;">Birinchi xarajatni qo'shish</a>
 </div>
