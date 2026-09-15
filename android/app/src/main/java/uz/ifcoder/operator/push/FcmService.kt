@@ -38,12 +38,12 @@ class FcmService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         when (message.data["type"]) {
-            "task_status_sms" -> handleTaskStatusSms(message)
+            "client_status_sms" -> handleClientStatusSms(message)
             "task_updated" -> handleTaskUpdated(message)
         }
     }
 
-    private fun handleTaskStatusSms(message: RemoteMessage) {
+    private fun handleClientStatusSms(message: RemoteMessage) {
         val phone = message.data["client_phone"].orEmpty()
         val text = message.data["sms_text"].orEmpty()
         val sent = SmsHelper.sendSms(applicationContext, phone, text)

@@ -7,7 +7,7 @@ class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
         fields = [
-            "name", "client", "description", "status", "repo_url", "deadline",
+            "name", "client", "assigned_to", "description", "status", "repo_url", "deadline",
             "contract_value", "hourly_rate",
         ]
         widgets = {

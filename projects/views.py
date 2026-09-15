@@ -77,6 +77,17 @@ class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     form_class = ProjectForm
     template_name = "projects/form.html"
 
+    def form_valid(self, form):
+        old_status = self.object.status
+        response = super().form_valid(form)
+        if self.object.status != old_status:
+            try:
+                from mobileapi.push import notify_project_status_change
+                notify_project_status_change(self.object)
+            except Exception:
+                pass
+        return response
+
     def get_success_url(self):
         return reverse("projects:detail", args=[self.object.pk])
 

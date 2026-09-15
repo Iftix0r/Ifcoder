@@ -5,10 +5,10 @@ from .models import Project, ProjectDocument, ProjectFile
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("name", "client", "status", "deadline", "created_at")
+    list_display = ("name", "client", "assigned_to", "status", "deadline", "created_at")
     list_filter = ("status",)
     search_fields = ("name", "description")
-    autocomplete_fields = ("client",)
+    autocomplete_fields = ("client", "assigned_to")
 
 
 @admin.register(ProjectDocument)

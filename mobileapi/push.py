@@ -50,32 +50,65 @@ def send_data_message(fcm_token: str, data: dict, notification: dict = None) -> 
         return False
 
 
-_STATUS_SMS_TEXT = {
+_TASK_STATUS_TEXT = {
     "todo": "Hurmatli {name}, \"{title}\" bo'yicha buyurtmangiz qabul qilindi.",
     "in_progress": "Hurmatli {name}, \"{title}\" bo'yicha ishlarimiz boshlandi.",
     "done": "Hurmatli {name}, \"{title}\" bo'yicha ishimiz bajarildi. Rahmat!",
 }
 
+_PROJECT_STATUS_TEXT = {
+    "planning": "Hurmatli {name}, \"{title}\" loyihangiz rejalashtirish bosqichida.",
+    "in_progress": "Hurmatli {name}, \"{title}\" loyihangiz ustida ishlar boshlandi.",
+    "paused": "Hurmatli {name}, \"{title}\" loyihangiz vaqtincha to'xtatildi.",
+    "completed": "Hurmatli {name}, \"{title}\" loyihangiz muvaffaqiyatli yakunlandi. Rahmat!",
+}
 
-def notify_task_status_sms(task, new_status):
-    """Vazifa holati o'zgarganda (todo/jarayonda/bajarildi — barcha holatlarda)
-    mas'ul operator telefoniga 'mijozga SMS yubor' degan ma'lumot xabarini
-    jo'natadi. Ilova buni ko'zga ko'rinadigan bildirishnoma sifatida ko'rsatmaydi
-    — faqat qabul qilib, SmsManager orqali SMS yuboradi.
+
+def notify_client_status_change(client, operator, text):
+    """Mijozga holat o'zgarishi haqida IKKALA kanal orqali xabar beradi:
+    Telegram (userbot, mijozning telegram_id/username'i bo'lsa) va SMS
+    (operator telefonidan, operator FCM tokeniga ega bo'lsa). Ikkisi ham
+    mustaqil — biri ishlamasa ikkinchisiga ta'sir qilmaydi.
     """
-    if not task.assigned_to or not task.client or not task.client.phone:
+    if not client:
         return
-    template = _STATUS_SMS_TEXT.get(new_status)
-    if not template:
+
+    target = (client.telegram_id or client.telegram or "").strip()
+    if target:
+        try:
+            from bots.userbot_helpers import send_userbot_message
+            send_userbot_message(target, text)
+        except Exception as e:
+            logger.error(f"Mijozga userbot orqali xabar yuborishda xatolik: {e}")
+
+    if operator and client.phone:
+        for dt in operator.device_tokens.all():
+            send_data_message(dt.fcm_token, {
+                "type": "client_status_sms",
+                "client_phone": client.phone,
+                "sms_text": text,
+            })
+
+
+def notify_task_status_change(task, new_status):
+    """Vazifa holati o'zgarganda (todo/jarayonda/bajarildi — barcha holatlarda)
+    mijozga Telegram (userbot) va SMS (mas'ul operator telefonidan) orqali
+    xabar yuboradi."""
+    template = _TASK_STATUS_TEXT.get(new_status)
+    if not template or not task.client:
         return
     text = template.format(name=task.client.name, title=task.title)
-    for dt in task.assigned_to.device_tokens.all():
-        send_data_message(dt.fcm_token, {
-            "type": "task_status_sms",
-            "task_id": task.id,
-            "client_phone": task.client.phone,
-            "sms_text": text,
-        })
+    notify_client_status_change(task.client, task.assigned_to, text)
+
+
+def notify_project_status_change(project):
+    """Loyiha holati o'zgarganda mijozga Telegram (userbot) va SMS (mas'ul
+    operator telefonidan) orqali xabar yuboradi."""
+    template = _PROJECT_STATUS_TEXT.get(project.status)
+    if not template or not project.client:
+        return
+    text = template.format(name=project.client.name, title=project.name)
+    notify_client_status_change(project.client, project.assigned_to, text)
 
 
 def notify_task_assigned(task):

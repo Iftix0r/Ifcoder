@@ -27,8 +27,8 @@ def set_task_status(task: Task, new_status: str, actor) -> bool:
         except Exception:
             pass
     try:
-        from mobileapi.push import notify_task_status_sms
-        notify_task_status_sms(task, new_status)
+        from mobileapi.push import notify_task_status_change
+        notify_task_status_change(task, new_status)
     except Exception:
         pass
     return True

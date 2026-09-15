@@ -25,6 +25,14 @@ class Project(models.Model):
     status = models.CharField(
         "Holati", max_length=20, choices=Status.choices, default=Status.PLANNING
     )
+    assigned_to = models.ForeignKey(
+        User,
+        verbose_name="Mas'ul operator",
+        related_name="assigned_projects",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     repo_url = models.URLField("Repozitoriy havolasi", blank=True)
     deadline = models.DateField("Muddat", null=True, blank=True)
     contract_value = models.DecimalField(
