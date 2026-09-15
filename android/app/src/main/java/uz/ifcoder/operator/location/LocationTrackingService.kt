@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -44,7 +45,7 @@ class LocationTrackingService : Service() {
             scope.launch {
                 try {
                     val (batteryLevel, batteryCharging) = DeviceInfo.batteryStatus(applicationContext)
-                    ApiClient.api().postLocation(
+                    val response = ApiClient.api().postLocation(
                         LocationPingRequest(
                             latitude = location.latitude,
                             longitude = location.longitude,
@@ -55,8 +56,14 @@ class LocationTrackingService : Service() {
                             network_type = DeviceInfo.networkType(applicationContext),
                         )
                     )
+                    if (response.isSuccessful) {
+                        Log.d(TAG, "Joylashuv yuborildi: ${location.latitude}, ${location.longitude}")
+                    } else {
+                        Log.w(TAG, "Joylashuv yuborilmadi: HTTP ${response.code()} — ${response.errorBody()?.string()}")
+                    }
                 } catch (e: Exception) {
                     // Keyingi davriy nuqtada qayta urinib ko'riladi.
+                    Log.e(TAG, "Joylashuv yuborishda xatolik: ${e.message}", e)
                 }
             }
         }
@@ -68,6 +75,7 @@ class LocationTrackingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "Xizmat ishga tushdi")
         startForeground(NOTIFICATION_ID, buildNotification())
         startLocationUpdates()
         return START_STICKY
@@ -79,8 +87,10 @@ class LocationTrackingService : Service() {
             .build()
         try {
             fusedClient.requestLocationUpdates(request, locationCallback, mainLooper)
+            Log.d(TAG, "Joylashuv so'rovlari boshlandi (${UPDATE_INTERVAL_MS / 1000}s interval)")
         } catch (e: SecurityException) {
             // Ruhsat berilmagan — xizmat o'zini to'xtatadi, chaqiruvchi ekranda qayta so'rashi kerak.
+            Log.e(TAG, "Joylashuv ruxsati yo'q — xizmat to'xtatildi", e)
             stopSelf()
         }
     }
@@ -108,6 +118,7 @@ class LocationTrackingService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     companion object {
+        private const val TAG = "LocationTrackingSvc"
         private const val NOTIFICATION_ID = 1001
         private const val UPDATE_INTERVAL_MS = 3 * 60 * 1000L // 3 daqiqa
         private const val MIN_UPDATE_INTERVAL_MS = 60 * 1000L

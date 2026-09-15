@@ -3,6 +3,7 @@ package uz.ifcoder.operator.ui
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -54,13 +55,16 @@ class LoginActivity : AppCompatActivity() {
             try {
                 val response = ApiClient.api().login(LoginRequest(username, password))
                 if (response.isSuccessful && response.body() != null) {
+                    Log.d(TAG, "Login muvaffaqiyatli")
                     ApiClient.tokens().saveToken(response.body()!!.token)
                     registerPendingFcmToken()
                     onLoginSuccess()
                 } else {
+                    Log.w(TAG, "Login rad etildi: HTTP ${response.code()}")
                     showError(getString(R.string.login_error))
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Login so'rovida tarmoq xatoligi: ${e.message}", e)
                 showError(getString(R.string.login_network_error))
             } finally {
                 setLoading(false)
@@ -83,9 +87,13 @@ class LoginActivity : AppCompatActivity() {
                             app_version = DeviceInfo.appVersion(),
                         )
                     )
+                    Log.d(TAG, "Qurilma tokeni ro'yxatdan o'tkazildi")
+                } else {
+                    Log.w(TAG, "FCM token olinmadi (Firebase ulanmagan bo'lishi mumkin) — qurilma ro'yxatdan o'tkazilmadi")
                 }
             } catch (e: Exception) {
                 // Firebase ulanmagan bo'lsa (google-services.json yo'q) — jim o'tkaziladi.
+                Log.e(TAG, "Qurilma tokenini ro'yxatdan o'tkazishda xatolik: ${e.message}", e)
             }
         }
     }
@@ -143,7 +151,10 @@ class LoginActivity : AppCompatActivity() {
         // Faqat foreground joylashuv ruhsati haqiqatan berilgan bo'lsa xizmatni ishga tushiramiz —
         // aks holda Android 12+ startForeground(type=location) SecurityException tashlaydi.
         if (permissionsHelper.hasForegroundLocation()) {
+            Log.d(TAG, "Joylashuv ruxsati bor — LocationTrackingService ishga tushirilmoqda")
             LocationTrackingService.start(this)
+        } else {
+            Log.w(TAG, "Joylashuv ruxsati YO'Q — xizmat ishga tushmaydi, joylashuv yuborilmaydi")
         }
         startActivity(Intent(this, TaskListActivity::class.java))
         finish()
@@ -157,5 +168,9 @@ class LoginActivity : AppCompatActivity() {
     private fun showError(message: String) {
         textLoginError.text = message
         textLoginError.visibility = View.VISIBLE
+    }
+
+    companion object {
+        private const val TAG = "LoginActivity"
     }
 }
