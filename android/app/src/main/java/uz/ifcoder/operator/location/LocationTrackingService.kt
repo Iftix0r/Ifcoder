@@ -13,6 +13,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -117,8 +118,27 @@ class LocationTrackingService : Service() {
         val request = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, UPDATE_INTERVAL_MS)
             .setMinUpdateIntervalMillis(MIN_UPDATE_INTERVAL_MS)
             .build()
+
+        // Qurilmaning tizim darajasidagi Joylashuv/GPS sozlamasi (ruxsatdan mustaqil
+        // holat) yetarli emasligini oldindan aniqlash uchun — bu tekshiruv bo'lmasa,
+        // masalan "Joylashuv" kaliti o'chirilgan bo'lsa, requestLocationUpdates() hech
+        // qanday xatosiz, lekin hech qachon natija bermay jim qolib ketishi mumkin edi.
+        val settingsRequest = LocationSettingsRequest.Builder().addLocationRequest(request).build()
+        LocationServices.getSettingsClient(this).checkLocationSettings(settingsRequest)
+            .addOnSuccessListener { Log.d(TAG, "Qurilma joylashuv sozlamalari yetarli") }
+            .addOnFailureListener { e ->
+                Log.e(
+                    TAG,
+                    "Qurilmaning joylashuv sozlamalari YETARLI EMAS — telefonda Joylashuv/GPS " +
+                        "o'chirilgan yoki aniqlik rejimi mos emas bo'lishi mumkin: ${e.message}",
+                    e,
+                )
+            }
+
         try {
             fusedClient.requestLocationUpdates(request, locationCallback, mainLooper)
+                .addOnSuccessListener { Log.d(TAG, "Joylashuv so'rovi Play Services'da muvaffaqiyatli ro'yxatdan o'tdi") }
+                .addOnFailureListener { e -> Log.e(TAG, "Joylashuv so'rovini ro'yxatdan o'tkazishda xatolik: ${e.message}", e) }
             Log.d(TAG, "Joylashuv so'rovlari boshlandi (${UPDATE_INTERVAL_MS / 1000}s interval)")
         } catch (e: SecurityException) {
             // Ruhsat berilmagan — xizmat o'zini to'xtatadi, chaqiruvchi ekranda qayta so'rashi kerak.
