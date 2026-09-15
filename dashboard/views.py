@@ -4,16 +4,20 @@ import urllib.error
 import urllib.request
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Count, DecimalField, IntegerField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
+
+from auditlog.models import AuditLog, log_action
 
 ONLINE_THRESHOLD = timedelta(minutes=10)
 
@@ -574,3 +578,82 @@ def operator_location_history(request, user_id):
         "dashboard/operator_location_history.html",
         {"operator": operator, "pings": pings, "points_json": points_json},
     )
+
+
+@login_required
+def user_list(request):
+    """Tizim foydalanuvchilarini boshqarish — Django Admin'ga kirmasdan admin
+    huquqi berish/olish va faollik holatini boshqarish uchun (faqat superuser)."""
+    if not request.user.is_superuser:
+        messages.error(request, "Bu bo'limga faqat administratorlar kira oladi.")
+        return redirect("dashboard:home")
+    users = User.objects.all().order_by("-is_superuser", "username")
+    return render(request, "dashboard/user_list.html", {"users": users})
+
+
+@login_required
+@require_POST
+def toggle_admin(request, user_id):
+    if not request.user.is_superuser:
+        messages.error(request, "Bu amalni faqat administratorlar bajara oladi.")
+        return redirect("dashboard:home")
+
+    target = get_object_or_404(User, pk=user_id)
+    if target == request.user:
+        messages.error(request, "O'zingizning admin huquqingizni shu yerdan olib tashlay olmaysiz.")
+        return redirect("dashboard:user_list")
+
+    making_admin = not target.is_superuser
+    if not making_admin:
+        remaining = User.objects.filter(is_superuser=True).exclude(pk=target.pk).count()
+        if remaining == 0:
+            messages.error(request, "Tizimda kamida bitta administrator qolishi kerak.")
+            return redirect("dashboard:user_list")
+
+    target.is_staff = making_admin
+    target.is_superuser = making_admin
+    target.save(update_fields=["is_staff", "is_superuser"])
+    log_action(
+        user=request.user,
+        action=AuditLog.Action.UPDATE,
+        model_name="User",
+        object_id=target.id,
+        object_repr=str(target),
+        message=f"{'Admin huquqi berildi' if making_admin else 'Admin huquqi olib tashlandi'}: {target.username}",
+        request=request,
+    )
+    messages.success(
+        request,
+        f"{target.username} {'admin qilindi.' if making_admin else 'admin huquqidan mahrum qilindi.'}",
+    )
+    return redirect("dashboard:user_list")
+
+
+@login_required
+@require_POST
+def toggle_active(request, user_id):
+    if not request.user.is_superuser:
+        messages.error(request, "Bu amalni faqat administratorlar bajara oladi.")
+        return redirect("dashboard:home")
+
+    target = get_object_or_404(User, pk=user_id)
+    if target == request.user:
+        messages.error(request, "O'zingizni shu yerdan faolsizlantira olmaysiz.")
+        return redirect("dashboard:user_list")
+
+    target.is_active = not target.is_active
+    target.save(update_fields=["is_active"])
+    log_action(
+        user=request.user,
+        action=AuditLog.Action.UPDATE,
+        model_name="User",
+        object_id=target.id,
+        object_repr=str(target),
+        message=f"{'Faollashtirildi' if target.is_active else 'Faolsizlantirildi'}: {target.username}",
+        request=request,
+    )
+    messages.success(
+        request,
+        f"{target.username} {'faollashtirildi.' if target.is_active else 'faolsizlantirildi.'}",
+    )
+    return redirect("dashboard:user_list")

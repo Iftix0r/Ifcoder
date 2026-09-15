@@ -1,0 +1,61 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Foydalanuvchilar — Ifcoder Panel{% endblock %}
+{% block page_title %}Foydalanuvchilar{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom:20px;">
+  <div>
+    <h1>Foydalanuvchilar</h1>
+    <div class="sub">Tizim foydalanuvchilari, admin huquqi va faollik holatini shu yerdan boshqaring</div>
+  </div>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Foydalanuvchi</th>
+      <th>Email</th>
+      <th>Holat</th>
+      <th>Admin huquqi</th>
+      <th>Oxirgi kirish</th>
+      <th>Ro'yxatdan o'tgan</th>
+      <th style="text-align:right;">Amallar</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td>
+        {{ u.get_full_name|default:u.username }}
+        {% if u == request.user %}<span style="font-size:11px;color:var(--muted);">(siz)</span>{% endif %}
+      </td>
+      <td>{{ u.email|default:"—" }}</td>
+      <td><span class="badge {% if u.is_active %}active{% else %}inactive{% endif %}">{% if u.is_active %}Faol{% else %}Nofaol{% endif %}</span></td>
+      <td><span class="badge {% if u.is_superuser %}active{% else %}inactive{% endif %}">{% if u.is_superuser %}Admin{% else %}Oddiy{% endif %}</span></td>
+      <td>{{ u.last_login|date:"d.m.Y H:i"|default:"—" }}</td>
+      <td>{{ u.date_joined|date:"d.m.Y" }}</td>
+      <td style="text-align:right;white-space:nowrap;">
+        {% if u != request.user %}
+        <form action="{% url 'dashboard:toggle_admin' u.id %}" method="post" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn" onclick="return confirm('{% if u.is_superuser %}{{ u.username }} uchun admin huquqini olib tashlaysizmi?{% else %}{{ u.username }}ni admin qilasizmi?{% endif %}')">
+            {% if u.is_superuser %}Admin huquqini olish{% else %}Admin qilish{% endif %}
+          </button>
+        </form>
+        <form action="{% url 'dashboard:toggle_active' u.id %}" method="post" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn {% if u.is_active %}btn-danger{% endif %}" onclick="return confirm('{% if u.is_active %}{{ u.username }}ni faolsizlantirasizmi?{% else %}{{ u.username }}ni faollashtirasizmi?{% endif %}')">
+            {% if u.is_active %}Faolsizlantirish{% else %}Faollashtirish{% endif %}
+          </button>
+        </form>
+        {% else %}—{% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7">Foydalanuvchi topilmadi.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

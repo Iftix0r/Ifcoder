@@ -17,4 +17,7 @@ urlpatterns = [
         views.operator_location_history,
         name="operator_location_history",
     ),
+    path("users/", views.user_list, name="user_list"),
+    path("users/<int:user_id>/toggle-admin/", views.toggle_admin, name="toggle_admin"),
+    path("users/<int:user_id>/toggle-active/", views.toggle_active, name="toggle_active"),
 ]
