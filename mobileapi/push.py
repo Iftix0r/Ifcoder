@@ -48,6 +48,10 @@ def send_data_message(fcm_token: str, data: dict, notification: dict = None) -> 
         token=fcm_token,
         data={k: str(v) for k, v in data.items()},
         notification=messaging.Notification(**notification) if notification else None,
+        # "high" ustuvorlik — aks holda ba'zi qurilmalar (ayniqsa Samsung One UI)
+        # data-xabarlarni "normal" ustuvorlikda ancha kechiktiradi yoki fon
+        # rejimida umuman yetkazmaydi.
+        android=messaging.AndroidConfig(priority="high"),
     )
     try:
         messaging.send(message)
