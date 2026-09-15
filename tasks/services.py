@@ -26,9 +26,9 @@ def set_task_status(task: Task, new_status: str, actor) -> bool:
             send_telegram_message(msg)
         except Exception:
             pass
-        try:
-            from mobileapi.push import notify_task_done_sms
-            notify_task_done_sms(task, actor)
-        except Exception:
-            pass
+    try:
+        from mobileapi.push import notify_task_status_sms
+        notify_task_status_sms(task, new_status)
+    except Exception:
+        pass
     return True

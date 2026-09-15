@@ -32,7 +32,10 @@ class TaskListActivity : AppCompatActivity() {
         swipeRefresh = findViewById(R.id.swipeRefresh)
         recyclerTasks = findViewById(R.id.recyclerTasks)
 
-        adapter = TaskAdapter(onMarkDone = { task -> markTaskDone(task) })
+        adapter = TaskAdapter(
+            onMarkDone = { task -> markTaskDone(task) },
+            onOpenDetail = { task -> TaskDetailActivity.start(this, task) },
+        )
         recyclerTasks.layoutManager = LinearLayoutManager(this)
         recyclerTasks.adapter = adapter
 

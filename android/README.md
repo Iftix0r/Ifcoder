@@ -16,11 +16,24 @@ push+avtomatik SMS bosqichi Firebase loyihasini talab qiladi (quyida).
 
 ## 2. Backend manzili
 
-`app/build.gradle.kts` da `BASE_URL`:
-- Emulator uchun standart qiymat `http://10.0.2.2:8000/api/` (host mashinaning
-  `python manage.py runserver`'iga ishora qiladi).
-- Haqiqiy qurilma uchun kompyuterning LAN IP'sini yozing: `http://192.168.x.x:8000/api/`.
-- Production uchun `release` build type ichida `https://iftix0r.uz/api/` kabi qiymat bering.
+`app/build.gradle.kts` da `BASE_URL` — hozir `https://iftix0r.uz/api/` (production) ga
+sozlangan. **MUHIM**: bu ishlashi uchun `mobileapi` backend production serverga deploy
+qilingan bo'lishi kerak — hali qilinmagan bo'lsa, `/api/` so'rovlari 404 qaytaradi:
+
+```bash
+# Production serverda (SSH orqali):
+git pull
+source venv/bin/activate   # yoki cPanel'dagi virtualenv
+pip install -r requirements.txt   # firebase-admin yangi qo'shildi
+python manage.py migrate          # mobileapi + authtoken migratsiyalari
+# so'ng Passenger/WSGI processni qayta ishga tushiring (masalan cPanel'da
+# "Restart App" yoki touch tmp/restart.txt — hosting sozlamalariga qarab)
+```
+
+Agar lokal kompyuterda (dev server bilan) sinash kerak bo'lsa, buni qatorni vaqtincha
+`http://10.0.2.2:8000/api/` (emulator) yoki kompyuterning LAN IP'siga (`hostname -I`)
+almashtiring — lekin bu holda `config/settings.py`'dagi `ALLOWED_HOSTS`'ga ham shu IP'ni
+qo'shish va serverni `python manage.py runserver 0.0.0.0:8000` bilan ishga tushirish kerak.
 
 ## 3. Firebase (push + avtomatik SMS uchun)
 

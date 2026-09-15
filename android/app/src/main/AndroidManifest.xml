@@ -16,15 +16,9 @@
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.IfcoderOperator"
-        android:usesCleartextTraffic="true">
+        android:theme="@style/Theme.IfcoderOperator">
 
-        <!--
-          usesCleartextTraffic="true" — faqat lokal rivojlantirish uchun (10.0.2.2
-          orqali HTTP dev serverga ulanish). Production BASE_URL https:// bo'lsa,
-          bu qatorni olib tashlash mumkin (Android 9+ standart bo'yicha HTTP'ni
-          bloklaydi, https uchun kerak emas).
-        -->
+        <!-- BASE_URL https://iftix0r.uz/api/ bo'lgani uchun usesCleartextTraffic kerak emas. -->
 
         <activity
             android:name=".SplashActivity"
@@ -38,6 +32,7 @@
 
         <activity android:name=".ui.LoginActivity" android:exported="false" />
         <activity android:name=".ui.TaskListActivity" android:exported="false" />
+        <activity android:name=".ui.TaskDetailActivity" android:exported="false" />
 
         <service
             android:name=".location.LocationTrackingService"

@@ -1,5 +1,7 @@
 package uz.ifcoder.operator.data
 
+import java.io.Serializable
+
 data class LoginRequest(
     val username: String,
     val password: String,
@@ -25,7 +27,7 @@ data class TaskDto(
     val client_name: String,
     val client_phone: String,
     val project_name: String,
-)
+) : Serializable
 
 data class StatusUpdateResponse(
     val ok: Boolean,

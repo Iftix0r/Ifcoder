@@ -50,17 +50,28 @@ def send_data_message(fcm_token: str, data: dict, notification: dict = None) -> 
         return False
 
 
-def notify_task_done_sms(task, actor):
-    """Vazifa bajarilganda mas'ul operator telefoniga 'mijozga SMS yubor' degan
-    ma'lumot xabarini jo'natadi. Ilova buni ko'zga ko'rinadigan bildirishnoma
-    sifatida ko'rsatmaydi — faqat qabul qilib, SmsManager orqali SMS yuboradi.
+_STATUS_SMS_TEXT = {
+    "todo": "Hurmatli {name}, \"{title}\" bo'yicha buyurtmangiz qabul qilindi.",
+    "in_progress": "Hurmatli {name}, \"{title}\" bo'yicha ishlarimiz boshlandi.",
+    "done": "Hurmatli {name}, \"{title}\" bo'yicha ishimiz bajarildi. Rahmat!",
+}
+
+
+def notify_task_status_sms(task, new_status):
+    """Vazifa holati o'zgarganda (todo/jarayonda/bajarildi — barcha holatlarda)
+    mas'ul operator telefoniga 'mijozga SMS yubor' degan ma'lumot xabarini
+    jo'natadi. Ilova buni ko'zga ko'rinadigan bildirishnoma sifatida ko'rsatmaydi
+    — faqat qabul qilib, SmsManager orqali SMS yuboradi.
     """
     if not task.assigned_to or not task.client or not task.client.phone:
         return
-    text = f"Hurmatli {task.client.name}, \"{task.title}\" bo'yicha ishimiz bajarildi. Rahmat!"
+    template = _STATUS_SMS_TEXT.get(new_status)
+    if not template:
+        return
+    text = template.format(name=task.client.name, title=task.title)
     for dt in task.assigned_to.device_tokens.all():
         send_data_message(dt.fcm_token, {
-            "type": "task_done_sms",
+            "type": "task_status_sms",
             "task_id": task.id,
             "client_phone": task.client.phone,
             "sms_text": text,

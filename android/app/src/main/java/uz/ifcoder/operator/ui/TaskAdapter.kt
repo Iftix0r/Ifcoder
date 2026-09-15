@@ -11,6 +11,7 @@ import uz.ifcoder.operator.data.TaskDto
 
 class TaskAdapter(
     private val onMarkDone: (TaskDto) -> Unit,
+    private val onOpenDetail: (TaskDto) -> Unit,
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
     private val tasks = mutableListOf<TaskDto>()
@@ -27,7 +28,7 @@ class TaskAdapter(
     }
 
     override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
-        holder.bind(tasks[position], onMarkDone)
+        holder.bind(tasks[position], onMarkDone, onOpenDetail)
     }
 
     override fun getItemCount(): Int = tasks.size
@@ -35,19 +36,23 @@ class TaskAdapter(
     class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val title: TextView = itemView.findViewById(R.id.textTaskTitle)
         private val client: TextView = itemView.findViewById(R.id.textTaskClient)
+        private val due: TextView = itemView.findViewById(R.id.textTaskDue)
         private val status: TextView = itemView.findViewById(R.id.textTaskStatus)
         private val markDone: Button = itemView.findViewById(R.id.buttonMarkDone)
 
-        fun bind(task: TaskDto, onMarkDone: (TaskDto) -> Unit) {
+        fun bind(task: TaskDto, onMarkDone: (TaskDto) -> Unit, onOpenDetail: (TaskDto) -> Unit) {
             title.text = task.title
             client.text = if (task.client_name.isNotBlank()) {
                 "${task.client_name} · ${task.client_phone}"
             } else {
                 itemView.context.getString(R.string.tasks_no_client)
             }
+            due.text = task.due_date
+            due.visibility = if (task.due_date.isNullOrBlank()) View.GONE else View.VISIBLE
             status.text = task.status_label
             markDone.visibility = if (task.status == "done") View.GONE else View.VISIBLE
             markDone.setOnClickListener { onMarkDone(task) }
+            itemView.setOnClickListener { onOpenDetail(task) }
         }
     }
 }

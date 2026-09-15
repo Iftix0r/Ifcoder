@@ -24,10 +24,11 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // Django backend manzili. Emulator uchun 10.0.2.2 host mashinaning
-        // localhost'iga ishora qiladi; haqiqiy qurilmada LAN IP yoki
-        // production domenga (masalan https://iftix0r.uz/api/) almashtiring.
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000/api/\"")
+        // Django backend manzili — production (iftix0r.uz). DIQQAT: mobileapi backend
+        // hali production serverga deploy qilinmagan bo'lsa, /api/ so'rovlari 404
+        // qaytaradi — avval serverda `git pull` + `pip install -r requirements.txt`
+        // + `migrate` + Passenger restart qilinishi kerak.
+        buildConfigField("String", "BASE_URL", "\"https://iftix0r.uz/api/\"")
     }
 
     buildFeatures {
