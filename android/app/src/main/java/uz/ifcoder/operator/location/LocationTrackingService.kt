@@ -24,6 +24,8 @@ import uz.ifcoder.operator.R
 import uz.ifcoder.operator.data.ApiClient
 import uz.ifcoder.operator.data.DeviceInfo
 import uz.ifcoder.operator.data.LocationPingRequest
+import uz.ifcoder.operator.data.LocationQueueStore
+import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -31,47 +33,77 @@ import java.util.TimeZone
 
 /**
  * Operator ilova ochiq/fonda bo'lgan vaqtda joylashuvni davriy ravishda serverga yuboradi.
- * Offline navbat (retry queue) fazasi keyingi bosqichga qoldirilgan — hozircha muvaffaqiyatsiz
- * yuborish shunchaki log qilinadi, keyingi davriy nuqta yana urinib ko'radi.
+ * Internet vaqtincha yo'q bo'lsa, nuqta [LocationQueueStore] orqali qurilmada saqlanadi va
+ * keyingi muvaffaqiyatli davriy urinishda tartib bilan qayta yuboriladi.
  */
 class LocationTrackingService : Service() {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private lateinit var fusedClient: FusedLocationProviderClient
+    private lateinit var queueStore: LocationQueueStore
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
             val location = result.lastLocation ?: return
             scope.launch {
-                try {
-                    val (batteryLevel, batteryCharging) = DeviceInfo.batteryStatus(applicationContext)
-                    val response = ApiClient.api().postLocation(
-                        LocationPingRequest(
-                            latitude = location.latitude,
-                            longitude = location.longitude,
-                            accuracy = location.accuracy,
-                            recorded_at = isoFormat(location.time),
-                            battery_level = batteryLevel,
-                            battery_charging = batteryCharging,
-                            network_type = DeviceInfo.networkType(applicationContext),
-                        )
-                    )
-                    if (response.isSuccessful) {
-                        Log.d(TAG, "Joylashuv yuborildi: ${location.latitude}, ${location.longitude}")
-                    } else {
-                        Log.w(TAG, "Joylashuv yuborilmadi: HTTP ${response.code()} — ${response.errorBody()?.string()}")
-                    }
-                } catch (e: Exception) {
-                    // Keyingi davriy nuqtada qayta urinib ko'riladi.
-                    Log.e(TAG, "Joylashuv yuborishda xatolik: ${e.message}", e)
-                }
+                val (batteryLevel, batteryCharging) = DeviceInfo.batteryStatus(applicationContext)
+                val payload = LocationPingRequest(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    accuracy = location.accuracy,
+                    recorded_at = isoFormat(location.time),
+                    battery_level = batteryLevel,
+                    battery_charging = batteryCharging,
+                    network_type = DeviceInfo.networkType(applicationContext),
+                )
+                flushQueueThenSend(payload)
             }
+        }
+    }
+
+    /** Avval navbatdagi eski nuqtalarni, keyin joriy nuqtani tartib bilan yuboradi.
+     * Birortasi muvaffaqiyatsiz tugasa (masalan internet yo'q), o'sha va undan
+     * keyingi barcha nuqtalar navbatda saqlab qo'yiladi — keyingi urinishda davom etadi. */
+    private suspend fun flushQueueThenSend(current: LocationPingRequest) {
+        val all = queueStore.pending() + current
+        val remaining = ArrayList<LocationPingRequest>()
+        var networkDown = false
+        for (item in all) {
+            if (networkDown) {
+                remaining.add(item)
+                continue
+            }
+            if (!trySend(item)) {
+                networkDown = true
+                remaining.add(item)
+            }
+        }
+        queueStore.replace(remaining)
+        if (remaining.isNotEmpty()) {
+            Log.w(TAG, "${remaining.size} ta joylashuv navbatda kutmoqda (internet yo'q yoki server xatosi)")
+        }
+    }
+
+    private suspend fun trySend(item: LocationPingRequest): Boolean {
+        return try {
+            val response: Response<Unit> = ApiClient.api().postLocation(item)
+            if (response.isSuccessful) {
+                Log.d(TAG, "Joylashuv yuborildi: ${item.latitude}, ${item.longitude}")
+                true
+            } else {
+                Log.w(TAG, "Joylashuv yuborilmadi: HTTP ${response.code()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Joylashuv yuborishda tarmoq xatoligi: ${e.message}")
+            false
         }
     }
 
     override fun onCreate() {
         super.onCreate()
         fusedClient = LocationServices.getFusedLocationProviderClient(this)
+        queueStore = LocationQueueStore(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

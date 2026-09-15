@@ -21,6 +21,27 @@ from auditlog.models import AuditLog, log_action
 
 ONLINE_THRESHOLD = timedelta(minutes=10)
 
+
+def _relative_uz(dt):
+    """Berilgan vaqtni o'zbekcha nisbiy ko'rinishda qaytaradi (masalan '5 daqiqa oldin')."""
+    if not dt:
+        return "—"
+    seconds = int((timezone.now() - dt).total_seconds())
+    if seconds < 0:
+        seconds = 0
+    if seconds < 60:
+        return "hozirgina"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{minutes} daqiqa oldin"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours} soat oldin"
+    days = hours // 24
+    if days < 30:
+        return f"{days} kun oldin"
+    return dt.strftime("%d.%m.%Y")
+
 from clients.models import Client
 from debts.models import Debt
 from finance.models import Expense, Income, Invoice
@@ -521,6 +542,7 @@ def _operator_rows():
             "last_ping": last_ping,
             "device": device,
             "last_seen_at": last_seen_at,
+            "last_seen_relative": _relative_uz(last_seen_at),
             "ping_count": user.location_pings.count(),
             "is_online": is_online,
         })
@@ -553,10 +575,12 @@ def operator_locations_live(request):
             "has_location": ping is not None,
             "latitude": float(ping.latitude) if ping else None,
             "longitude": float(ping.longitude) if ping else None,
+            "accuracy": ping.accuracy if ping else None,
             "recorded_at": (
                 timezone.localtime(row["last_seen_at"]).strftime("%d.%m.%Y %H:%M")
                 if row["last_seen_at"] else None
             ),
+            "last_seen_relative": row["last_seen_relative"],
             "battery_level": ping.battery_level if ping else None,
             "battery_charging": ping.battery_charging if ping else None,
             "network_type": ping.network_type if ping else "",

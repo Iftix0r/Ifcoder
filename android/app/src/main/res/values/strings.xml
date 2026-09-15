@@ -13,6 +13,9 @@
     <string name="tasks_no_client">Mijoz biriktirilmagan</string>
     <string name="tasks_mark_done">Bajarildi</string>
     <string name="tasks_logout">Chiqish</string>
+    <string name="tasks_refresh_permissions">Ruxsatlarni yangilash</string>
+    <string name="permissions_all_granted_hint">Barcha ruxsatlar berilgan va xizmat qayta ishga tushirildi. Joylashuv baribir kelmasa: Sozlamalar → Ilovalar → %1$s → Batareya bo\'limidan \"Cheklanmagan\" tanlang.</string>
+    <string name="permissions_denied_hint">Joylashuv ruxsati berilmadi. Sozlamalar → Ilovalar → %1$s → Ruxsatlar → Joylashuv bo\'limidan qo\'lda yoqing.</string>
 
     <string name="location_notification_title">Joylashuv kuzatilmoqda</string>
     <string name="location_notification_text">Ifcoder Operator ish vaqtida joylashuvni serverga yuboradi</string>

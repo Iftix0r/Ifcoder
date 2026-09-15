@@ -2,6 +2,7 @@ package uz.ifcoder.operator.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -19,6 +20,8 @@ import uz.ifcoder.operator.data.TaskDto
 import uz.ifcoder.operator.location.LocationTrackingService
 
 class TaskListActivity : AppCompatActivity() {
+
+    private val permissionsHelper = PermissionsHelper(this)
 
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var recyclerTasks: RecyclerView
@@ -46,15 +49,13 @@ class TaskListActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadTasks()
-        if (hasLocationPermission()) {
+        if (permissionsHelper.hasForegroundLocation()) {
+            Log.d(TAG, "onResume: joylashuv ruxsati bor — xizmat (qayta) ishga tushirilmoqda")
             LocationTrackingService.start(this)
+        } else {
+            Log.w(TAG, "onResume: joylashuv ruxsati YO'Q — xizmat ishga tushmaydi")
         }
     }
-
-    private fun hasLocationPermission(): Boolean =
-        androidx.core.content.ContextCompat.checkSelfPermission(
-            this, android.Manifest.permission.ACCESS_FINE_LOCATION
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_task_list, menu)
@@ -62,11 +63,55 @@ class TaskListActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_logout) {
-            logout()
-            return true
+        when (item.itemId) {
+            R.id.action_logout -> {
+                logout()
+                return true
+            }
+            R.id.action_refresh_permissions -> {
+                refreshPermissions()
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    /** Foydalanuvchi menyudan qo'lda chaqirsa — barcha ruxsatlarni qayta so'raydi va
+     * xizmatni qayta ishga tushiradi. Login paytida rad etilgan yoki keyinchalik
+     * tizim tomonidan olib tashlangan ruxsatlarni logout qilmasdan tiklash uchun. */
+    private fun refreshPermissions() {
+        if (!permissionsHelper.hasForegroundLocation()) {
+            permissionsHelper.requestForegroundLocation { granted ->
+                if (granted) requestBackgroundThenRestart() else showPermissionDenied()
+            }
+        } else {
+            requestBackgroundThenRestart()
+        }
+    }
+
+    private fun requestBackgroundThenRestart() {
+        if (!permissionsHelper.hasBackgroundLocation()) {
+            permissionsHelper.requestBackgroundLocation { restartLocationServiceWithFeedback() }
+        } else {
+            restartLocationServiceWithFeedback()
+        }
+    }
+
+    private fun restartLocationServiceWithFeedback() {
+        LocationTrackingService.start(this)
+        Toast.makeText(
+            this,
+            getString(R.string.permissions_all_granted_hint, getString(R.string.app_name)),
+            Toast.LENGTH_LONG,
+        ).show()
+    }
+
+    private fun showPermissionDenied() {
+        Toast.makeText(
+            this,
+            getString(R.string.permissions_denied_hint, getString(R.string.app_name)),
+            Toast.LENGTH_LONG,
+        ).show()
     }
 
     private fun loadTasks() {
@@ -103,5 +148,9 @@ class TaskListActivity : AppCompatActivity() {
         ApiClient.tokens().clear()
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
+    }
+
+    companion object {
+        private const val TAG = "TaskListActivity"
     }
 }

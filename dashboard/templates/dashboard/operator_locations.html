@@ -71,13 +71,13 @@
       </td>
       <td><span class="badge {% if row.is_online %}active{% else %}inactive{% endif %}">{% if row.is_online %}Onlayn{% else %}Oflayn{% endif %}</span></td>
       <td>{{ row.ping_count }}</td>
-      <td>
+      <td title="{{ row.last_seen_at|date:'d.m.Y H:i:s'|default:'' }}">
         {% if row.last_ping %}
         <a href="https://maps.google.com/?q={{ row.last_ping.latitude|unlocalize }},{{ row.last_ping.longitude|unlocalize }}" target="_blank" rel="noopener">
-          {{ row.last_seen_at|date:"d.m.Y H:i" }}
+          {{ row.last_seen_relative }}
         </a>
         {% elif row.last_seen_at %}
-        {{ row.last_seen_at|date:"d.m.Y H:i" }}
+        {{ row.last_seen_relative }}
         <div style="font-size:11px;color:var(--muted);">joylashuv hali yo'q</div>
         {% else %}—{% endif %}
       </td>
@@ -108,6 +108,7 @@
   map.setView([41.3111, 69.2797], 11); // Toshkent — ma'lumot kelguncha standart markaz
 
   var markers = {};
+  var accuracyCircles = {};
 
   function batteryHtml(row) {
     if (row.battery_level === null || row.battery_level === undefined) return '—';
@@ -121,22 +122,43 @@
         map.removeLayer(markers[row.user_id]);
         delete markers[row.user_id];
       }
+      if (accuracyCircles[row.user_id]) {
+        map.removeLayer(accuracyCircles[row.user_id]);
+        delete accuracyCircles[row.user_id];
+      }
       return;
     }
     var latlng = [row.latitude, row.longitude];
+    var color = row.is_online ? '#10b981' : '#94a3b8';
+
+    if (row.accuracy) {
+      if (accuracyCircles[row.user_id]) {
+        accuracyCircles[row.user_id].setLatLng(latlng).setRadius(row.accuracy);
+      } else {
+        accuracyCircles[row.user_id] = L.circle(latlng, {
+          radius: row.accuracy,
+          color: color,
+          weight: 1,
+          fillColor: color,
+          fillOpacity: 0.08,
+        }).addTo(map);
+      }
+      accuracyCircles[row.user_id].setStyle({ color: color, fillColor: color });
+    }
+
     if (markers[row.user_id]) {
       markers[row.user_id].setLatLng(latlng);
     } else {
       markers[row.user_id] = L.circleMarker(latlng, {
         radius: 8,
-        color: row.is_online ? '#10b981' : '#94a3b8',
-        fillColor: row.is_online ? '#10b981' : '#94a3b8',
+        color: color,
+        fillColor: color,
         fillOpacity: 0.85,
       }).addTo(map);
     }
-    markers[row.user_id].setStyle({ color: row.is_online ? '#10b981' : '#94a3b8', fillColor: row.is_online ? '#10b981' : '#94a3b8' });
+    markers[row.user_id].setStyle({ color: color, fillColor: color });
     markers[row.user_id].bindPopup(
-      '<b>' + row.name + '</b><br>' + row.device + '<br>' + row.recorded_at + '<br>' + batteryHtml(row)
+      '<b>' + row.name + '</b><br>' + row.device + '<br>' + row.last_seen_relative + '<br>' + batteryHtml(row)
     );
   }
 
@@ -150,10 +172,11 @@
       cells[3].innerHTML = batteryHtml(row);
       cells[4].innerHTML = '<span class="badge ' + (row.is_online ? 'active' : 'inactive') + '">' + (row.is_online ? 'Onlayn' : 'Oflayn') + '</span>';
       cells[5].textContent = row.ping_count;
+      cells[6].title = row.recorded_at || '';
       if (row.has_location) {
-        cells[6].innerHTML = '<a href="https://maps.google.com/?q=' + row.latitude + ',' + row.longitude + '" target="_blank" rel="noopener">' + row.recorded_at + '</a>';
-      } else if (row.recorded_at) {
-        cells[6].innerHTML = row.recorded_at + '<div style="font-size:11px;color:var(--muted);">joylashuv hali yo\'q</div>';
+        cells[6].innerHTML = '<a href="https://maps.google.com/?q=' + row.latitude + ',' + row.longitude + '" target="_blank" rel="noopener">' + row.last_seen_relative + '</a>';
+      } else if (row.last_seen_relative && row.last_seen_relative !== '—') {
+        cells[6].innerHTML = row.last_seen_relative + '<div style="font-size:11px;color:var(--muted);">joylashuv hali yo\'q</div>';
       } else {
         cells[6].textContent = '—';
       }
