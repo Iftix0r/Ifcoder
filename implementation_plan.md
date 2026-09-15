@@ -1,38 +1,46 @@
-# Ticket (Yordam) Tizimi — Implementation Plan
+# Operator Mobil Ilova (Android) + Backend API — Implementation Plan
 
 ## Maqsad
-Mijoz portalida **ticket ochish**, admin panelida **tiket ko'rish va javob berish** imkoniyatini yaratish.
+Operatorlar uchun native Android ilova (Java/Kotlin, Android Studio, faqat ichki APK —
+Play Store'ga chiqarilmaydi):
+1. Fon rejimida joylashuvni kuzatish va serverga yuborish (oxirgi manzillar tarixi).
+2. Vazifa holati serverda o'zgarganda — Firebase push orqali ilovaga signal, ilova esa
+   telefonning o'z SMS (SmsManager) orqali mijozga xabar yuboradi (uchinchi tomon SMS API'siz).
+3. Operatorga tayinlangan vazifalar ro'yxati + push bildirishnoma.
 
 ## Arxitektura
 
-### Yangi `tickets` Django app
-- `Ticket` model: title, body, status, priority, client (FK), created_at
-- `TicketReply` model: ticket (FK), author (User FK), body, is_staff, created_at
+### Backend: yangi `mobileapi` Django app
+- DRF yoqiladi (`rest_framework`, `rest_framework.authtoken`), Token auth.
+- Modellar: `DeviceToken` (FCM token), `LocationPing` (joylashuv tarixi).
+- `tasks/services.py` — `task_set_status` ichidagi bildirishnoma mantiqi shu yerga
+  ko'chiriladi, veb panel va mobil API bitta funksiyani chaqiradi.
+- `mobileapi/push.py` — Firebase Admin SDK orqali push yuborish (bots/telegram.py
+  uslubiga mos, lekin FCM uchun rasmiy SDK ishlatiladi — qo'lda JWT/crypto yozish xato
+  ehtimoli yuqori bo'lgani uchun `firebase-admin` requirements.txt'ga qo'shiladi).
+- `dashboard` ga "Operatorlar joylashuvi" sahifasi qo'shiladi (oxirgi manzil + tarix).
 
-### Portal tomonida (Mijoz):
-- `/portal/tickets/` — mening tiketlarim ro'yxati
-- `/portal/tickets/new/` — yangi tiket ochish
-- `/portal/tickets/<id>/` — tiket detail + javoblar + javob yozish
+### Android: `android/` (yangi papka, repo ichida)
+- Kotlin, package `uz.ifcoder.operator`, minSdk 26.
+- Login (token saqlash — EncryptedSharedPreferences), vazifalar ro'yxati (Retrofit),
+  fon joylashuv Service (FusedLocationProviderClient), FCM xizmat (push qabul qilish +
+  SmsManager orqali SMS yuborish), BootReceiver.
+- Firebase loyihasi va `google-services.json` — foydalanuvchi tomonidan taqdim etiladi.
 
-### Admin Panel tomonida:
-- `/panel/tickets/` — barcha tiketlar (filtrlash: status, priority)
-- `/panel/tickets/<id>/` — tiket detail + admin javob + status o'zgartirish
+## Bosqichlar
+1. Backend: models/admin/serializers/views/urls/services/push — curl orqali tekshiriladi.
+2. Android skelet: login + vazifalar ro'yxati (Firebase'siz ishlaydi).
+3. Joylashuv kuzatish: Service + permissions + dashboard'da ko'rish.
+4. Firebase ulanganidan keyin: push + avtomatik SMS oqimi.
+5. Signing/APK tayyorlash.
 
 ## Fayllar
-
-### [NEW] tickets/models.py
-### [NEW] tickets/views.py (portal + admin views)
-### [NEW] tickets/urls.py (portal + admin urls)
-### [NEW] tickets/admin.py
-### [NEW] tickets/apps.py
-### [NEW] tickets/migrations/
-### [NEW] templates/tickets/portal_list.html
-### [NEW] templates/tickets/portal_new.html
-### [NEW] templates/tickets/portal_detail.html
-### [NEW] templates/tickets/admin_list.html
-### [NEW] templates/tickets/admin_detail.html
-
-### [MODIFY] config/urls.py — yangi URL lar
-### [MODIFY] config/settings.py — INSTALLED_APPS
-### [MODIFY] templates/portal/base.html — Yordam bo'limi link
-### [MODIFY] templates/dashboard/base.html — Tiketlar nav link
+### [NEW] mobileapi/{models,admin,serializers,views,urls,push,apps}.py + migrations/
+### [NEW] tasks/services.py
+### [MODIFY] tasks/views.py — task_set_status → services.set_task_status chaqiradi
+### [MODIFY] config/settings.py — INSTALLED_APPS, REST_FRAMEWORK, FIREBASE_*
+### [MODIFY] config/urls.py — path('api/', include('mobileapi.urls'))
+### [MODIFY] requirements.txt — djangorestframework (mavjud, faollashtiriladi), firebase-admin
+### [MODIFY] dashboard/views.py, dashboard/urls.py, templates/dashboard/base.html
+### [NEW] templates/dashboard/operator_locations.html, operator_location_history.html
+### [NEW] android/ — to'liq Gradle/Kotlin loyiha (quyida fayl daraxti)

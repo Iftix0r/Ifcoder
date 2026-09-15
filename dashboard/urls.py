@@ -10,4 +10,10 @@ urlpatterns = [
     path("search/", views.search, name="search"),
     path("ai/", views.ai_assistant, name="ai_assistant"),
     path("reports/", views.reports, name="reports"),
+    path("operators/location/", views.operator_locations, name="operator_locations"),
+    path(
+        "operators/<int:user_id>/location/",
+        views.operator_location_history,
+        name="operator_location_history",
+    ),
 ]

@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
     'clients',
     'projects',
     'bots',
@@ -71,7 +73,17 @@ INSTALLED_APPS = [
     'tickets',
     'auditlog',
     'learning',
+    'mobileapi',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -179,6 +191,12 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 # Telegram Bot sozlamalari (admin bildirishnomalari va bot boshqaruvi uchun)
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_ADMIN_CHAT_ID = os.environ.get('TELEGRAM_ADMIN_CHAT_ID', '')
+
+# Firebase Cloud Messaging (mobileapi/push.py) — operator Android ilovasiga push
+# yuborish uchun. Xizmat hisobi (service account) JSON fayli serverda saqlanadi,
+# ilova ichiga (APK) hech qachon joylanmaydi. Fayl mavjud bo'lmasa, push funksiyalari
+# jim tarzda hech narsa qilmaydi (mobileapi/push.py orqali).
+FIREBASE_CREDENTIALS_FILE = os.environ.get('FIREBASE_CREDENTIALS_FILE', '')
 
 # Production (DEBUG=False) uchun xavfsizlik sozlamalari — cPanel'dagi
 # iftix0r.uz Let's Encrypt SSL bilan xizmat qilgani uchun HTTPS majburlanadi.

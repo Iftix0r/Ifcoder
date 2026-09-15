@@ -1460,6 +1460,9 @@
       <a href="{% url 'infrastructure:domain_list' %}" class="{% if 'infrastructure' in request.resolver_match.namespace %}active{% endif %}">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 000 2.75v2.5C0 6.216.784 7 1.75 7h12.5A1.75 1.75 0 0016 5.25v-2.5A1.75 1.75 0 0014.25 1H1.75zM3 4a1 1 0 100-2 1 1 0 000 2zm2-1a1 1 0 100 2 1 1 0 000-2zM1.75 9A1.75 1.75 0 000 10.75v2.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-2.5A1.75 1.75 0 0014.25 9H1.75zM3 12a1 1 0 100-2 1 1 0 000 2zm2-1a1 1 0 100 2 1 1 0 000-2z"/></svg>
         Infrastruktura</a>
+      <a href="{% url 'dashboard:operator_locations' %}" class="{% if request.resolver_match.view_name == 'dashboard:operator_locations' or request.resolver_match.view_name == 'dashboard:operator_location_history' %}active{% endif %}">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 16s6-5.686 6-10A6 6 0 002 6c0 4.314 6 10 6 10zm0-7a3 3 0 110-6 3 3 0 010 6z"/></svg>
+        Operatorlar joylashuvi</a>
 
       <div class="nav-section">Ta'lim &amp; Rivojlanish</div>
       <a href="{% url 'learning:index' %}" class="{% if 'learning' in request.resolver_match.namespace %}active{% endif %}">

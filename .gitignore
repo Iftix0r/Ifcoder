@@ -8,3 +8,8 @@ public/
 media/
 *.sqlite3-journal
 backups/
+
+# Firebase service-account (Admin SDK) kaliti — mobileapi/push.py FIREBASE_CREDENTIALS_FILE
+# orqali o'qiydi. Bu maxfiy kalit, hech qachon repo'ga tushmasligi kerak.
+firebase-service-account.json
+*firebase-adminsdk*.json

@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% load l10n %}
+{% block title %}{{ operator.username }} — Joylashuv tarixi — Ifcoder Panel{% endblock %}
+{% block page_title %}Joylashuv tarixi{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom:20px;">
+  <div>
+    <h1>{{ operator.get_full_name|default:operator.username }}</h1>
+    <div class="sub">So'nggi {{ pings|length }} ta joylashuv nuqtasi</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn" href="{% url 'dashboard:operator_locations' %}">← Ro'yxatga qaytish</a>
+  </div>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Vaqt</th>
+      <th>Koordinatalar</th>
+      <th>Aniqlik</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ping in pings %}
+    <tr>
+      <td>{{ ping.recorded_at|date:"d.m.Y H:i:s" }}</td>
+      <td>
+        <a href="https://maps.google.com/?q={{ ping.latitude|unlocalize }},{{ ping.longitude|unlocalize }}" target="_blank" rel="noopener">
+          {{ ping.latitude|unlocalize }}, {{ ping.longitude|unlocalize }}
+        </a>
+      </td>
+      <td>{% if ping.accuracy %}±{{ ping.accuracy|floatformat:0 }} m{% else %}—{% endif %}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">Joylashuv tarixi topilmadi.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

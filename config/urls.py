@@ -42,6 +42,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/login/', ThrottledLoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('api/', include('mobileapi.urls')),
     path('portal/', include('portal.urls')),
     path('panel/clients/', include('clients.urls')),
     path('panel/projects/', include('projects.urls')),

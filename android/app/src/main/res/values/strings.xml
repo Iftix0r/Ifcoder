@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Ifcoder Operator</string>
+
+    <string name="login_title">Kirish</string>
+    <string name="login_username">Foydalanuvchi nomi</string>
+    <string name="login_password">Parol</string>
+    <string name="login_button">Kirish</string>
+    <string name="login_error">Login yoki parol noto\'g\'ri</string>
+    <string name="login_network_error">Serverga ulanib bo\'lmadi. Internetni tekshiring.</string>
+
+    <string name="tasks_title">Vazifalarim</string>
+    <string name="tasks_empty">Sizga tayinlangan vazifalar yo\'q</string>
+    <string name="tasks_no_client">Mijoz biriktirilmagan</string>
+    <string name="tasks_mark_done">Bajarildi</string>
+    <string name="tasks_logout">Chiqish</string>
+
+    <string name="location_notification_title">Joylashuv kuzatilmoqda</string>
+    <string name="location_notification_text">Ifcoder Operator ish vaqtida joylashuvni serverga yuboradi</string>
+
+    <string name="notification_channel_alerts">Vazifa bildirishnomalari</string>
+    <string name="notification_channel_ops">Fon xizmatlari</string>
+
+    <string name="sms_sent_title">SMS yuborildi</string>
+    <string name="sms_failed_title">SMS yuborilmadi</string>
+
+    <string name="permission_location_required">Ilova ishlashi uchun joylashuv ruhsati kerak</string>
+    <string name="permission_background_location_required">Fon rejimida joylashuv uchun \"Har doim ruxsat berish\" tanlang</string>
+    <string name="permission_sms_required">Mijozlarga avtomatik SMS yuborish uchun SMS ruhsati kerak</string>
+</resources>

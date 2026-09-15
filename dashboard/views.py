@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Count, DecimalField, IntegerField, Q, Sum, Value
 from django.db.models.functions import Coalesce
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
 
@@ -488,3 +488,35 @@ def reports(request):
         "top_clients": top_clients,
     }
     return render(request, "dashboard/reports.html", context)
+
+
+@login_required
+def operator_locations(request):
+    """Har bir operatorning oxirgi ma'lum joylashuvi (mobil ilova orqali yuborilgan)."""
+    from django.contrib.auth.models import User
+
+    operators = (
+        User.objects.filter(location_pings__isnull=False)
+        .distinct()
+        .order_by("username")
+    )
+    rows = []
+    for user in operators:
+        last_ping = user.location_pings.first()
+        if last_ping:
+            rows.append({"user": user, "last_ping": last_ping})
+    return render(request, "dashboard/operator_locations.html", {"rows": rows})
+
+
+@login_required
+def operator_location_history(request, user_id):
+    """Bitta operatorning joylashuv tarixi (eng so'nggilaridan)."""
+    from django.contrib.auth.models import User
+
+    operator = get_object_or_404(User, pk=user_id)
+    pings = operator.location_pings.all()[:200]
+    return render(
+        request,
+        "dashboard/operator_location_history.html",
+        {"operator": operator, "pings": pings},
+    )

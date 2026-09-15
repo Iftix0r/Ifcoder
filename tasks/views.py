@@ -13,6 +13,7 @@ from bots.telegram import send_telegram_message
 
 from .forms import TaskForm, TimeEntryForm
 from .models import Task, TimeEntry
+from .services import set_task_status
 
 
 class TaskListView(LoginRequiredMixin, CSVExportMixin, ListView):
@@ -99,6 +100,11 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
             send_telegram_message(msg)
         except Exception:
             pass
+        try:
+            from mobileapi.push import notify_task_assigned
+            notify_task_assigned(self.object)
+        except Exception:
+            pass
         return response
 
 
@@ -106,6 +112,15 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
     model = Task
     form_class = TaskForm
     template_name = "tasks/form.html"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        try:
+            from mobileapi.push import notify_task_assigned
+            notify_task_assigned(self.object)
+        except Exception:
+            pass
+        return response
 
     def get_success_url(self):
         return reverse("tasks:detail", args=[self.object.pk])
@@ -127,19 +142,7 @@ class TaskDeleteView(LoginRequiredMixin, DeleteView):
 def task_set_status(request, pk):
     task = Task.objects.get(pk=pk)
     status = request.POST.get("status")
-    if status in Task.Status.values:
-        task.status = status
-        task.save(update_fields=["status"])
-        if status == Task.Status.DONE:
-            try:
-                msg = (
-                    f"✅ <b>VAZIFA BAJARILDI!</b>\n\n"
-                    f"📌 <b>Vazifa:</b> {html.escape(task.title)}\n"
-                    f"👤 <b>Bajaruvchi:</b> {html.escape(request.user.get_full_name() or request.user.username)}"
-                )
-                send_telegram_message(msg)
-            except Exception:
-                pass
+    if set_task_status(task, status, request.user):
         return JsonResponse({"ok": True, "status": task.status, "label": task.get_status_display()})
     return JsonResponse({"ok": False}, status=400)
 
