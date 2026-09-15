@@ -62,17 +62,47 @@ def send_data_message(fcm_token: str, data: dict, notification: dict = None) -> 
 
 
 _TASK_STATUS_TEXT = {
-    "todo": "Hurmatli {name}, \"{title}\" bo'yicha buyurtmangiz qabul qilindi.",
-    "in_progress": "Hurmatli {name}, \"{title}\" bo'yicha ishlarimiz boshlandi.",
-    "done": "Hurmatli {name}, \"{title}\" bo'yicha ishimiz bajarildi. Rahmat!",
+    "todo": (
+        "🆕 Assalomu alaykum, {name}!\n"
+        "\"{title}\" bo'yicha buyurtmangiz muvaffaqiyatli qabul qilindi. "
+        "Tez orada ishni boshlaymiz! 🙌"
+    ),
+    "in_progress": (
+        "🔧 Hurmatli {name}, xushxabar!\n"
+        "\"{title}\" bo'yicha ishlarimiz boshlandi. Jarayon haqida sizni "
+        "doimo xabardor qilib boramiz ⏳"
+    ),
+    "done": (
+        "✅ Tabriklaymiz, {name}!\n"
+        "\"{title}\" bo'yicha ishimiz muvaffaqiyatli yakunlandi. Bizni "
+        "tanlaganingiz uchun katta rahmat! 🙏🎉"
+    ),
 }
 
 _PROJECT_STATUS_TEXT = {
-    "planning": "Hurmatli {name}, \"{title}\" loyihangiz rejalashtirish bosqichida.",
-    "in_progress": "Hurmatli {name}, \"{title}\" loyihangiz ustida ishlar boshlandi.",
-    "paused": "Hurmatli {name}, \"{title}\" loyihangiz vaqtincha to'xtatildi.",
-    "completed": "Hurmatli {name}, \"{title}\" loyihangiz muvaffaqiyatli yakunlandi. Rahmat!",
+    "planning": (
+        "📋 Assalomu alaykum, {name}!\n"
+        "\"{title}\" loyihangiz hozircha rejalashtirish bosqichida — tez "
+        "orada ishga tushamiz! ✨"
+    ),
+    "in_progress": (
+        "🚀 Hurmatli {name}, xushxabar!\n"
+        "\"{title}\" loyihangiz ustida faol ishlar boshlandi 💪"
+    ),
+    "paused": (
+        "⏸️ Hurmatli {name},\n"
+        "\"{title}\" loyihangiz vaqtincha to'xtatildi. Tafsilotlar uchun "
+        "operatorimiz siz bilan bog'lanadi 📞"
+    ),
+    "completed": (
+        "🎉 Tabriklaymiz, {name}!\n"
+        "\"{title}\" loyihangiz muvaffaqiyatli yakunlandi. Hamkorligingiz "
+        "uchun katta rahmat! 🙏"
+    ),
 }
+
+
+_SITE_FOOTER = "\n\n🌐 iftix0r.uz"
 
 
 def notify_client_status_change(client, operator, text):
@@ -84,6 +114,7 @@ def notify_client_status_change(client, operator, text):
     if not client:
         return
 
+    text = text + _SITE_FOOTER
     target = (client.telegram_id or client.telegram or "").strip()
     if target:
         try:
