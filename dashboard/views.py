@@ -498,26 +498,29 @@ def reports(request):
 
 
 def _operator_rows():
-    """Har bir operator uchun oxirgi joylashuv, qurilma va onlayn holatini yig'adi."""
-    from django.contrib.auth.models import User
+    """Har bir operator uchun oxirgi joylashuv, qurilma va onlayn holatini yig'adi.
 
+    Joylashuv (GPS) pingi hali kelmagan bo'lsa ham, kamida qurilma ro'yxatdan
+    o'tkazilgan (login/FCM) foydalanuvchi ham ro'yxatda ko'rinadi — shunda mavjud
+    ma'lumot (qurilma, oxirgi faollik) darhol ko'rinadi, GPS ping kutilmaydi.
+    """
     now = timezone.now()
     operators = (
-        User.objects.filter(location_pings__isnull=False)
+        User.objects.filter(Q(location_pings__isnull=False) | Q(device_tokens__isnull=False))
         .distinct()
         .order_by("username")
     )
     rows = []
     for user in operators:
         last_ping = user.location_pings.first()
-        if not last_ping:
-            continue
         device = user.device_tokens.order_by("-updated_at").first()
-        is_online = (now - last_ping.recorded_at) <= ONLINE_THRESHOLD
+        last_seen_at = last_ping.recorded_at if last_ping else (device.last_seen_at if device else None)
+        is_online = bool(last_seen_at) and (now - last_seen_at) <= ONLINE_THRESHOLD
         rows.append({
             "user": user,
             "last_ping": last_ping,
             "device": device,
+            "last_seen_at": last_seen_at,
             "ping_count": user.location_pings.count(),
             "is_online": is_online,
         })
@@ -547,12 +550,16 @@ def operator_locations_live(request):
         data.append({
             "user_id": user.id,
             "name": user.get_full_name() or user.username,
-            "latitude": float(ping.latitude),
-            "longitude": float(ping.longitude),
-            "recorded_at": timezone.localtime(ping.recorded_at).strftime("%d.%m.%Y %H:%M"),
-            "battery_level": ping.battery_level,
-            "battery_charging": ping.battery_charging,
-            "network_type": ping.network_type,
+            "has_location": ping is not None,
+            "latitude": float(ping.latitude) if ping else None,
+            "longitude": float(ping.longitude) if ping else None,
+            "recorded_at": (
+                timezone.localtime(row["last_seen_at"]).strftime("%d.%m.%Y %H:%M")
+                if row["last_seen_at"] else None
+            ),
+            "battery_level": ping.battery_level if ping else None,
+            "battery_charging": ping.battery_charging if ping else None,
+            "network_type": ping.network_type if ping else "",
             "device": f"{device.brand} {device.device_id}".strip() if device else "",
             "os_version": device.os_version if device else "",
             "app_version": device.app_version if device else "",

@@ -72,16 +72,21 @@
       <td><span class="badge {% if row.is_online %}active{% else %}inactive{% endif %}">{% if row.is_online %}Onlayn{% else %}Oflayn{% endif %}</span></td>
       <td>{{ row.ping_count }}</td>
       <td>
+        {% if row.last_ping %}
         <a href="https://maps.google.com/?q={{ row.last_ping.latitude|unlocalize }},{{ row.last_ping.longitude|unlocalize }}" target="_blank" rel="noopener">
-          {{ row.last_ping.recorded_at|date:"d.m.Y H:i" }}
+          {{ row.last_seen_at|date:"d.m.Y H:i" }}
         </a>
+        {% elif row.last_seen_at %}
+        {{ row.last_seen_at|date:"d.m.Y H:i" }}
+        <div style="font-size:11px;color:var(--muted);">joylashuv hali yo'q</div>
+        {% else %}—{% endif %}
       </td>
       <td style="text-align:right;">
         <a class="btn" href="{% url 'dashboard:operator_location_history' row.user.id %}">Tarixni ko'rish</a>
       </td>
     </tr>
     {% empty %}
-    <tr><td colspan="8">Hali hech qanday joylashuv ma'lumoti kelmagan.</td></tr>
+    <tr><td colspan="8">Hali hech qanday operator/qurilma ma'lumoti kelmagan.</td></tr>
     {% endfor %}
   </tbody>
 </table>
@@ -111,6 +116,13 @@
   }
 
   function upsertMarker(row) {
+    if (!row.has_location) {
+      if (markers[row.user_id]) {
+        map.removeLayer(markers[row.user_id]);
+        delete markers[row.user_id];
+      }
+      return;
+    }
     var latlng = [row.latitude, row.longitude];
     if (markers[row.user_id]) {
       markers[row.user_id].setLatLng(latlng);
@@ -138,7 +150,13 @@
       cells[3].innerHTML = batteryHtml(row);
       cells[4].innerHTML = '<span class="badge ' + (row.is_online ? 'active' : 'inactive') + '">' + (row.is_online ? 'Onlayn' : 'Oflayn') + '</span>';
       cells[5].textContent = row.ping_count;
-      cells[6].innerHTML = '<a href="https://maps.google.com/?q=' + row.latitude + ',' + row.longitude + '" target="_blank" rel="noopener">' + row.recorded_at + '</a>';
+      if (row.has_location) {
+        cells[6].innerHTML = '<a href="https://maps.google.com/?q=' + row.latitude + ',' + row.longitude + '" target="_blank" rel="noopener">' + row.recorded_at + '</a>';
+      } else if (row.recorded_at) {
+        cells[6].innerHTML = row.recorded_at + '<div style="font-size:11px;color:var(--muted);">joylashuv hali yo\'q</div>';
+      } else {
+        cells[6].textContent = '—';
+      }
     });
   }
 
@@ -150,7 +168,7 @@
         document.getElementById('stat-total').textContent = data.rows.length;
         renderTable(data.rows);
         data.rows.forEach(upsertMarker);
-        var pts = data.rows.map(function (r) { return [r.latitude, r.longitude]; });
+        var pts = data.rows.filter(function (r) { return r.has_location; }).map(function (r) { return [r.latitude, r.longitude]; });
         if (pts.length) map.fitBounds(pts, { maxZoom: 13, padding: [30, 30] });
       })
       .catch(function () {});
