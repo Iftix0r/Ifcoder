@@ -39,9 +39,16 @@ data class LocationPingRequest(
     val longitude: Double,
     val accuracy: Float?,
     val recorded_at: String,
+    val battery_level: Int? = null,
+    val battery_charging: Boolean? = null,
+    val network_type: String? = null,
 )
 
 data class DeviceTokenRequest(
     val fcm_token: String,
     val device_id: String,
+    val brand: String? = null,
+    val os_version: String? = null,
+    val sdk_int: Int? = null,
+    val app_version: String? = null,
 )

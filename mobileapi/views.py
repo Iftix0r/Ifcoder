@@ -1,9 +1,11 @@
 from django.core.cache import cache
+from django.utils import timezone
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from auditlog.models import AuditLog, log_action
 from tasks.models import Task
 from tasks.services import set_task_status
 
@@ -17,6 +19,11 @@ from .serializers import (
 
 LOGIN_ATTEMPT_LIMIT = 5
 LOGIN_ATTEMPT_WINDOW = 300  # soniya
+
+
+def _client_ip(request):
+    x_forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+    return x_forwarded.split(",")[0].strip() if x_forwarded else request.META.get("REMOTE_ADDR")
 
 
 class ThrottledObtainAuthToken(ObtainAuthToken):
@@ -64,17 +71,40 @@ class LocationPingCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        DeviceToken.objects.filter(user=self.request.user).update(
+            last_seen_at=timezone.now(),
+            last_ip=_client_ip(self.request),
+        )
 
 
 class DeviceTokenRegisterAPIView(APIView):
     def post(self, request):
         serializer = DeviceTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        DeviceToken.objects.update_or_create(
-            fcm_token=serializer.validated_data["fcm_token"],
+        data = serializer.validated_data
+        device, _ = DeviceToken.objects.update_or_create(
+            fcm_token=data["fcm_token"],
             defaults={
                 "user": request.user,
-                "device_id": serializer.validated_data.get("device_id", ""),
+                "device_id": data.get("device_id", ""),
+                "brand": data.get("brand", ""),
+                "os_version": data.get("os_version", ""),
+                "sdk_int": data.get("sdk_int"),
+                "app_version": data.get("app_version", ""),
+                "last_seen_at": timezone.now(),
+                "last_ip": _client_ip(request),
             },
+        )
+        log_action(
+            user=request.user,
+            action=AuditLog.Action.LOGIN,
+            model_name="DeviceToken",
+            object_id=device.id,
+            object_repr=str(device),
+            message=(
+                f"Mobil ilova: {device.brand} {device.device_id}, "
+                f"Android {device.os_version}, ilova v{device.app_version}"
+            ).strip(),
+            request=request,
         )
         return Response({"ok": True})

@@ -10,9 +10,12 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Count, DecimalField, IntegerField, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
+
+ONLINE_THRESHOLD = timedelta(minutes=10)
 
 from clients.models import Client
 from debts.models import Debt
@@ -490,11 +493,11 @@ def reports(request):
     return render(request, "dashboard/reports.html", context)
 
 
-@login_required
-def operator_locations(request):
-    """Har bir operatorning oxirgi ma'lum joylashuvi (mobil ilova orqali yuborilgan)."""
+def _operator_rows():
+    """Har bir operator uchun oxirgi joylashuv, qurilma va onlayn holatini yig'adi."""
     from django.contrib.auth.models import User
 
+    now = timezone.now()
     operators = (
         User.objects.filter(location_pings__isnull=False)
         .distinct()
@@ -503,9 +506,57 @@ def operator_locations(request):
     rows = []
     for user in operators:
         last_ping = user.location_pings.first()
-        if last_ping:
-            rows.append({"user": user, "last_ping": last_ping})
-    return render(request, "dashboard/operator_locations.html", {"rows": rows})
+        if not last_ping:
+            continue
+        device = user.device_tokens.order_by("-updated_at").first()
+        is_online = (now - last_ping.recorded_at) <= ONLINE_THRESHOLD
+        rows.append({
+            "user": user,
+            "last_ping": last_ping,
+            "device": device,
+            "ping_count": user.location_pings.count(),
+            "is_online": is_online,
+        })
+    return rows
+
+
+@login_required
+def operator_locations(request):
+    """Har bir operatorning oxirgi ma'lum joylashuvi (mobil ilova orqali yuborilgan)."""
+    rows = _operator_rows()
+    online_count = sum(1 for row in rows if row["is_online"])
+    return render(
+        request,
+        "dashboard/operator_locations.html",
+        {"rows": rows, "online_count": online_count},
+    )
+
+
+@login_required
+def operator_locations_live(request):
+    """`operator_locations` sahifasini AJAX orqali (reload'siz) yangilash uchun JSON."""
+    data = []
+    for row in _operator_rows():
+        user = row["user"]
+        ping = row["last_ping"]
+        device = row["device"]
+        data.append({
+            "user_id": user.id,
+            "name": user.get_full_name() or user.username,
+            "latitude": float(ping.latitude),
+            "longitude": float(ping.longitude),
+            "recorded_at": timezone.localtime(ping.recorded_at).strftime("%d.%m.%Y %H:%M"),
+            "battery_level": ping.battery_level,
+            "battery_charging": ping.battery_charging,
+            "network_type": ping.network_type,
+            "device": f"{device.brand} {device.device_id}".strip() if device else "",
+            "os_version": device.os_version if device else "",
+            "app_version": device.app_version if device else "",
+            "ping_count": row["ping_count"],
+            "is_online": row["is_online"],
+            "history_url": reverse("dashboard:operator_location_history", args=[user.id]),
+        })
+    return JsonResponse({"rows": data, "online_count": sum(1 for r in data if r["is_online"])})
 
 
 @login_required
@@ -514,9 +565,12 @@ def operator_location_history(request, user_id):
     from django.contrib.auth.models import User
 
     operator = get_object_or_404(User, pk=user_id)
-    pings = operator.location_pings.all()[:200]
+    pings = list(operator.location_pings.all()[:200])
+    points_json = json.dumps([
+        {"lat": float(p.latitude), "lng": float(p.longitude)} for p in reversed(pings)
+    ])
     return render(
         request,
         "dashboard/operator_location_history.html",
-        {"operator": operator, "pings": pings},
+        {"operator": operator, "pings": pings, "points_json": points_json},
     )

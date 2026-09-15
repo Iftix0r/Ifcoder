@@ -28,9 +28,21 @@ class TaskStatusSerializer(serializers.Serializer):
 class LocationPingSerializer(serializers.ModelSerializer):
     class Meta:
         model = LocationPing
-        fields = ["latitude", "longitude", "accuracy", "recorded_at"]
+        fields = [
+            "latitude", "longitude", "accuracy", "recorded_at",
+            "battery_level", "battery_charging", "network_type",
+        ]
+        extra_kwargs = {
+            "battery_level": {"required": False},
+            "battery_charging": {"required": False},
+            "network_type": {"required": False},
+        }
 
 
 class DeviceTokenSerializer(serializers.Serializer):
     fcm_token = serializers.CharField(max_length=255)
     device_id = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    brand = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    os_version = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    sdk_int = serializers.IntegerField(required=False, allow_null=True)
+    app_version = serializers.CharField(max_length=50, required=False, allow_blank=True)

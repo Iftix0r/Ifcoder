@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import uz.ifcoder.operator.App
 import uz.ifcoder.operator.R
 import uz.ifcoder.operator.data.ApiClient
+import uz.ifcoder.operator.data.DeviceInfo
 import uz.ifcoder.operator.data.DeviceTokenRequest
 import uz.ifcoder.operator.ui.TaskListActivity
 
@@ -27,7 +28,14 @@ class FcmService : FirebaseMessagingService() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 ApiClient.api().registerDeviceToken(
-                    DeviceTokenRequest(fcm_token = token, device_id = android.os.Build.MODEL)
+                    DeviceTokenRequest(
+                        fcm_token = token,
+                        device_id = android.os.Build.MODEL,
+                        brand = DeviceInfo.brand(),
+                        os_version = DeviceInfo.osVersion(),
+                        sdk_int = DeviceInfo.sdkInt(),
+                        app_version = DeviceInfo.appVersion(),
+                    )
                 )
             } catch (e: Exception) {
                 // Keyingi ochilishda (masalan LoginActivity) qayta urinib ko'riladi.

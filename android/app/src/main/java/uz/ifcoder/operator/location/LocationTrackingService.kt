@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import uz.ifcoder.operator.App
 import uz.ifcoder.operator.R
 import uz.ifcoder.operator.data.ApiClient
+import uz.ifcoder.operator.data.DeviceInfo
 import uz.ifcoder.operator.data.LocationPingRequest
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -42,12 +43,16 @@ class LocationTrackingService : Service() {
             val location = result.lastLocation ?: return
             scope.launch {
                 try {
+                    val (batteryLevel, batteryCharging) = DeviceInfo.batteryStatus(applicationContext)
                     ApiClient.api().postLocation(
                         LocationPingRequest(
                             latitude = location.latitude,
                             longitude = location.longitude,
                             accuracy = location.accuracy,
                             recorded_at = isoFormat(location.time),
+                            battery_level = batteryLevel,
+                            battery_charging = batteryCharging,
+                            network_type = DeviceInfo.networkType(applicationContext),
                         )
                     )
                 } catch (e: Exception) {

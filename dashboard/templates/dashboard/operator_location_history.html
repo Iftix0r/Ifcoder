@@ -3,6 +3,17 @@
 {% block title %}{{ operator.username }} — Joylashuv tarixi — Ifcoder Panel{% endblock %}
 {% block page_title %}Joylashuv tarixi{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  #history-map { width:100%; height:340px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:24px; }
+  .battery-pill { display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:12.5px; }
+  .battery-pill.low { color:var(--red); }
+  .battery-pill.ok { color:var(--muted); }
+  .battery-pill.charging { color:var(--green); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header" style="margin-bottom:20px;">
   <div>
@@ -14,6 +25,8 @@
   </div>
 </div>
 
+<div id="history-map"></div>
+
 <div class="table-wrap">
 <table>
   <thead>
@@ -21,6 +34,8 @@
       <th>Vaqt</th>
       <th>Koordinatalar</th>
       <th>Aniqlik</th>
+      <th>Batareyka</th>
+      <th>Tarmoq</th>
     </tr>
   </thead>
   <tbody>
@@ -33,11 +48,45 @@
         </a>
       </td>
       <td>{% if ping.accuracy %}±{{ ping.accuracy|floatformat:0 }} m{% else %}—{% endif %}</td>
+      <td>
+        {% if ping.battery_level != None %}
+        <span class="battery-pill {% if ping.battery_charging %}charging{% elif ping.battery_level <= 20 %}low{% else %}ok{% endif %}">
+          {% if ping.battery_charging %}⚡{% endif %}{{ ping.battery_level }}%
+        </span>
+        {% else %}—{% endif %}
+      </td>
+      <td>{{ ping.network_type|default:"—" }}</td>
     </tr>
     {% empty %}
-    <tr><td colspan="3">Joylashuv tarixi topilmadi.</td></tr>
+    <tr><td colspan="5">Joylashuv tarixi topilmadi.</td></tr>
     {% endfor %}
   </tbody>
 </table>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  var points = {{ points_json|safe }};
+  var map = L.map('history-map');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap',
+  }).addTo(map);
+
+  if (points.length) {
+    var latlngs = points.map(function (p) { return [p.lat, p.lng]; });
+    L.polyline(latlngs, { color: '#6366f1', weight: 3, opacity: 0.7 }).addTo(map);
+    L.circleMarker(latlngs[latlngs.length - 1], { radius: 8, color: '#10b981', fillColor: '#10b981', fillOpacity: 0.9 })
+      .addTo(map).bindPopup('Oxirgi ma\'lum joylashuv');
+    L.circleMarker(latlngs[0], { radius: 6, color: '#94a3b8', fillColor: '#94a3b8', fillOpacity: 0.7 })
+      .addTo(map).bindPopup('Eng eski nuqta (ro\'yxatdagi)');
+    map.fitBounds(latlngs, { maxZoom: 15, padding: [30, 30] });
+  } else {
+    map.setView([41.3111, 69.2797], 11);
+  }
+})();
+</script>
 {% endblock %}

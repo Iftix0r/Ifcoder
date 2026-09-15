@@ -3,32 +3,77 @@
 {% block title %}Operatorlar joylashuvi — Ifcoder Panel{% endblock %}
 {% block page_title %}Operatorlar joylashuvi{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  #operator-map { width:100%; height:380px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:24px; }
+  .battery-pill { display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:12.5px; }
+  .battery-pill.low { color:var(--red); }
+  .battery-pill.ok { color:var(--muted); }
+  .battery-pill.charging { color:var(--green); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header" style="margin-bottom:20px;">
   <div>
     <h1>Operatorlar joylashuvi</h1>
-    <div class="sub">Mobil ilova orqali yuborilgan oxirgi joylashuv ma'lumotlari</div>
+    <div class="sub">Mobil ilova orqali yuborilgan qurilma, batareyka va joylashuv ma'lumotlari &middot; har 20 soniyada avtomatik yangilanadi</div>
   </div>
 </div>
+
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin-bottom:24px;">
+  <div class="card">
+    <div class="card-top"><div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zM2 8a6 6 0 1112 0A6 6 0 012 8z"/></svg></div></div>
+    <div class="value" id="stat-total">{{ rows|length }}</div>
+    <div class="label">Jami operator</div>
+  </div>
+  <div class="card stat-green">
+    <div class="card-top"><div class="icon"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="6"/></svg></div></div>
+    <div class="value" id="stat-online">{{ online_count }}</div>
+    <div class="label">Hozir onlayn</div>
+  </div>
+</div>
+
+<div id="operator-map"></div>
 
 <div class="table-wrap">
 <table>
   <thead>
     <tr>
       <th>Operator</th>
+      <th>Qurilma</th>
+      <th>Ilova versiyasi</th>
+      <th>Batareyka</th>
+      <th>Holat</th>
+      <th>Joylashuv soni</th>
       <th>Oxirgi ko'rilgan</th>
-      <th>Koordinatalar</th>
       <th style="text-align:right;">Amallar</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody id="operator-rows">
     {% for row in rows %}
-    <tr>
+    <tr data-user-id="{{ row.user.id }}">
       <td>{{ row.user.get_full_name|default:row.user.username }}</td>
-      <td>{{ row.last_ping.recorded_at|date:"d.m.Y H:i" }}</td>
+      <td>
+        {% if row.device %}
+          {{ row.device.brand }} {{ row.device.device_id }}
+          {% if row.device.os_version %}<br><span style="font-size:11.5px;color:var(--muted);">Android {{ row.device.os_version }}</span>{% endif %}
+        {% else %}—{% endif %}
+      </td>
+      <td>{{ row.device.app_version|default:"—" }}</td>
+      <td>
+        {% if row.last_ping.battery_level != None %}
+        <span class="battery-pill {% if row.last_ping.battery_charging %}charging{% elif row.last_ping.battery_level <= 20 %}low{% else %}ok{% endif %}">
+          {% if row.last_ping.battery_charging %}⚡{% endif %}{{ row.last_ping.battery_level }}%
+        </span>
+        {% else %}—{% endif %}
+      </td>
+      <td><span class="badge {% if row.is_online %}active{% else %}inactive{% endif %}">{% if row.is_online %}Onlayn{% else %}Oflayn{% endif %}</span></td>
+      <td>{{ row.ping_count }}</td>
       <td>
         <a href="https://maps.google.com/?q={{ row.last_ping.latitude|unlocalize }},{{ row.last_ping.longitude|unlocalize }}" target="_blank" rel="noopener">
-          {{ row.last_ping.latitude|unlocalize }}, {{ row.last_ping.longitude|unlocalize }}
+          {{ row.last_ping.recorded_at|date:"d.m.Y H:i" }}
         </a>
       </td>
       <td style="text-align:right;">
@@ -36,9 +81,83 @@
       </td>
     </tr>
     {% empty %}
-    <tr><td colspan="4">Hali hech qanday joylashuv ma'lumoti kelmagan.</td></tr>
+    <tr><td colspan="8">Hali hech qanday joylashuv ma'lumoti kelmagan.</td></tr>
     {% endfor %}
   </tbody>
 </table>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  var LIVE_URL = "{% url 'dashboard:operator_locations_live' %}";
+  var POLL_MS = 20000;
+
+  var map = L.map('operator-map');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap',
+  }).addTo(map);
+  map.setView([41.3111, 69.2797], 11); // Toshkent — ma'lumot kelguncha standart markaz
+
+  var markers = {};
+
+  function batteryHtml(row) {
+    if (row.battery_level === null || row.battery_level === undefined) return '—';
+    var cls = row.battery_charging ? 'charging' : (row.battery_level <= 20 ? 'low' : 'ok');
+    return '<span class="battery-pill ' + cls + '">' + (row.battery_charging ? '⚡' : '') + row.battery_level + '%</span>';
+  }
+
+  function upsertMarker(row) {
+    var latlng = [row.latitude, row.longitude];
+    if (markers[row.user_id]) {
+      markers[row.user_id].setLatLng(latlng);
+    } else {
+      markers[row.user_id] = L.circleMarker(latlng, {
+        radius: 8,
+        color: row.is_online ? '#10b981' : '#94a3b8',
+        fillColor: row.is_online ? '#10b981' : '#94a3b8',
+        fillOpacity: 0.85,
+      }).addTo(map);
+    }
+    markers[row.user_id].setStyle({ color: row.is_online ? '#10b981' : '#94a3b8', fillColor: row.is_online ? '#10b981' : '#94a3b8' });
+    markers[row.user_id].bindPopup(
+      '<b>' + row.name + '</b><br>' + row.device + '<br>' + row.recorded_at + '<br>' + batteryHtml(row)
+    );
+  }
+
+  function renderTable(rows) {
+    var tbody = document.getElementById('operator-rows');
+    if (!rows.length) return;
+    rows.forEach(function (row) {
+      var tr = tbody.querySelector('tr[data-user-id="' + row.user_id + '"]');
+      if (!tr) return; // yangi operator — keyingi to'liq sahifa yangilanishida ko'rinadi
+      var cells = tr.children;
+      cells[3].innerHTML = batteryHtml(row);
+      cells[4].innerHTML = '<span class="badge ' + (row.is_online ? 'active' : 'inactive') + '">' + (row.is_online ? 'Onlayn' : 'Oflayn') + '</span>';
+      cells[5].textContent = row.ping_count;
+      cells[6].innerHTML = '<a href="https://maps.google.com/?q=' + row.latitude + ',' + row.longitude + '" target="_blank" rel="noopener">' + row.recorded_at + '</a>';
+    });
+  }
+
+  function refresh() {
+    fetch(LIVE_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        document.getElementById('stat-online').textContent = data.online_count;
+        document.getElementById('stat-total').textContent = data.rows.length;
+        renderTable(data.rows);
+        data.rows.forEach(upsertMarker);
+        var pts = data.rows.map(function (r) { return [r.latitude, r.longitude]; });
+        if (pts.length) map.fitBounds(pts, { maxZoom: 13, padding: [30, 30] });
+      })
+      .catch(function () {});
+  }
+
+  refresh();
+  setInterval(refresh, POLL_MS);
+})();
+</script>
 {% endblock %}

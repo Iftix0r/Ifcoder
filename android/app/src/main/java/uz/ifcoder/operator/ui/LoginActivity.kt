@@ -16,6 +16,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import uz.ifcoder.operator.R
 import uz.ifcoder.operator.data.ApiClient
+import uz.ifcoder.operator.data.DeviceInfo
 import uz.ifcoder.operator.data.DeviceTokenRequest
 import uz.ifcoder.operator.data.LoginRequest
 import uz.ifcoder.operator.location.LocationTrackingService
@@ -73,7 +74,14 @@ class LoginActivity : AppCompatActivity() {
                 val pending = ApiClient.tokens().takePendingFcmToken() ?: fetchFcmToken()
                 if (!pending.isNullOrBlank()) {
                     ApiClient.api().registerDeviceToken(
-                        DeviceTokenRequest(fcm_token = pending, device_id = Build.MODEL)
+                        DeviceTokenRequest(
+                            fcm_token = pending,
+                            device_id = Build.MODEL,
+                            brand = DeviceInfo.brand(),
+                            os_version = DeviceInfo.osVersion(),
+                            sdk_int = DeviceInfo.sdkInt(),
+                            app_version = DeviceInfo.appVersion(),
+                        )
                     )
                 }
             } catch (e: Exception) {
