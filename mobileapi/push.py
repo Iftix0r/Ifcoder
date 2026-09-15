@@ -21,12 +21,19 @@ def _get_app():
         return _firebase_app
     if not settings.FIREBASE_CREDENTIALS_FILE:
         return None
-    import firebase_admin
-    from firebase_admin import credentials
+    try:
+        import firebase_admin
+        from firebase_admin import credentials
 
-    cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_FILE)
-    _firebase_app = firebase_admin.initialize_app(cred)
-    return _firebase_app
+        cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_FILE)
+        _firebase_app = firebase_admin.initialize_app(cred)
+        return _firebase_app
+    except Exception as e:
+        # Fayl topilmadi, JSON buzilgan yoki noto'g'ri kalit — bu xatolik avval
+        # jim yutilib ketardi (chaqiruvchilar tashqi try/except bilan o'ralgan),
+        # shuning uchun bu yerda aniq log qilib qo'yamiz.
+        logger.error(f"Firebase ilovasini ishga tushirishda xatolik ({settings.FIREBASE_CREDENTIALS_FILE}): {e}")
+        return None
 
 
 def send_data_message(fcm_token: str, data: dict, notification: dict = None) -> bool:
