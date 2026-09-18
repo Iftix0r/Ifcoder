@@ -75,6 +75,9 @@ urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     path('googlecb3a790b25376a2f.html', google_site_verification, name='google_site_verification'),
+    # Ko'p brauzer va qidiruv tizimlari /static/ orqali emas, saytning ildizidan
+    # to'g'ridan-to'g'ri /favicon.ico so'raydi — shuning uchun alohida yo'l kerak.
+    path('favicon.ico', serve, {'document_root': settings.BASE_DIR / 'static', 'path': 'favicon.ico'}, name='favicon'),
     path('bots/telegram/webhook/', telegram_webhook, name='telegram_webhook_root'),
     path('admin/', admin.site.urls),
     path('accounts/login/', ThrottledLoginView.as_view(), name='login'),
