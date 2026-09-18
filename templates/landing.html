@@ -1,9 +1,93 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="uz">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ifcoder — Raqamli Yechimlar, Veb Dasturlash & CRM Tizimlar</title>
+<title>Ifcoder — Veb Dasturlash, CRM va Telegram Bot Yechimlari O'zbekistonda</title>
+<meta name="description" content="Ifcoder — O'zbekistonda biznesingiz uchun zamonaviy veb-saytlar, veb-ilovalar, CRM va avtomatizatsiya tizimlari, Telegram botlar hamda AI integratsiyasi yaratuvchi raqamli agentlik. Bepul konsultatsiya oling.">
+<meta name="keywords" content="veb sayt yaratish, veb dasturlash, CRM tizim, Telegram bot yaratish, AI integratsiya, dasturlash agentligi, O'zbekiston, Toshkent, ifcoder">
+<meta name="robots" content="index, follow">
+<meta name="author" content="Ifcoder">
+<link rel="canonical" href="https://iftix0r.uz/">
+<meta name="google-site-verification" content="yhYIRl_LKulLm3YEWRkQgn1HRBZH8x_70LA0FkCJ5sE" />
+
+<!-- Open Graph / Facebook, Telegram -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://iftix0r.uz/">
+<meta property="og:site_name" content="Ifcoder">
+<meta property="og:locale" content="uz_UZ">
+<meta property="og:title" content="Ifcoder — Veb Dasturlash, CRM va Telegram Bot Yechimlari">
+<meta property="og:description" content="Biznesingiz uchun zamonaviy veb-saytlar, CRM tizimlar, Telegram botlar va AI integratsiyasi. Bepul konsultatsiya oling.">
+<meta property="og:image" content="https://iftix0r.uz{% static 'og-image.png' %}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ifcoder — Veb Dasturlash, CRM va Telegram Bot Yechimlari">
+<meta name="twitter:description" content="Biznesingiz uchun zamonaviy veb-saytlar, CRM tizimlar, Telegram botlar va AI integratsiyasi. Bepul konsultatsiya oling.">
+<meta name="twitter:image" content="https://iftix0r.uz{% static 'og-image.png' %}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Ifcoder",
+  "url": "https://iftix0r.uz/",
+  "image": "https://iftix0r.uz{% static 'og-image.png' %}",
+  "description": "Veb-saytlar, veb-ilovalar, CRM va avtomatizatsiya tizimlari, Telegram botlar hamda AI integratsiyasi yaratuvchi raqamli agentlik.",
+  "areaServed": {
+    "@type": "Country",
+    "name": "O'zbekiston"
+  },
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "UZ"
+  },
+  "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Veb-sayt yoki CRM tizim yaratish qancha vaqt oladi?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Loyihaning murakkabligiga qarab oddiy landing sayt 3-7 kunda, to'liq CRM yoki SaaS platforma esa 2-6 haftada tayyor bo'ladi."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Telegram bot yaratish narxi qanday belgilanadi?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Narx botning funksionalligiga (buyurtma qabul qilish, to'lov tizimlari, AI integratsiyasi va h.k.) bog'liq."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Tayyor loyihaga texnik yordam va yangilanishlar beriladimi?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ha, har bir loyihadan so'ng qo'llab-quvvatlash va yangi funksiyalar qo'shish xizmatini taklif qilamiz."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Faqat Toshkentdagi mijozlar bilan ishlaysizmi?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yo'q, biz butun O'zbekiston bo'ylab va xorijdagi mijozlar bilan ham masofadan turib ishlaymiz."
+      }
+    }
+  ]
+}
+</script>
+
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f46e5'/><stop offset='1' stop-color='%23818cf8'/></linearGradient></defs><rect width='64' height='64' rx='18' fill='url(%23g)'/><text x='32' y='45' font-family='sans-serif' font-size='38' font-weight='900' fill='%23ffffff' text-anchor='middle'>I</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -127,6 +211,38 @@
   .service-card h3 { font-size: 20px; font-weight: 800; margin: 0 0 10px; }
   .service-card p { color: var(--muted); font-size: 14.5px; margin: 0; }
 
+  /* PROCESS STEPS */
+  .process-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px;
+  }
+  .process-step {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 18px; padding: 26px 22px; text-align: center;
+  }
+  .process-step .step-num {
+    width: 40px; height: 40px; margin: 0 auto 16px; border-radius: 50%;
+    background: rgba(99, 102, 241, 0.15); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px;
+  }
+  .process-step h3 { font-size: 17px; font-weight: 800; margin: 0 0 8px; }
+  .process-step p { color: var(--muted); font-size: 14px; margin: 0; }
+
+  /* FAQ */
+  .faq-list { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  .faq-item {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 4px 22px;
+  }
+  .faq-item summary {
+    cursor: pointer; padding: 16px 0; font-weight: 700; font-size: 15.5px;
+    list-style: none;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: '+'; float: right; color: var(--accent); font-size: 20px; }
+  .faq-item[open] summary::after { content: '−'; }
+  .faq-item p { color: var(--muted); font-size: 14.5px; margin: 0 0 18px; }
+
   /* CONTACT FORM SECTION */
   .contact-box {
     background: var(--panel); border: 1px solid var(--border);
@@ -177,6 +293,8 @@
   </div>
   <nav class="nav-links">
     <a href="#services">Xizmatlar</a>
+    <a href="#process">Ish Jarayoni</a>
+    <a href="#faq">Savollar</a>
     <a href="#contact">Ariza Qoldirish</a>
   </nav>
   <div class="btn-group">
@@ -230,6 +348,62 @@
     </div>
   </section>
 
+  <!-- PROCESS -->
+  <section class="section" id="process">
+    <div class="section-title">
+      <h2>Ish Jarayonimiz</h2>
+      <p>Loyihangiz g'oyadan ishlab turgan mahsulotgacha qanday bosqichlardan o'tadi</p>
+    </div>
+    <div class="process-grid">
+      <div class="process-step">
+        <div class="step-num">1</div>
+        <h3>Konsultatsiya</h3>
+        <p>Biznesingiz ehtiyojlarini o'rganamiz va eng maqbul texnik yechimni taklif qilamiz.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">2</div>
+        <h3>Dizayn va Reja</h3>
+        <p>UI/UX dizayn va texnik topshiriqni tayyorlab, muddat hamda narxni kelishamiz.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">3</div>
+        <h3>Dasturlash</h3>
+        <p>Zamonaviy texnologiyalar asosida sayt, CRM yoki botni bosqichma-bosqich ishlab chiqamiz.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">4</div>
+        <h3>Yetkazib Berish va Qo'llab-quvvatlash</h3>
+        <p>Loyihani ishga tushiramiz va undan keyin ham texnik yordam ko'rsatishda davom etamiz.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="section-title">
+      <h2>Ko'p So'raladigan Savollar</h2>
+      <p>Ifcoder xizmatlari haqida qisqacha javoblar</p>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>Veb-sayt yoki CRM tizim yaratish qancha vaqt oladi?</summary>
+        <p>Loyihaning murakkabligiga qarab oddiy landing sayt 3-7 kunda, to'liq CRM yoki SaaS platforma esa 2-6 haftada tayyor bo'ladi. Aniq muddat konsultatsiyadan so'ng kelishiladi.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Telegram bot yaratish narxi qanday belgilanadi?</summary>
+        <p>Narx botning funksionalligiga (buyurtma qabul qilish, to'lov tizimlari, AI integratsiyasi va h.k.) bog'liq. Aniq hisob-kitob uchun forma orqali murojaat qoldiring.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Tayyor loyihaga texnik yordam va yangilanishlar beriladimi?</summary>
+        <p>Ha, har bir loyihadan so'ng qo'llab-quvvatlash va yangi funksiyalar qo'shish xizmatini taklif qilamiz.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Faqat Toshkentdagi mijozlar bilan ishlaysizmi?</summary>
+        <p>Yo'q, biz butun O'zbekiston bo'ylab va xorijdagi mijozlar bilan ham masofadan turib ishlaymiz.</p>
+      </details>
+    </div>
+  </section>
+
   <!-- CONTACT FORM -->
   <section class="section" id="contact">
     <div class="section-title">
@@ -271,6 +445,7 @@
 </main>
 
 <footer>
+  <p style="margin:0 0 10px;">Ifcoder — O'zbekistonda veb-sayt, CRM va Telegram bot yaratish agentligi</p>
   &copy; 2026 Ifcoder Digital Agency. Barcha huquqlar himoyalangan.
 </footer>
 

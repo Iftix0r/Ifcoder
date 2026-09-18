@@ -25,8 +25,34 @@ from portal.views import landing_view
 
 
 def robots_txt(request):
-    # Bu shaxsiy CRM/boshqaruv paneli — qidiruv tizimlari indekslamasligi kerak.
-    return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain")
+    # Faqat ochiq landing sahifa (/) qidiruv tizimlariga ko'rinadi — CRM/boshqaruv
+    # paneli, mijoz kabineti va API kabi shaxsiy bo'limlar indekslanmasligi kerak.
+    lines = [
+        "User-agent: *",
+        "Allow: /$",
+        "Disallow: /panel/",
+        "Disallow: /admin/",
+        "Disallow: /portal/",
+        "Disallow: /accounts/",
+        "Disallow: /api/",
+        "Disallow: /tickets/",
+        "Disallow: /bots/",
+        "Disallow: /media/",
+        "",
+        f"Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
+def sitemap_xml(request):
+    site_url = f"{request.scheme}://{request.get_host()}"
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"  <url><loc>{site_url}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n"
+        "</urlset>\n"
+    )
+    return HttpResponse(xml, content_type="application/xml")
 
 
 from django.conf import settings
@@ -38,6 +64,7 @@ from bots.views import telegram_webhook
 
 urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     path('bots/telegram/webhook/', telegram_webhook, name='telegram_webhook_root'),
     path('admin/', admin.site.urls),
     path('accounts/login/', ThrottledLoginView.as_view(), name='login'),

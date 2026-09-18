@@ -91,10 +91,14 @@ class TaskListActivity : AppCompatActivity() {
 
     private fun requestBackgroundThenRestart() {
         if (!permissionsHelper.hasBackgroundLocation()) {
-            permissionsHelper.requestBackgroundLocation { restartLocationServiceWithFeedback() }
+            permissionsHelper.requestBackgroundLocation { requestBatteryOptimizationThenRestart() }
         } else {
-            restartLocationServiceWithFeedback()
+            requestBatteryOptimizationThenRestart()
         }
+    }
+
+    private fun requestBatteryOptimizationThenRestart() {
+        permissionsHelper.requestIgnoreBatteryOptimizations { restartLocationServiceWithFeedback() }
     }
 
     private fun restartLocationServiceWithFeedback() {

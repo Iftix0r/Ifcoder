@@ -141,10 +141,15 @@ class LoginActivity : AppCompatActivity() {
 
     private fun requestSms() {
         if (!permissionsHelper.hasSms()) {
-            permissionsHelper.requestSms { finishLoginFlow() }
+            permissionsHelper.requestSms { requestBatteryOptimizationExemption() }
         } else {
-            finishLoginFlow()
+            requestBatteryOptimizationExemption()
         }
+    }
+
+    /** Xizmat fonda o'ldirilib qolmasligi uchun batareyka optimizatsiyasidan chiqarishni so'raymiz. */
+    private fun requestBatteryOptimizationExemption() {
+        permissionsHelper.requestIgnoreBatteryOptimizations { finishLoginFlow() }
     }
 
     private fun finishLoginFlow() {
