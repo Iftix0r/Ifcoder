@@ -1,0 +1,10 @@
+{# Tezkor qo'shish: {% include "planner/partials/quick_add.html" with planned_for=... project=... status=... %} #}
+<form hx-post="{% url 'task_quick' %}" hx-on::after-request="if (event.detail.successful) this.reset()" class="flex items-center gap-2 {{ class }}">
+  {% if planned_for %}<input type="hidden" name="planned_for" value="{{ planned_for|date:'Y-m-d' }}">{% endif %}
+  {% if project %}<input type="hidden" name="project" value="{{ project }}">{% endif %}
+  {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+  <label class="relative flex flex-1 items-center">
+    <span class="pointer-events-none absolute left-3 text-ink-3">{% icon "plus" "size-4" %}</span>
+    <input name="title" required maxlength="250" autocomplete="off" placeholder="{{ placeholder|default:'Vazifa qo‘shish va Enter…' }}" class="input h-10 border-dashed bg-transparent pl-9 shadow-none">
+  </label>
+</form>

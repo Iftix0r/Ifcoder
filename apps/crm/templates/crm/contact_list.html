@@ -1,0 +1,59 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Mijozlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Mijozlar</h1>
+    <p class="mt-1 text-sm text-ink-2">Mijozlar, potentsial mijozlar va hamkorlar — barcha aloqalar tarixi bilan.</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="{% url 'deal_board' %}" class="btn btn-secondary">{% icon "target" "size-4" %}Bitimlar</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'contact_create' %}" hx-target="#modal-content">{% icon "user-plus" "size-4" %}Mijoz qo'shish</button>
+  </div>
+</div>
+
+<div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between animate-fade-up">
+  <nav class="-mx-4 flex gap-5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0">
+    {% for value, label, n in tabs %}
+      <a href="?status={{ value }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="tab whitespace-nowrap {% if status == value %}is-active{% endif %}">{{ label }} <span class="text-xs text-ink-3">{{ n }}</span></a>
+    {% endfor %}
+  </nav>
+  <form method="get" hx-get="{% url 'contact_list' %}" hx-target="#contacts-region" hx-select="#contacts-region" hx-swap="outerHTML" hx-push-url="true" hx-trigger="input changed delay:300ms from:input[name=q]">
+    <input type="hidden" name="status" value="{{ status }}">
+    <label class="relative flex h-10 items-center lg:w-72">
+      <span class="pointer-events-none absolute left-3 text-ink-3">{% icon "search" "size-4" %}</span>
+      <input type="search" name="q" value="{{ q }}" placeholder="Ism, kompaniya, telefon, teg…" autocomplete="off" class="input h-10 pl-9">
+    </label>
+  </form>
+</div>
+
+<div id="contacts-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#contacts-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if contacts %}
+  <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    {% for c in contacts %}
+      <a href="{{ c.get_absolute_url }}" class="card card-hover group block p-4 animate-fade-up">
+        <div class="flex items-start gap-3">
+          <span class="avatar size-11 rounded-xl text-sm">{{ c.name|initials }}</span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[15px] font-semibold text-ink">{{ c.name }}</p>
+            <p class="truncate text-xs text-ink-3">{% if c.company %}{{ c.company }}{% if c.position %} · {{ c.position }}{% endif %}{% else %}{{ c.get_kind_display }} · {{ c.get_source_display }}{% endif %}</p>
+          </div>
+          <span class="badge {{ c.status_badge }}">{{ c.get_status_display }}</span>
+        </div>
+        <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-2">
+          {% if c.phone %}<span class="inline-flex items-center gap-1">{% icon "phone" "size-3.5 text-ink-3" %}{{ c.phone }}</span>{% endif %}
+          {% if c.telegram %}<span class="inline-flex items-center gap-1">{% icon "send" "size-3.5 text-ink-3" %}{{ c.telegram }}</span>{% endif %}
+        </div>
+        <div class="mt-3 flex items-center gap-2 border-t border-line pt-3 text-xs text-ink-3">
+          <span class="inline-flex items-center gap-1">{% icon "target" "size-3.5" %}{{ c.open_deals }} bitim</span>
+          <span class="inline-flex items-center gap-1">{% icon "folder-kanban" "size-3.5" %}{{ c.project_count }} loyiha</span>
+          {% if c.next_contact %}<span class="badge {{ c.next_contact|due_badge }} ml-auto">{% icon "bell" "size-3" %}{{ c.next_contact|due_label }}</span>{% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="users" title="Mijozlar yo'q" text="Birinchi mijoz yoki potentsial mijozni qo'shing — keyin bitim va loyihalarni bog'laysiz." %}</div>
+{% endif %}
+</div>
+{% endblock %}

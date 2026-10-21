@@ -1,0 +1,7 @@
+{% extends "layouts/minimal.html" %}
+{% block content %}
+<span class="icon-chip tone-amber mx-auto size-14 rounded-2xl">{% icon "shield-alert" "size-6" %}</span>
+<h1 class="mt-5 text-2xl font-bold">Sahifa eskirgan</h1>
+<p class="mt-2 text-sm text-ink-2">Forma ikki marta yuborilgan yoki sessiya yangilangan bo'lishi mumkin. Sahifani qayta oching.</p>
+<a href="{{ continue_url }}" class="btn btn-primary mt-6">{% icon "refresh-cw" "size-4" %}Qayta ochish</a>
+{% endblock %}

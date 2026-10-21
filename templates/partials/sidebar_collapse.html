@@ -1,0 +1,7 @@
+<div class="border-t border-line p-3">
+  <button type="button" @click="$store.sidebar.toggle()" class="nav-link hidden w-full lg:flex {% if not mobile %}collapsed:justify-center collapsed:px-0{% endif %}" {% if mobile %}hidden{% endif %}>
+    <span class="collapsed:hidden">{% icon "panel-left-close" "size-[18px]" "1.9" %}</span>
+    <span class="hidden collapsed:inline">{% icon "panel-left-open" "size-[18px]" "1.9" %}</span>
+    <span class="collapsed:hidden">Menyuni yig'ish</span>
+  </button>
+</div>

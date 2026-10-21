@@ -1,0 +1,11 @@
+<div x-data x-cloak x-show="$store.modal.open" class="fixed inset-0 z-[70] flex items-end justify-center sm:items-center sm:p-4"
+     @keydown.escape.window="$store.modal.close()" role="dialog" aria-modal="true">
+  <div x-show="$store.modal.open" x-transition.opacity class="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" @click="$store.modal.close()"></div>
+  <div x-show="$store.modal.open" x-trap.noscroll="$store.modal.open"
+       x-transition:enter="transition duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-8 sm:translate-y-2 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+       x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 translate-y-8 sm:translate-y-0 sm:scale-95"
+       :class="{ 'sm:max-w-lg': $store.modal.size === 'md', 'sm:max-w-2xl': $store.modal.size === 'xl', 'sm:max-w-3xl': $store.modal.size === 'xxl' }"
+       class="relative max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-line bg-surface shadow-lift sm:rounded-2xl">
+    <div id="modal-content"></div>
+  </div>
+</div>

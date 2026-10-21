@@ -1,0 +1,79 @@
+<header class="sticky top-0 z-30 border-b border-line bg-canvas/75 backdrop-blur-xl">
+  <div class="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:px-6 lg:px-8">
+    <button type="button" class="btn btn-ghost btn-icon -ml-2 lg:hidden" @click="$store.sidebar.mobileOpen = true" aria-label="Menyuni ochish">
+      {% icon "menu" "size-5" %}
+    </button>
+
+    <button type="button" @click="$dispatch('palette:open')"
+            class="group hidden h-10 w-full max-w-md items-center gap-2.5 rounded-xl border border-line bg-surface px-3 text-sm text-ink-3 shadow-soft transition hover:border-line-strong hover:text-ink-2 sm:flex">
+      {% icon "search" "size-4" %}
+      <span class="truncate">Qidirish yoki bo'limga o'tish…</span>
+      <span class="ml-auto hidden items-center gap-1 sm:flex"><kbd class="kbd">Ctrl</kbd><kbd class="kbd">K</kbd></span>
+    </button>
+
+    <a href="{% url 'dashboard' %}" class="flex min-w-0 items-center gap-2 sm:hidden">
+      <span class="font-display truncate text-[15px] font-bold">Ifcoder</span>
+    </a>
+
+    <div class="ml-auto flex items-center gap-1">
+      {% include "planner/partials/timer_chip.html" %}
+
+      <button type="button" @click="$dispatch('palette:open')" class="btn btn-ghost btn-icon sm:hidden" aria-label="Qidirish">{% icon "search" "size-[18px]" %}</button>
+
+      {# Tez qo'shish #}
+      <div x-data="{ open: false }" class="relative">
+        <button type="button" @click="open = !open" class="btn btn-primary btn-sm btn-icon sm:w-auto sm:px-3" aria-label="Qo'shish">
+          {% icon "plus" "size-4" "2.5" %}<span class="hidden sm:inline">Qo'shish</span>
+        </button>
+        <div x-cloak x-show="open" @click.outside="open = false" @click="open = false" x-transition.origin.top.right class="popover absolute right-0 mt-2 w-56">
+          <button type="button" class="menu-item" hx-get="{% url 'task_create' %}" hx-target="#modal-content">{% icon "list-todo" "size-4" %} Vazifa <kbd class="kbd ml-auto">N</kbd></button>
+          <button type="button" class="menu-item" hx-get="{% url 'deal_create' %}" hx-target="#modal-content">{% icon "target" "size-4" %} Bitim</button>
+          <button type="button" class="menu-item" hx-get="{% url 'contact_create' %}" hx-target="#modal-content">{% icon "user-plus" "size-4" %} Mijoz</button>
+          <button type="button" class="menu-item" hx-get="{% url 'project_create' %}" hx-target="#modal-content">{% icon "folder-plus" "size-4" %} Loyiha</button>
+          <div class="my-1 h-px bg-line"></div>
+          <button type="button" class="menu-item" hx-get="{% url 'transaction_create' %}?kind=income" hx-target="#modal-content">{% icon "trending-up" "size-4 text-emerald-500" %} Kirim</button>
+          <button type="button" class="menu-item" hx-get="{% url 'transaction_create' %}?kind=expense" hx-target="#modal-content">{% icon "trending-down" "size-4 text-rose-500" %} Chiqim</button>
+          <div class="my-1 h-px bg-line"></div>
+          <button type="button" class="menu-item" hx-get="{% url 'note_create' %}" hx-target="#modal-content">{% icon "sticky-note" "size-4" %} Eslatma</button>
+          <button type="button" class="menu-item" hx-get="{% url 'note_create' %}?kind=idea" hx-target="#modal-content">{% icon "lightbulb" "size-4" %} G'oya</button>
+        </div>
+      </div>
+
+      {# Tema #}
+      <button type="button" @click="$store.theme.cycle()" class="btn btn-ghost btn-icon"
+              :title="{light: 'Yorug\' rejim', dark: 'Qorong\'i rejim', system: 'Tizim rejimi'}[$store.theme.mode]" aria-label="Temani almashtirish">
+        <span x-show="$store.theme.mode === 'light'">{% icon "sun" "size-[18px]" %}</span>
+        <span x-cloak x-show="$store.theme.mode === 'dark'">{% icon "moon" "size-[18px]" %}</span>
+        <span x-cloak x-show="$store.theme.mode === 'system'">{% icon "monitor" "size-[18px]" %}</span>
+      </button>
+
+      {# Foydalanuvchi #}
+      <div x-data="{ open: false }" class="relative ml-1">
+        <button type="button" @click="open = !open" class="flex items-center gap-2.5 rounded-xl p-1 pr-2 transition hover:bg-surface-2" aria-label="Profil menyusi">
+          <span class="avatar size-8 text-xs">{{ user.get_full_name|default:user.username|initials }}</span>
+          <span class="hidden text-left leading-tight md:block">
+            <span class="block text-[13px] font-semibold text-ink">{{ user.first_name|default:user.username }}</span>
+            <span class="block text-[11px] text-ink-3">Dasturchi</span>
+          </span>
+          <span class="hidden text-ink-3 md:block">{% icon "chevron-down" "size-4" %}</span>
+        </button>
+        <div x-cloak x-show="open" @click.outside="open = false" x-transition.origin.top.right class="popover absolute right-0 mt-2 w-60">
+          <div class="px-2.5 pt-1.5 pb-2.5">
+            <p class="truncate text-sm font-semibold text-ink">{{ user.get_full_name|default:user.username }}</p>
+            <p class="truncate text-xs text-ink-3">{{ user.email|default:"@"|add:user.username }}</p>
+          </div>
+          <div class="my-1 h-px bg-line"></div>
+          <a href="{% url 'settings' %}" class="menu-item">{% icon "settings" "size-4" %} Sozlamalar</a>
+          <a href="{% url 'vault_list' %}" class="menu-item">{% icon "shield-check" "size-4" %} Xavfsizlik va kalitlar</a>
+          <a href="{% url 'admin:index' %}" hx-boost="false" class="menu-item">{% icon "database" "size-4" %} Ma'lumotlar bazasi</a>
+          <a href="{% url 'landing' %}" hx-boost="false" class="menu-item">{% icon "globe" "size-4" %} Ochiq sahifa</a>
+          <div class="my-1 h-px bg-line"></div>
+          <form method="post" action="{% url 'logout' %}" hx-boost="false">
+            {% csrf_token %}
+            <button class="menu-item text-rose-500 hover:text-rose-600">{% icon "log-out" "size-4" %} Chiqish</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

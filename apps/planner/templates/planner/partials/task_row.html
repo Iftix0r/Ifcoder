@@ -1,0 +1,24 @@
+<li class="group flex items-start gap-3 px-4 py-3 transition hover:bg-surface-2/50 {% if t.is_done %}opacity-60{% endif %}">
+  <button type="button" hx-post="{% url 'task_toggle' t.pk %}" class="check mt-0.5 {% if t.is_done %}is-done{% endif %}" aria-label="Bajarildi">
+    {% if t.is_done %}{% icon "check" "size-3.5" "3" %}{% endif %}
+  </button>
+  <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'task_edit' t.pk %}" hx-target="#modal-content">
+    <p class="text-sm font-medium text-ink {% if t.is_done %}line-through decoration-ink-3/50{% endif %}">{{ t.title }}</p>
+    <div class="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-3">
+      {% if t.priority >= 3 %}<span class="inline-flex items-center gap-0.5 font-semibold {{ t.priority_color }}">{% icon "flag" "size-3" "2.5" %}{{ t.get_priority_display }}</span>{% endif %}
+      {% if t.project %}<span class="inline-flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 font-medium text-ink-2"><span class="size-1.5 rounded-full {{ t.project.tone|dot }}"></span>{{ t.project.name }}</span>{% endif %}
+      {% if t.contact %}<span class="inline-flex items-center gap-1">{% icon "user" "size-3" %}{{ t.contact.name }}</span>{% endif %}
+      {% if t.due_date and not t.is_done %}<span class="badge {{ t.due_date|due_badge }}">{% icon "calendar-clock" "size-3" %}{{ t.due_date|due_label }}</span>{% endif %}
+      {% if t.status == "doing" %}<span class="badge badge-warning">Jarayonda</span>{% endif %}
+      {% if t.estimate %}<span class="inline-flex items-center gap-0.5">{% icon "clock" "size-3" %}{{ t.estimate }} daq</span>{% endif %}
+    </div>
+  </div>
+  {% if not t.is_done %}
+  <div class="flex shrink-0 items-center gap-0.5 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+    {% if show_plan and t.planned_for != today %}
+      <button type="button" hx-post="{% url 'task_plan' t.pk %}" hx-vals='{"when": "today"}' class="btn btn-ghost btn-icon btn-sm" title="Bugunga rejalash">{% icon "sun" "size-4" %}</button>
+    {% endif %}
+    <button type="button" hx-post="{% url 'timer_start' t.pk %}" class="btn btn-ghost btn-icon btn-sm" title="Taymerni boshlash">{% icon "play" "size-4" %}</button>
+  </div>
+  {% endif %}
+</li>

@@ -1,0 +1,32 @@
+<div class="card relative overflow-hidden animate-fade-up" x-data>
+  <div class="bg-brand-gradient pointer-events-none absolute -top-16 -right-16 size-40 rounded-full opacity-15 blur-3xl"></div>
+  <div class="card-body">
+    <div class="flex items-center justify-between">
+      <p class="card-title">Fokus taymer</p>
+      <div class="segmented">
+        <button type="button" @click="$store.pomodoro.set('focus')" :class="$store.pomodoro.mode === 'focus' && 'is-active'">25 daq</button>
+        <button type="button" @click="$store.pomodoro.set('break')" :class="$store.pomodoro.mode === 'break' && 'is-active'">Tanaffus</button>
+      </div>
+    </div>
+    <div class="mt-5 flex items-center gap-5">
+      <div class="relative size-24 shrink-0">
+        <svg viewBox="0 0 36 36" class="size-24 -rotate-90">
+          <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" stroke-width="3" class="text-surface-3"></circle>
+          <circle cx="18" cy="18" r="15.5" fill="none" stroke="url(#pomo)" stroke-width="3" stroke-linecap="round" stroke-dasharray="97.4" :style="`stroke-dashoffset: ${97.4 - 97.4 * $store.pomodoro.percent / 100}`" style="stroke-dashoffset: 97.4"></circle>
+          <defs><linearGradient id="pomo" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>
+        </svg>
+        <span class="absolute inset-0 flex items-center justify-center font-mono text-lg font-bold tabular-nums" x-text="$store.pomodoro.display">25:00</span>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm text-ink-2" x-text="$store.pomodoro.mode === 'focus' ? 'Bitta vazifaga to‘liq e‘tibor. Telefon — uzoqda.' : 'Turing, suv iching, ko‘zni dam oldiring.'"></p>
+        <div class="mt-3 flex gap-2">
+          <button type="button" class="btn btn-primary btn-sm" @click="$store.pomodoro.toggle()">
+            <span x-show="!$store.pomodoro.running" class="flex items-center gap-1.5">{% icon "play" "size-3.5" %}Boshlash</span>
+            <span x-cloak x-show="$store.pomodoro.running" class="flex items-center gap-1.5">{% icon "pause" "size-3.5" %}Pauza</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm btn-icon" @click="$store.pomodoro.set($store.pomodoro.mode)" aria-label="Qayta">{% icon "rotate-ccw" "size-3.5" %}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

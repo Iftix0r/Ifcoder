@@ -1,0 +1,18 @@
+<nav class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" aria-label="Mobil menyu">
+  <ul class="mx-auto grid max-w-md grid-cols-5">
+    {% for item in mobile_nav %}
+      <li>
+        <a href="{{ item.href }}" {% if nav_active == item.key %}aria-current="page"{% endif %} class="flex flex-col items-center gap-0.5 pt-1.5 pb-2 text-[10.5px] font-medium transition {% if nav_active == item.key %}text-brand-600 dark:text-brand-300{% else %}text-ink-3 hover:text-ink{% endif %}">
+          <span class="flex h-7 w-12 items-center justify-center rounded-full transition {% if nav_active == item.key %}bg-brand-500/12 dark:bg-brand-500/20{% endif %}">{% icon item.icon "size-[21px]" "1.8" %}</span>
+          <span class="max-w-full truncate px-1">{{ item.short|default:item.label }}</span>
+        </a>
+      </li>
+    {% endfor %}
+    <li>
+      <button type="button" @click="$store.sidebar.mobileOpen = true" class="flex w-full flex-col items-center gap-0.5 pt-1.5 pb-2 text-[10.5px] font-medium text-ink-3 hover:text-ink">
+        <span class="flex h-7 w-12 items-center justify-center">{% icon "layout-grid" "size-[21px]" "1.8" %}</span>
+        <span>Menyu</span>
+      </button>
+    </li>
+  </ul>
+</nav>

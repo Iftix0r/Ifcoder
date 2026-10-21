@@ -1,0 +1,15 @@
+{% extends "components/form_modal.html" %}
+{% block size %}xl{% endblock %}
+{% block extra_body %}
+  {% if task %}
+  <div class="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface-2/50 p-3">
+    {% if running_timer.task_id == task.pk %}
+      <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'timer_stop' %}">{% icon "square" "size-3.5" %}Taymerni to'xtatish</button>
+    {% elif not task.is_done %}
+      <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'timer_start' task.pk %}">{% icon "play" "size-3.5" %}Taymerni boshlash</button>
+    {% endif %}
+    <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'task_toggle' task.pk %}" @click="$store.modal.close()">{% if task.is_done %}{% icon "rotate-ccw" "size-3.5" %}Qayta ochish{% else %}{% icon "check" "size-3.5" %}Bajarildi{% endif %}</button>
+    <span class="ml-auto text-xs text-ink-3">Yaratilgan: {{ task.created_at|date:"j E, H:i" }}</span>
+  </div>
+  {% endif %}
+{% endblock %}

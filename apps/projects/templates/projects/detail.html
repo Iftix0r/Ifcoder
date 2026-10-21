@@ -1,0 +1,132 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}{{ project.name }}{% endblock %}
+{% block content %}
+<div id="project-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#project-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<a href="{% url 'project_list' %}" class="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-3 transition hover:text-ink">{% icon "arrow-left" "size-4" %}Loyihalar</a>
+
+<div class="card relative mb-4 overflow-hidden animate-fade-up">
+  <div class="h-1.5 w-full {{ project.tone|dot }}"></div>
+  <div class="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-start">
+    <div class="min-w-0 flex-1">
+      <div class="flex flex-wrap items-center gap-2">
+        <h1 class="text-2xl font-bold tracking-tight">{{ project.name }}</h1>
+        <span class="badge {{ project.status_badge }}">{{ project.get_status_display }}</span>
+        <span class="badge badge-neutral">{{ project.get_kind_display }}</span>
+      </div>
+      {% if project.contact %}<a href="{{ project.contact.get_absolute_url }}" class="mt-1 inline-flex items-center gap-1.5 text-sm text-ink-2 hover:text-brand-600">{% icon "user" "size-3.5" %}{{ project.contact.name }}</a>{% endif %}
+      {% if project.description %}<p class="prose-note mt-3 max-w-3xl">{{ project.description|linkify }}</p>{% endif %}
+      {% if project.stack_list %}<div class="mt-3 flex flex-wrap gap-1.5">{% for s in project.stack_list %}<span class="rounded-md border border-line bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-ink-2">{{ s }}</span>{% endfor %}</div>{% endif %}
+      <div class="mt-4 flex flex-wrap gap-2">
+        {% if project.repo_url %}<a href="{{ project.repo_url }}" target="_blank" rel="noopener" hx-boost="false" class="btn btn-secondary btn-sm">{% icon "github" "size-3.5" %}Repozitoriy</a>{% endif %}
+        {% if project.live_url %}<a href="{{ project.live_url }}" target="_blank" rel="noopener" hx-boost="false" class="btn btn-secondary btn-sm">{% icon "external-link" "size-3.5" %}Sayt</a>{% endif %}
+      </div>
+    </div>
+    <div class="flex shrink-0 gap-2">
+      <button type="button" class="btn btn-secondary" hx-get="{% url 'project_edit' project.pk %}" hx-target="#modal-content">{% icon "pencil" "size-4" %}Tahrirlash</button>
+      <button type="button" class="btn btn-primary" hx-get="{% url 'task_create' %}?project={{ project.pk }}" hx-target="#modal-content">{% icon "plus" "size-4" %}Vazifa</button>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 border-t border-line lg:grid-cols-5">
+    <div class="col-span-2 border-b border-line p-4 lg:col-span-1 lg:border-r lg:border-b-0">
+      <div class="flex items-center justify-between text-xs text-ink-3"><span>Progress</span><span class="font-bold text-ink">{{ progress }}%</span></div>
+      <div class="progress mt-2"><span style="width: {{ progress }}%"></span></div>
+    </div>
+    <div class="border-r border-line p-4"><p class="text-xs text-ink-3">Muddat</p><p class="mt-1 text-sm font-bold">{% if project.deadline %}{{ project.deadline|date:"j M Y" }}{% if project.status != "done" %} <span class="badge {{ project.deadline|due_badge }}">{{ project.deadline|due_label }}</span>{% endif %}{% else %}—{% endif %}</p></div>
+    <div class="p-4 lg:border-r lg:border-line"><p class="text-xs text-ink-3">Sarflangan vaqt</p><p class="mt-1 text-sm font-bold">{{ hours|hours }}</p></div>
+    <div class="border-t border-r border-line p-4 lg:border-t-0"><p class="text-xs text-ink-3">Byudjet</p><p class="mt-1 text-sm font-bold">{% if project.budget %}{{ project.budget|money:project.currency }}{% else %}—{% endif %}</p></div>
+    <div class="border-t border-line p-4 lg:border-t-0"><p class="text-xs text-ink-3">Tushum / xarajat</p><p class="mt-1 text-sm font-bold"><span class="text-emerald-600 dark:text-emerald-400">{{ income|totals }}</span> <span class="text-ink-3">/</span> <span class="text-rose-500">{{ expense|totals }}</span></p></div>
+  </div>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-5">
+  <div class="space-y-4 lg:col-span-3">
+    <div class="card overflow-hidden animate-fade-up">
+      <div class="card-header"><p class="card-title">Vazifalar</p><a href="{% url 'task_board' %}?project={{ project.pk }}" class="badge badge-neutral hover:text-ink">Kanban →</a></div>
+      <div class="border-b border-line p-3">{% include "planner/partials/quick_add.html" with project=project.pk %}</div>
+      {% if open_tasks %}
+        <ul class="divide-y divide-line">{% for t in open_tasks %}{% include "planner/partials/task_row.html" with show_plan=True %}{% endfor %}</ul>
+      {% else %}
+        <p class="px-5 py-6 text-center text-sm text-ink-3">Ochiq vazifa yo'q. Keyingi qadamni yozing.</p>
+      {% endif %}
+      {% if done_tasks %}
+        <details class="group border-t border-line">
+          <summary class="flex cursor-pointer items-center gap-2 px-5 py-3 text-sm font-medium text-ink-3 hover:text-ink">{% icon "chevron-right" "size-4 transition group-open:rotate-90" %}Bajarilganlar ({{ done_tasks|length }})</summary>
+          <ul class="divide-y divide-line">{% for t in done_tasks %}{% include "planner/partials/task_row.html" %}{% endfor %}</ul>
+        </details>
+      {% endif %}
+    </div>
+
+    <div class="card overflow-hidden animate-fade-up">
+      <div class="card-header">
+        <p class="card-title">Moliya</p>
+        <div class="flex gap-1">
+          <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'transaction_create' %}?kind=income&project={{ project.pk }}{% if project.contact %}&contact={{ project.contact_id }}{% endif %}" hx-target="#modal-content">{% icon "plus" "size-3.5 text-emerald-500" %}Kirim</button>
+          <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'transaction_create' %}?kind=expense&project={{ project.pk }}" hx-target="#modal-content">{% icon "minus" "size-3.5 text-rose-500" %}Chiqim</button>
+        </div>
+      </div>
+      {% if transactions %}
+        <ul class="divide-y divide-line">{% for tx in transactions %}{% include "finance/partials/tx_row.html" %}{% endfor %}</ul>
+      {% else %}<p class="px-5 py-6 text-center text-sm text-ink-3">Hali to'lov yoki xarajat yozilmagan.</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="space-y-4 lg:col-span-2">
+    <div class="card overflow-hidden animate-fade-up">
+      <div class="card-header"><p class="card-title">Eslatmalar</p><button type="button" class="btn btn-ghost btn-sm btn-icon" hx-get="{% url 'note_create' %}?project={{ project.pk }}" hx-target="#modal-content" aria-label="Eslatma">{% icon "plus" "size-4" %}</button></div>
+      {% if notes %}
+        <ul class="divide-y divide-line">
+          {% for n in notes %}
+            <li class="flex cursor-pointer items-center gap-3 px-5 py-3 transition hover:bg-surface-2/50" hx-get="{% url 'note_view' n.pk %}" hx-target="#modal-content">
+              <span class="icon-chip {{ n.tone }} size-8 rounded-lg">{% icon n.icon "size-4" %}</span>
+              <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ n.title }}</span>
+              <span class="text-xs text-ink-3">{{ n.updated_at|ago }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}<p class="px-5 py-6 text-center text-sm text-ink-3">TZ, arxitektura, kod parchalari — shu yerda.</p>{% endif %}
+    </div>
+
+    <div class="card overflow-hidden animate-fade-up">
+      <div class="card-header"><p class="card-title">Infratuzilma va kalitlar</p>
+        <div class="flex gap-1">
+          <button type="button" class="btn btn-ghost btn-sm btn-icon" hx-get="{% url 'resource_create' %}?project={{ project.pk }}" hx-target="#modal-content" title="Resurs" aria-label="Resurs">{% icon "server" "size-4" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm btn-icon" hx-get="{% url 'secret_create' %}?project={{ project.pk }}" hx-target="#modal-content" title="Kalit" aria-label="Kalit">{% icon "key-round" "size-4" %}</button>
+        </div>
+      </div>
+      {% if resources or secrets %}
+        <ul class="divide-y divide-line">
+          {% for r in resources %}
+            <li class="flex cursor-pointer items-center gap-3 px-5 py-3 transition hover:bg-surface-2/50" hx-get="{% url 'resource_edit' r.pk %}" hx-target="#modal-content">
+              <span class="icon-chip tone-cyan size-8 rounded-lg">{% icon r.icon "size-4" %}</span>
+              <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ r.name }}</span>
+              {% if r.renews_on %}<span class="badge {{ r.renews_on|due_badge }}">{{ r.renews_on|date:"j M Y" }}</span>{% endif %}
+            </li>
+          {% endfor %}
+          {% for s in secrets %}
+            <li><a href="{% url 'vault_list' %}?q={{ s.name|urlencode }}" class="flex items-center gap-3 px-5 py-3 transition hover:bg-surface-2/50">
+              <span class="icon-chip tone-amber size-8 rounded-lg">{% icon s.icon "size-4" %}</span>
+              <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ s.name }}</span>
+              <span class="font-mono text-xs text-ink-3">••••••</span>
+            </a></li>
+          {% endfor %}
+        </ul>
+      {% else %}<p class="px-5 py-6 text-center text-sm text-ink-3">Domen, server va API kalitlarni loyihaga bog'lang.</p>{% endif %}
+    </div>
+
+    {% if deals or invoices %}
+    <div class="card overflow-hidden animate-fade-up">
+      <div class="card-header"><p class="card-title">Bitim va hisob-fakturalar</p><a href="{% url 'invoice_create' %}?project={{ project.pk }}{% if project.contact %}&contact={{ project.contact_id }}{% endif %}" class="btn btn-ghost btn-sm btn-icon" aria-label="Hisob-faktura">{% icon "receipt-text" "size-4" %}</a></div>
+      <ul class="divide-y divide-line">
+        {% for d in deals %}
+          <li class="flex cursor-pointer items-center gap-3 px-5 py-3 hover:bg-surface-2/50" hx-get="{% url 'deal_edit' d.pk %}" hx-target="#modal-content">{% icon "target" "size-4 text-violet-500" %}<span class="min-w-0 flex-1 truncate text-sm">{{ d.title }}</span><span class="text-sm font-semibold">{{ d.value|money:d.currency }}</span></li>
+        {% endfor %}
+        {% for inv in invoices %}
+          <li><a href="{{ inv.get_absolute_url }}" class="flex items-center gap-3 px-5 py-3 hover:bg-surface-2/50">{% icon "receipt-text" "size-4 text-ink-3" %}<span class="font-mono text-xs">{{ inv.number }}</span><span class="badge {{ inv.status_badge }}">{{ inv.status_label }}</span><span class="ml-auto text-sm font-semibold">{{ inv.total|money:inv.currency }}</span></a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+</div>
+{% endblock %}

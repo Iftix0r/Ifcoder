@@ -1,0 +1,77 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Vaqt hisobi{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Vaqt hisobi</h1>
+    <p class="mt-1 text-sm text-ink-2">Qayerga vaqt ketayotganini ko'ring — soatbay narx va reja uchun.</p>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <nav class="segmented">
+      <a href="?period=week" class="{% if period == 'week' %}is-active{% endif %}">Bu hafta</a>
+      <a href="?period=month" class="{% if period == 'month' %}is-active{% endif %}">Bu oy</a>
+      <a href="?period=30" class="{% if period == '30' %}is-active{% endif %}">30 kun</a>
+    </nav>
+    {% if not running_timer %}<button type="button" class="btn btn-secondary" hx-post="{% url 'timer_start_free' %}">{% icon "play" "size-4" %}Taymer</button>{% endif %}
+    <button type="button" class="btn btn-primary" hx-get="{% url 'entry_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Qo'lda yozish</button>
+  </div>
+</div>
+
+<div id="time-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#time-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="card lg:col-span-2 animate-fade-up">
+    <div class="card-header">
+      <div><p class="card-title">Oxirgi 14 kun</p><p class="text-xs text-ink-3">Kunlik ishlangan vaqt</p></div>
+      <span class="badge badge-brand">{{ start|date:"j M" }} dan jami: {{ total_hours|hours }}</span>
+    </div>
+    <div class="relative h-56 px-5 pt-6 pb-8">
+      <div class="absolute inset-x-5 top-6 bottom-8 flex flex-col justify-between">{% for i in "1234" %}<div class="border-t border-dashed border-line"></div>{% endfor %}</div>
+      <div class="relative flex h-full items-end gap-1.5">
+        {% for p in chart %}
+          <div class="group relative flex h-full flex-1 items-end justify-center" title="{{ p.date|date:'j M' }}: {{ p.minutes|stringformat:'d' }} daq">
+            <div class="bg-brand-gradient w-full max-w-7 rounded-t-md {% if not p.minutes %}opacity-20{% endif %}" style="height: {% if p.minutes %}{{ p.height }}{% else %}3{% endif %}%"></div>
+            <span class="absolute top-full mt-2 text-[10px] text-ink-3">{{ p.date|date:"j" }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="card animate-fade-up">
+    <div class="card-header"><p class="card-title">Loyihalar bo'yicha</p></div>
+    <div class="card-body space-y-3.5">
+      {% for p in projects %}
+        <div>
+          <div class="mb-1.5 flex items-center justify-between text-xs"><span class="flex items-center gap-1.5 font-medium text-ink-2"><span class="size-2 rounded-full {{ p.tone|dot }}"></span>{{ p.name }}</span><span class="font-semibold">{{ p.hours|hours }}</span></div>
+          <div class="progress"><span style="width: {{ p.minutes|pct:total }}%"></span></div>
+        </div>
+      {% empty %}
+        <p class="py-6 text-center text-sm text-ink-3">Bu davrda vaqt yozilmagan.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4 overflow-hidden animate-fade-up">
+  <div class="card-header"><p class="card-title">Yozuvlar</p><span class="badge badge-neutral">{{ entries|length }}</span></div>
+  {% if entries %}
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead><tr><th>Ish</th><th>Loyiha</th><th>Sana</th><th class="text-right">Davomiyligi</th></tr></thead>
+      <tbody>
+        {% for e in entries %}
+          <tr class="cursor-pointer" hx-get="{% url 'entry_edit' e.pk %}" hx-target="#modal-content">
+            <td class="font-medium text-ink">{% if e.is_running %}<span class="badge badge-warning mr-1">ishlayapti</span>{% endif %}{{ e.label }}</td>
+            <td>{% if e.project %}<span class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full {{ e.project.tone|dot }}"></span>{{ e.project }}</span>{% else %}—{% endif %}</td>
+            <td class="whitespace-nowrap">{{ e.started_at|date:"j M, H:i" }}{% if e.ended_at %}–{{ e.ended_at|time:"H:i" }}{% endif %}</td>
+            <td class="text-right font-semibold whitespace-nowrap text-ink">{{ e.hours|hours }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {% include "components/empty_state.html" with icon="timer" title="Hali vaqt yozilmagan" text="Vazifa yonidagi ▶ tugmasi bilan taymerni ishga tushiring." %}
+  {% endif %}
+</div>
+</div>
+{% endblock %}

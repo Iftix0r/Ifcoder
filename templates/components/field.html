@@ -1,0 +1,19 @@
+{# {% include "components/field.html" with field=form.name %} — ixtiyoriy: hint, prefix, suffix, extra #}
+<div class="{% if field.errors %}has-error{% endif %} {{ wrapper_class }}">
+  {% if field.label %}<label for="{{ field.id_for_label }}" class="label">{{ field.label }}{% if not field.field.required %} <span class="font-normal text-ink-3">(ixtiyoriy)</span>{% endif %}</label>{% endif %}
+  {% if prefix or suffix %}
+    <div class="relative flex items-center">
+      {% if prefix %}<span class="pointer-events-none absolute left-3.5 text-ink-3">{% icon prefix "size-4" %}</span>{% endif %}
+      <div class="w-full {% if prefix %}[&_.input]:pl-10{% endif %} {% if suffix %}[&_.input]:pr-24{% endif %}">{{ field }}</div>
+      {% if suffix %}<span class="pointer-events-none absolute right-3.5 text-sm text-ink-3">{{ suffix }}</span>{% endif %}
+    </div>
+  {% else %}
+    {{ field }}
+  {% endif %}
+  {{ extra }}
+  {% for error in field.errors %}
+    <p class="error-text">{% icon "circle-alert" "size-3.5" %} {{ error }}</p>
+  {% empty %}
+    {% if hint %}<p class="help-text">{{ hint }}</p>{% elif field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+  {% endfor %}
+</div>

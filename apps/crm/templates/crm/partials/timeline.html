@@ -1,0 +1,32 @@
+<div id="timeline">
+  <form hx-post="{% url 'activity_add' contact.pk %}" hx-target="#timeline" hx-swap="outerHTML" class="space-y-2 border-b border-line p-4">
+    {% csrf_token %}
+    {{ activity_form.text }}
+    <div class="flex items-center gap-2">
+      <div class="w-40">{{ activity_form.kind }}</div>
+      <button class="btn btn-primary btn-sm ml-auto">{% icon "send" "size-3.5" %}Yozish</button>
+    </div>
+  </form>
+  {% if activities %}
+    <ol class="relative space-y-0 p-4">
+      {% for a in activities %}
+        <li class="group relative flex gap-3 pb-5 last:pb-0">
+          {% if not forloop.last %}<span class="absolute top-8 bottom-0 left-4 w-px bg-line"></span>{% endif %}
+          <span class="icon-chip {% if a.kind == 'stage' %}tone-violet{% elif a.kind == 'call' %}tone-emerald{% elif a.kind == 'meeting' %}tone-amber{% elif a.kind == 'message' %}tone-cyan{% else %}tone-brand{% endif %} relative size-8 shrink-0 rounded-lg">{% icon a.icon "size-4" %}</span>
+          <div class="min-w-0 flex-1 pt-0.5">
+            <div class="flex items-center gap-2 text-xs text-ink-3">
+              <span class="font-semibold text-ink-2">{{ a.get_kind_display }}</span>
+              <span>{{ a.created_at|date:"j M, H:i" }}</span>
+              {% if a.kind != 'stage' %}
+                <button type="button" hx-post="{% url 'activity_delete' a.pk %}" hx-target="#timeline" hx-swap="outerHTML" hx-confirm="Yozuv o'chirilsinmi?" class="ml-auto rounded p-0.5 opacity-0 transition group-hover:opacity-100 hover:text-rose-500" aria-label="O'chirish">{% icon "x" "size-3.5" %}</button>
+              {% endif %}
+            </div>
+            <p class="prose-note mt-0.5 text-ink">{{ a.text|linkify }}</p>
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="px-5 py-8 text-center text-sm text-ink-3">Hali yozuv yo'q. Qo'ng'iroq, uchrashuv yoki kelishuvlarni shu yerga yozib boring.</p>
+  {% endif %}
+</div>

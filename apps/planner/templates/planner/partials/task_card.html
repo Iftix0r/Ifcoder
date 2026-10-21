@@ -1,0 +1,26 @@
+<article data-card="{{ t.pk }}" data-move-url="{% url 'task_move' t.pk %}" draggable="true"
+         hx-get="{% url 'task_edit' t.pk %}" hx-target="#modal-content" hx-trigger="click"
+         class="group cursor-grab rounded-xl border border-line bg-surface p-3 shadow-soft transition duration-200 select-none hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift active:cursor-grabbing">
+  <div class="flex items-start gap-2">
+    <p class="min-w-0 flex-1 text-[13.5px] leading-snug font-semibold text-ink {% if t.is_done %}text-ink-3 line-through{% endif %}">{{ t.title }}</p>
+    {% if t.priority >= 3 %}<span class="{{ t.priority_color }}" title="{{ t.get_priority_display }}">{% icon "flag" "size-3.5" "2.5" %}</span>{% endif %}
+  </div>
+  {% if t.project or t.contact %}
+  <div class="mt-2 flex flex-wrap items-center gap-1.5">
+    {% if t.project %}<span class="inline-flex max-w-full items-center gap-1 truncate rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-ink-2"><span class="size-1.5 shrink-0 rounded-full {{ t.project.tone|dot }}"></span>{{ t.project.name }}</span>{% endif %}
+    {% if t.contact %}<span class="inline-flex items-center gap-1 text-[11px] text-ink-3">{% icon "user" "size-3" %}{{ t.contact.name }}</span>{% endif %}
+  </div>
+  {% endif %}
+  <div class="mt-2.5 flex items-center justify-between gap-2 text-[11px] text-ink-3">
+    {% if t.is_done %}
+      <span class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">{% icon "circle-check" "size-3" %}{{ t.completed_at|ago }}</span>
+    {% elif t.due_date %}
+      <span class="badge {{ t.due_date|due_badge }}">{{ t.due_date|due_label }}</span>
+    {% elif t.planned_for %}
+      <span class="flex items-center gap-1">{% icon "sun" "size-3" %}{{ t.planned_for|due_label }}</span>
+    {% else %}<span></span>{% endif %}
+    {% if not t.is_done %}
+      <button type="button" hx-post="{% url 'timer_start' t.pk %}" @click.stop class="rounded-md p-1 opacity-0 transition group-hover:opacity-100 hover:bg-surface-2 hover:text-ink" title="Taymer">{% icon "play" "size-3.5" %}</button>
+    {% endif %}
+  </div>
+</article>

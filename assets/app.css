@@ -1,0 +1,372 @@
+/* Ifcoder dizayn tizimi — Tailwind CSS v4 (AIMarkaz bilan bir xil tokenlar).
+   Build: npm run css  (natija: static/dist/app.css — repoga qo'shiladi, serverda Node kerak emas) */
+
+@import "tailwindcss";
+
+@source "../templates";
+@source "../apps";
+@source "../static/js";
+
+@custom-variant dark (&:where(.dark, .dark *));
+/* Sidebar yig'ilgan holati: <html class="sb-collapsed"> */
+@custom-variant collapsed (&:where(.sb-collapsed, .sb-collapsed *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+
+  /* Brend: indigo → violet */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+  --color-brand-950: #1e1b4b;
+  --color-violet-brand: #8b5cf6;
+  --color-accent: #06b6d4;
+
+  /* Semantik tokenlar (dark mode'da pastda qayta belgilanadi) */
+  --color-canvas: #f7f8fb;
+  --color-surface: #ffffff;
+  --color-surface-2: #f2f4f8;
+  --color-surface-3: #e9ecf3;
+  --color-line: #e4e7ef;
+  --color-line-strong: #d3d8e3;
+  --color-ink: #0f172a;
+  --color-ink-2: #475569;
+  --color-ink-3: #94a3b8;
+
+  --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 6px 20px -8px rgb(15 23 42 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.04), 0 18px 40px -14px rgb(15 23 42 / 0.18);
+  --shadow-glow: 0 8px 30px -6px rgb(99 102 241 / 0.55);
+
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+}
+
+@layer base {
+  .dark {
+    --color-canvas: #07080d;
+    --color-surface: #0e1017;
+    --color-surface-2: #151822;
+    --color-surface-3: #1c2030;
+    --color-line: #1f2433;
+    --color-line-strong: #2b3245;
+    --color-ink: #eef1f8;
+    --color-ink-2: #a3acc2;
+    --color-ink-3: #636d86;
+    --shadow-soft: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-lift: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 20px 50px -12px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scrollbar-gutter: stable;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  ::selection {
+    @apply bg-brand-500/20;
+  }
+  [x-cloak] {
+    display: none !important;
+  }
+  /* Grid elementlari uzun matn (truncate, nowrap) tufayli ustundan chiqib ketmasin — mobil gorizontal scroll'ning asosiy sababi */
+  :where(.grid) > * {
+    min-width: 0;
+  }
+  /* sr-only radio/checkbox (segment tugmalar) scroll konteyneridan "qochib" sahifani kengaytirmasin */
+  :where(label):has(> .sr-only) {
+    position: relative;
+  }
+  :focus-visible {
+    @apply outline-none;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+}
+
+@layer components {
+  /* --- Tugmalar --- */
+  .btn {
+    @apply relative inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold whitespace-nowrap select-none
+      transition-all duration-200 ease-out
+      focus-visible:ring-4 focus-visible:ring-brand-500/25
+      active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply text-white shadow-[0_1px_0_rgb(255_255_255/0.2)_inset,0_6px_18px_-6px_rgb(99_102_241/0.7)]
+      hover:shadow-[0_1px_0_rgb(255_255_255/0.2)_inset,0_10px_26px_-6px_rgb(99_102_241/0.8)] hover:brightness-110;
+    background-image: linear-gradient(135deg, var(--color-brand-500), var(--color-violet-brand));
+  }
+  .btn-secondary {
+    @apply border border-line bg-surface text-ink shadow-soft hover:border-line-strong hover:bg-surface-2;
+  }
+  .btn-ghost {
+    @apply text-ink-2 hover:bg-surface-2 hover:text-ink;
+  }
+  .btn-danger {
+    @apply bg-rose-500 text-white shadow-[0_6px_18px_-6px_rgb(244_63_94/0.6)] hover:bg-rose-600;
+  }
+  .btn-sm { @apply h-8 rounded-lg px-3 text-xs; }
+  .btn-lg { @apply h-12 rounded-2xl px-6 text-[15px]; }
+  .btn-icon { @apply size-10 px-0; }
+  .btn-icon.btn-sm { @apply size-8; }
+
+  /* --- Kartalar --- */
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-soft;
+  }
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift;
+  }
+  .card-header {
+    @apply flex items-center justify-between gap-3 border-b border-line px-5 py-4;
+  }
+  .card-title {
+    @apply text-[15px] font-semibold text-ink;
+  }
+  .card-body { @apply p-5; }
+
+  /* --- Formalar --- */
+  .label {
+    @apply mb-1.5 block text-[13px] font-medium text-ink;
+  }
+  .input {
+    @apply block h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-sm text-ink shadow-[0_1px_2px_rgb(15_23_42/0.04)]
+      transition duration-200 placeholder:text-ink-3
+      hover:border-line-strong
+      focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 focus:outline-none
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .input.textarea { @apply h-auto py-2.5 leading-relaxed; }
+  .input.select {
+    @apply appearance-none bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+  .input.has-error, .has-error .input {
+    @apply border-rose-400 focus:border-rose-500 focus:ring-rose-500/15;
+  }
+  .checkbox {
+    @apply size-4 rounded border-line-strong text-brand-600 accent-brand-600;
+  }
+  .help-text { @apply mt-1.5 text-xs text-ink-3; }
+  .error-text { @apply mt-1.5 flex items-center gap-1 text-xs font-medium text-rose-500; }
+
+  /* --- Belgilar --- */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 whitespace-nowrap text-[11px] font-semibold leading-4 ring-1 ring-inset;
+  }
+  .badge-brand { @apply bg-brand-500/10 text-brand-600 ring-brand-500/20 dark:text-brand-300; }
+  .badge-success { @apply bg-emerald-500/10 text-emerald-600 ring-emerald-500/20 dark:text-emerald-400; }
+  .badge-warning { @apply bg-amber-500/10 text-amber-600 ring-amber-500/25 dark:text-amber-400; }
+  .badge-danger { @apply bg-rose-500/10 text-rose-600 ring-rose-500/20 dark:text-rose-400; }
+  .badge-neutral { @apply bg-surface-2 text-ink-2 ring-line; }
+
+  .kbd {
+    @apply inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-line bg-surface-2 px-1 font-sans text-[10px] font-semibold text-ink-3;
+  }
+
+  /* --- Avatar --- */
+  .avatar {
+    @apply inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold text-white;
+    background-image: linear-gradient(135deg, var(--color-brand-500), var(--color-violet-brand));
+  }
+
+  /* --- Sidebar navigatsiya --- */
+  .nav-link {
+    @apply relative flex h-9 items-center gap-3 rounded-xl px-2.5 text-[13.5px] font-medium text-ink-2 transition-colors duration-150
+      hover:bg-surface-2 hover:text-ink;
+  }
+  .nav-link.is-active {
+    @apply bg-brand-500/10 text-brand-700 dark:bg-brand-500/15 dark:text-white;
+  }
+  .nav-link.is-active::before {
+    content: "";
+    @apply absolute top-1.5 -left-3 h-6 w-1 rounded-r-full;
+    background-image: linear-gradient(180deg, var(--color-brand-500), var(--color-violet-brand));
+  }
+  .nav-link.is-active svg { @apply text-brand-600 dark:text-brand-300; }
+  /* Menyu uzun bo'lsa — yuqori/pastki chekka yumshoq so'nadi (scroll borligini bildiradi) */
+  .nav-scroll {
+    mask-image: linear-gradient(to bottom, transparent, #000 14px, #000 calc(100% - 28px), transparent);
+  }
+
+  /* --- Tablar --- */
+  .tab {
+    @apply relative inline-flex h-10 items-center gap-2 px-1 text-sm font-medium text-ink-3 transition-colors hover:text-ink;
+  }
+  .tab.is-active {
+    @apply text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-brand-500;
+  }
+
+  /* --- Skeleton --- */
+  .skeleton {
+    @apply rounded-lg animate-shimmer;
+    background-image: linear-gradient(90deg, var(--color-surface-2) 0%, var(--color-surface-3) 50%, var(--color-surface-2) 100%);
+    background-size: 200% 100%;
+  }
+
+  /* --- Dropdown / popover --- */
+  .popover {
+    @apply rounded-2xl border border-line bg-surface p-1.5 shadow-lift;
+  }
+  .menu-item {
+    @apply flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink;
+  }
+
+  /* --- Jadval --- */
+  .table {
+    @apply w-full text-left text-sm tabular-nums;
+  }
+  .table th {
+    @apply border-b border-line bg-surface-2/60 px-3 py-2.5 text-[11px] sm:px-4 font-semibold tracking-wider text-ink-3 uppercase first:rounded-tl-2xl last:rounded-tr-2xl;
+  }
+  .table td {
+    @apply border-b border-line px-3 py-3 text-ink-2 sm:px-4;
+  }
+  .table tbody tr { @apply transition-colors hover:bg-surface-2/50; }
+  .table tbody tr:last-child td { @apply border-b-0; }
+
+  /* --- Yordamchi effektlar --- */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(120deg, var(--color-brand-500) 0%, var(--color-violet-brand) 50%, var(--color-accent) 100%);
+  }
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, var(--color-brand-500), var(--color-violet-brand));
+  }
+  .glass {
+    @apply border border-white/40 bg-white/60 backdrop-blur-xl backdrop-saturate-150 dark:border-white/[0.06] dark:bg-white/[0.03];
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, var(--color-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-line) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, black 40%, transparent);
+  }
+  .mask-radial {
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  }
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--color-brand-500), var(--color-violet-brand), var(--color-accent));
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+
+  /* Ikon "chip" — KPI kartalari uchun */
+  .icon-chip {
+    @apply inline-flex size-10 items-center justify-center rounded-xl ring-1 ring-inset;
+  }
+  .tone-brand { @apply bg-brand-500/10 text-brand-600 ring-brand-500/15 dark:text-brand-300; }
+  .tone-emerald { @apply bg-emerald-500/10 text-emerald-600 ring-emerald-500/15 dark:text-emerald-400; }
+  .tone-amber { @apply bg-amber-500/10 text-amber-600 ring-amber-500/15 dark:text-amber-400; }
+  .tone-cyan { @apply bg-cyan-500/10 text-cyan-600 ring-cyan-500/15 dark:text-cyan-400; }
+  .tone-rose { @apply bg-rose-500/10 text-rose-600 ring-rose-500/15 dark:text-rose-400; }
+  .tone-violet { @apply bg-violet-500/10 text-violet-600 ring-violet-500/15 dark:text-violet-400; }
+}
+
+/* HTMX + View Transitions: sahifalar orasida silliq o'tish */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(main) {
+    animation: 120ms ease-out both vt-out;
+  }
+  ::view-transition-new(main) {
+    animation: 260ms cubic-bezier(0.22, 1, 0.36, 1) both vt-in;
+  }
+}
+@keyframes vt-out { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+#main { view-transition-name: main; }
+
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator, .htmx-request.htmx-indicator { display: inline-block; }
+
+/* Yuqoridagi yuklanish chizig'i */
+#progress-bar {
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.4s ease, opacity 0.3s ease;
+}
+html.is-loading #progress-bar { transform: scaleX(0.7); transition: transform 8s cubic-bezier(0.1, 0.8, 0.2, 1); }
+html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --- Ifcoder qo'shimchalari --- */
+@layer components {
+  .progress {
+    @apply h-1.5 overflow-hidden rounded-full bg-surface-3;
+  }
+  .progress > span {
+    @apply bg-brand-gradient block h-full rounded-full transition-[width] duration-700;
+  }
+  .segmented {
+    @apply inline-flex items-center gap-0.5 rounded-xl border border-line bg-surface-2/60 p-0.5;
+  }
+  .segmented > a, .segmented > button {
+    @apply inline-flex h-8 items-center gap-1.5 rounded-[10px] px-3 text-[13px] font-medium text-ink-3 transition hover:text-ink;
+  }
+  .segmented > .is-active {
+    @apply bg-surface text-ink shadow-soft ring-1 ring-line;
+  }
+  .prose-note {
+    @apply text-sm leading-relaxed whitespace-pre-wrap text-ink-2;
+  }
+  .code-block {
+    @apply overflow-x-auto rounded-xl border border-line bg-surface-2 p-4 font-mono text-[12.5px] leading-relaxed text-ink;
+  }
+  .check {
+    @apply flex size-5 shrink-0 items-center justify-center rounded-md border-2 border-line-strong text-white transition hover:border-brand-500;
+  }
+  .check.is-done {
+    @apply bg-brand-gradient border-transparent;
+  }
+}

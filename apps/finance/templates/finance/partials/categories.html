@@ -1,0 +1,22 @@
+<div id="categories" data-modal-size="md">
+  <div class="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-6 py-4 backdrop-blur">
+    <div class="flex items-center gap-3"><span class="icon-chip tone-violet">{% icon "tags" "size-5" %}</span><div><h2 class="text-base font-semibold">Toifalar</h2><p class="text-xs text-ink-3">Kirim va chiqim toifalari</p></div></div>
+    <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="$store.modal.close()" aria-label="Yopish">{% icon "x" "size-4" %}</button>
+  </div>
+  <form hx-post="{% url 'category_list' %}" hx-target="#categories" hx-swap="outerHTML" class="grid grid-cols-[1fr_auto] gap-2 border-b border-line px-6 py-4 sm:grid-cols-[1fr_8rem_7rem_auto]">
+    {% csrf_token %}
+    <div class="col-span-2 sm:col-span-1">{{ form.name }}</div>{{ form.kind }}{{ form.tone }}
+    <button class="btn btn-primary btn-icon" aria-label="Qo'shish">{% icon "plus" "size-4" %}</button>
+    {% for e in form.name.errors %}<p class="error-text col-span-full">{{ e }}</p>{% endfor %}
+  </form>
+  <ul class="divide-y divide-line px-2 py-2">
+    {% for c in categories %}
+      <li class="flex items-center gap-3 rounded-xl px-4 py-2.5">
+        <span class="size-2.5 rounded-full {{ c.tone|dot }}"></span>
+        <span class="flex-1 text-sm font-medium">{{ c.name }}</span>
+        <span class="badge {% if c.kind == 'income' %}badge-success{% else %}badge-danger{% endif %}">{{ c.get_kind_display }}</span>
+        <button type="button" hx-post="{% url 'category_delete' c.pk %}" hx-target="#categories" hx-swap="outerHTML" hx-confirm="«{{ c.name }}» o'chirilsinmi? Tranzaksiyalar toifasiz qoladi." class="btn btn-ghost btn-icon btn-sm text-ink-3 hover:text-rose-500" aria-label="O'chirish">{% icon "trash-2" "size-3.5" %}</button>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

@@ -1,0 +1,12 @@
+{% extends "components/form_modal.html" %}
+{% block extra_body %}
+  <div class="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface-2/50 p-3 text-sm">
+    <a href="{{ deal.contact.get_absolute_url }}" class="btn btn-secondary btn-sm" @click="$store.modal.close()">{% icon "user" "size-3.5" %}{{ deal.contact.name }}</a>
+    {% if deal.project %}
+      <a href="{{ deal.project.get_absolute_url }}" class="btn btn-secondary btn-sm" @click="$store.modal.close()">{% icon "folder-kanban" "size-3.5" %}{{ deal.project.name }}</a>
+    {% elif deal.stage == "won" %}
+      <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'project_create' %}?deal={{ deal.pk }}" hx-target="#modal-content">{% icon "folder-plus" "size-3.5" %}Loyiha ochish</button>
+    {% endif %}
+    <span class="ml-auto text-xs text-ink-3">{{ deal.created_at|date:"j E Y" }}</span>
+  </div>
+{% endblock %}

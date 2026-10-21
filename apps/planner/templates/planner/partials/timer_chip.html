@@ -1,0 +1,10 @@
+<div id="timer-chip" hx-get="{% url 'timer_chip' %}" hx-trigger="timer:changed from:body" hx-swap="outerHTML" hx-disinherit="*">
+  {% if running_timer %}
+    <div class="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 py-1 pr-1 pl-2.5 text-amber-700 dark:text-amber-300">
+      <span class="relative flex size-2"><span class="absolute inline-flex size-full animate-ping rounded-full bg-amber-500 opacity-60"></span><span class="relative inline-flex size-2 rounded-full bg-amber-500"></span></span>
+      <span class="hidden max-w-40 truncate text-xs font-medium md:inline" title="{{ running_timer.label }}">{{ running_timer.label }}</span>
+      <span class="font-mono text-xs font-semibold tabular-nums" x-data="ticker('{{ running_timer.started_at.isoformat }}')" x-text="text"></span>
+      <button type="button" hx-post="{% url 'timer_stop' %}" class="ml-0.5 flex size-7 items-center justify-center rounded-lg transition hover:bg-amber-500/20" title="To'xtatish" aria-label="Taymerni to'xtatish">{% icon "square" "size-3.5" "2.5" %}</button>
+    </div>
+  {% endif %}
+</div>

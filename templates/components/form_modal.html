@@ -1,0 +1,30 @@
+{% extends "components/modal_form.html" %}
+{% block size %}{{ size|default:"md" }}{% endblock %}
+{% block attrs %}hx-post="{{ action }}"{% if multipart %} hx-encoding="multipart/form-data"{% endif %}{% endblock %}
+{% block tone %}{{ tone }}{% endblock %}
+{% block icon %}{% icon icon "size-5" %}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
+{% block subtitle %}{{ subtitle }}{% endblock %}
+{% block body %}
+<div class="grid gap-4 sm:grid-cols-2">
+  {% for field in form.visible_fields %}
+    {% if field.field.is_checkbox %}
+      <label class="flex cursor-pointer items-center gap-2.5 rounded-xl border border-line bg-surface-2/40 px-3.5 py-3 text-sm font-medium text-ink sm:col-span-1">
+        {{ field }} {{ field.label }}
+      </label>
+    {% else %}
+      {% include "components/field.html" with field=field wrapper_class=field.field.wide|yesno:"sm:col-span-2," %}
+    {% endif %}
+  {% endfor %}
+  {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+</div>
+{% block extra_body %}{% endblock %}
+{% endblock %}
+{% block footer_left %}
+  {% if delete_url %}
+    <button type="button" class="btn btn-ghost mr-auto text-rose-500 hover:bg-rose-500/10 hover:text-rose-600"
+            hx-post="{{ delete_url }}" hx-confirm="Rostdan o'chirilsinmi? Bu amalni qaytarib bo'lmaydi." hx-target="#modal-content">
+      {% icon "trash-2" "size-4" %}<span class="hidden sm:inline">O'chirish</span>
+    </button>
+  {% endif %}
+{% endblock %}

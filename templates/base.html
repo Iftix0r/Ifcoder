@@ -1,0 +1,42 @@
+{% load static %}<!doctype html>
+<html lang="uz" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="theme-color" content="#6366f1">
+  <title>{% block title %}Ifcoder{% endblock %}</title>
+  <meta name="description" content="{% block description %}Ifcoder — dasturchining shaxsiy ish tizimi.{% endblock %}">
+  {% block robots %}{% endblock %}
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="icon" href="{% static 'img/favicon-32x32.png' %}" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'img/site.webmanifest' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme") || "system";
+        var d = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        var c = document.documentElement.classList;
+        c.toggle("dark", d);
+        if (localStorage.getItem("sidebar") === "collapsed") c.add("sb-collapsed");
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="{% static 'dist/app.css' %}">
+  <script defer src="{% static 'vendor/htmx.min.js' %}"></script>
+  <script defer src="{% static 'js/app.js' %}"></script>
+  <script defer src="{% static 'vendor/alpine-focus.min.js' %}"></script>
+  <script defer src="{% static 'vendor/alpine-collapse.min.js' %}"></script>
+  <script defer src="{% static 'vendor/alpine.min.js' %}"></script>
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}min-h-full{% endblock %}">
+  <div id="progress-bar" class="bg-brand-gradient pointer-events-none fixed inset-x-0 top-0 z-[100] h-0.5"></div>
+  {% block body %}{% endblock %}
+  {% include "partials/toasts.html" %}
+</body>
+</html>

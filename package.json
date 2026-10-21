@@ -1,0 +1,19 @@
+{
+  "name": "ifcoder",
+  "private": true,
+  "description": "Faqat lokal build uchun (serverda Node.js kerak emas)",
+  "scripts": {
+    "css": "tailwindcss -i assets/app.css -o static/dist/app.css --minify",
+    "css:watch": "tailwindcss -i assets/app.css -o static/dist/app.css --watch",
+    "vendor": "node scripts/vendor.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0",
+    "htmx.org": "^2.0.4",
+    "alpinejs": "^3.14.0",
+    "@alpinejs/focus": "^3.14.0",
+    "@alpinejs/collapse": "^3.14.0",
+    "lucide-static": "^0.460.0"
+  }
+}

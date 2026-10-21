@@ -1,0 +1,14 @@
+{% if page.paginator.num_pages > 1 %}
+<div class="flex items-center justify-between gap-3 border-t border-line px-4 py-3 text-sm">
+  <p class="text-ink-3">{{ page.start_index }}–{{ page.end_index }} / {{ page.paginator.count }}</p>
+  <div class="flex items-center gap-1">
+    {% if page.has_previous %}
+      <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page.previous_page_number }}" class="btn btn-secondary btn-sm btn-icon" aria-label="Oldingi">{% icon "chevron-left" "size-4" %}</a>
+    {% endif %}
+    <span class="px-2 text-ink-2">{{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}
+      <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page.next_page_number }}" class="btn btn-secondary btn-sm btn-icon" aria-label="Keyingi">{% icon "chevron-right" "size-4" %}</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

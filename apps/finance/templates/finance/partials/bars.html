@@ -1,0 +1,13 @@
+{# Kirim/chiqim ustunli grafigi: series = [{label, income_h, expense_h, income, expense}] #}
+<div class="relative {{ size|default:'h-64' }} px-5 pt-6 pb-8">
+  <div class="absolute inset-x-5 top-6 bottom-8 flex flex-col justify-between">{% for i in "1234" %}<div class="border-t border-dashed border-line"></div>{% endfor %}</div>
+  <div class="relative flex h-full items-end gap-3 sm:gap-5">
+    {% for s in series %}
+      <div class="relative flex h-full flex-1 items-end justify-center gap-1" title="{{ s.label }}: +{{ s.income|num }} / −{{ s.expense|num }}">
+        <div class="bg-brand-gradient w-full max-w-6 rounded-t-md transition-all duration-700" style="height: {% if s.income_h %}{{ s.income_h }}{% else %}2{% endif %}%"></div>
+        <div class="w-full max-w-6 rounded-t-md bg-rose-400/70" style="height: {% if s.expense_h %}{{ s.expense_h }}{% else %}2{% endif %}%"></div>
+        <span class="absolute top-full mt-2 text-[11px] text-ink-3">{{ s.label }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</div>

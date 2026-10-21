@@ -1,0 +1,26 @@
+{% load static %}
+<div class="flex h-16 shrink-0 items-center gap-3 px-4 {% if not mobile %}collapsed:justify-center collapsed:px-0{% endif %}">
+  <a href="{% url 'dashboard' %}" class="flex min-w-0 items-center gap-3">
+    <img src="{% static 'img/logo.svg' %}" alt="Ifcoder" class="size-9 shrink-0 rounded-xl shadow-glow">
+    <span class="min-w-0 {% if not mobile %}collapsed:hidden{% endif %}">
+      <span class="font-display block truncate text-[15px] font-bold text-ink">Ifcoder</span>
+      <span class="block truncate text-[11px] text-ink-3">Shaxsiy ish tizimi</span>
+    </span>
+  </a>
+  {% if mobile %}
+    <button type="button" class="btn btn-ghost btn-icon btn-sm ml-auto" @click="$store.sidebar.mobileOpen = false" aria-label="Yopish">{% icon "x" "size-4" %}</button>
+  {% endif %}
+</div>
+
+{% include "partials/nav_list.html" %}
+
+<div class="px-3 pb-3 [@media(max-height:860px)]:hidden {% if not mobile %}collapsed:hidden{% endif %}">
+  <div class="relative overflow-hidden rounded-2xl border border-line bg-surface-2/60 p-4">
+    <div class="bg-brand-gradient pointer-events-none absolute -top-10 -right-10 size-28 rounded-full opacity-20 blur-2xl"></div>
+    <p class="flex items-center gap-2 text-xs font-semibold text-ink">{% icon "sparkles" "size-4 text-brand-500" %} Kun maqsadi</p>
+    <p class="mt-1 text-xs text-ink-2">Bitta katta ish + bitta odat = yaxshi kun.</p>
+    <a href="{% url 'journal_today' %}" class="btn btn-secondary btn-sm mt-3 w-full">{% icon "notebook-pen" "size-3.5" %}Kundalik yozish</a>
+  </div>
+</div>
+
+{% include "partials/sidebar_collapse.html" %}

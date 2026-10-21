@@ -1,0 +1,71 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Kirim-chiqim{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Kirim-chiqim</h1>
+    <div class="mt-2 flex items-center gap-2">
+      <a href="?m={{ prev|date:'Y-m' }}" class="btn btn-secondary btn-sm btn-icon" aria-label="Oldingi oy">{% icon "chevron-left" "size-4" %}</a>
+      <span class="min-w-32 text-center text-sm font-semibold">{{ month_label }}</span>
+      <a href="?m={{ next|date:'Y-m' }}" class="btn btn-secondary btn-sm btn-icon" aria-label="Keyingi oy">{% icon "chevron-right" "size-4" %}</a>
+      {% if not is_current %}<a href="?" class="btn btn-ghost btn-sm">Joriy oy</a>{% endif %}
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <button type="button" class="btn btn-ghost" hx-get="{% url 'category_list' %}" hx-target="#modal-content">{% icon "tags" "size-4" %}<span class="hidden sm:inline">Toifalar</span></button>
+    <button type="button" class="btn btn-secondary" hx-get="{% url 'transaction_create' %}?kind=expense" hx-target="#modal-content">{% icon "minus" "size-4 text-rose-500" %}Chiqim</button>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'transaction_create' %}?kind=income" hx-target="#modal-content">{% icon "plus" "size-4" %}Kirim</button>
+  </div>
+</div>
+
+<div id="finance-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#finance-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+  <div class="card p-4 sm:p-5 animate-fade-up"><span class="icon-chip tone-emerald">{% icon "trending-up" "size-5" %}</span><p class="mt-4 text-[13px] font-medium text-ink-2">Kirim</p><p class="mt-1 text-lg font-bold tracking-tight text-emerald-600 sm:text-xl dark:text-emerald-400">{{ income|totals }}</p></div>
+  <div class="card p-4 sm:p-5 animate-fade-up" style="animation-delay: 40ms"><span class="icon-chip tone-rose">{% icon "trending-down" "size-5" %}</span><p class="mt-4 text-[13px] font-medium text-ink-2">Chiqim</p><p class="mt-1 text-lg font-bold tracking-tight sm:text-xl">{{ expense|totals }}</p></div>
+  <div class="card p-4 sm:p-5 animate-fade-up" style="animation-delay: 80ms"><span class="icon-chip tone-brand">{% icon "scale" "size-5" %}</span><p class="mt-4 text-[13px] font-medium text-ink-2">Sof natija</p><p class="mt-1 text-lg font-bold tracking-tight sm:text-xl">{{ net|totals }}</p></div>
+  <a href="{% url 'invoice_list' %}?status=sent" class="card card-hover p-4 sm:p-5 animate-fade-up" style="animation-delay: 120ms"><span class="icon-chip tone-amber">{% icon "receipt-text" "size-5" %}</span><p class="mt-4 text-[13px] font-medium text-ink-2">Kutilayotgan to'lovlar</p><p class="mt-1 text-lg font-bold tracking-tight sm:text-xl">{{ unpaid|totals }}</p><p class="mt-0.5 text-xs text-ink-3">{{ unpaid_count }} ta hisob-faktura</p></a>
+</div>
+
+<div class="mt-4 grid gap-4 lg:grid-cols-3">
+  <div class="card lg:col-span-2 animate-fade-up">
+    <div class="card-header">
+      <div><p class="card-title">Oxirgi 6 oy</p><p class="text-xs text-ink-3">so'mdagi operatsiyalar</p></div>
+      <div class="flex items-center gap-3 text-xs text-ink-3">
+        <span class="flex items-center gap-1.5"><span class="bg-brand-gradient size-2.5 rounded-sm"></span>Kirim</span>
+        <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-sm bg-rose-400/70"></span>Chiqim</span>
+      </div>
+    </div>
+    {% include "finance/partials/bars.html" %}
+  </div>
+  <div class="card animate-fade-up">
+    <div class="card-header"><p class="card-title">Xarajatlar tarkibi</p><span class="badge badge-neutral">so'm</span></div>
+    <div class="card-body space-y-3.5">
+      {% for r in breakdown %}
+        <div>
+          <div class="mb-1.5 flex items-center justify-between text-xs"><span class="flex items-center gap-1.5 font-medium text-ink-2"><span class="size-2 rounded-full {{ r.category__tone|dot }}"></span>{{ r.category__name|default:"Toifasiz" }}</span><span class="font-semibold">{{ r.s|num }} · {{ r.pct }}%</span></div>
+          <div class="h-2 overflow-hidden rounded-full bg-surface-2"><div class="h-full rounded-full {{ r.category__tone|dot }}" style="width: {{ r.pct }}%"></div></div>
+        </div>
+      {% empty %}
+        <p class="py-8 text-center text-sm text-ink-3">Bu oyda xarajat yozilmagan.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4 overflow-hidden animate-fade-up">
+  <div class="card-header flex-wrap gap-y-2">
+    <p class="card-title">Operatsiyalar</p>
+    <form method="get" class="flex gap-2" hx-get="{% url 'finance_overview' %}" hx-target="#finance-region" hx-select="#finance-region" hx-swap="outerHTML" hx-push-url="true" hx-trigger="change">
+      <input type="hidden" name="m" value="{{ month|date:'Y-m' }}">
+      <select name="kind" class="input select h-9 w-auto text-xs"><option value="">Barchasi</option><option value="income" {% if kind == 'income' %}selected{% endif %}>Kirim</option><option value="expense" {% if kind == 'expense' %}selected{% endif %}>Chiqim</option></select>
+      <select name="category" class="input select h-9 w-auto max-w-44 text-xs"><option value="">Barcha toifalar</option>{% for c in categories %}<option value="{{ c.pk }}" {% if category == c.pk|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+    </form>
+  </div>
+  {% if transactions %}
+    <ul class="divide-y divide-line">{% for tx in transactions %}{% include "finance/partials/tx_row.html" %}{% endfor %}</ul>
+  {% else %}
+    {% include "components/empty_state.html" with icon="wallet" title="Operatsiya yo'q" text="Kirim yoki chiqimni yozing — har oy aniq hisobot bo'ladi." %}
+  {% endif %}
+</div>
+</div>
+{% endblock %}

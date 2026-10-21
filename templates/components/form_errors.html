@@ -1,0 +1,6 @@
+{% if form.non_field_errors %}
+  <div class="flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.07] p-3.5 text-sm text-rose-600 dark:text-rose-400" role="alert">
+    {% icon "circle-alert" "size-5 shrink-0" %}
+    <div>{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>
+  </div>
+{% endif %}

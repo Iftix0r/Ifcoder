@@ -1,0 +1,139 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Vazifalar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Vazifalar</h1>
+    <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+      <span class="badge badge-brand">{{ stats.open }} ta ochiq</span>
+      <span class="badge badge-neutral">Bugunga {{ stats.today }} ta</span>
+      {% if stats.overdue %}<span class="badge badge-danger">{{ stats.overdue }} ta muddati o'tgan</span>{% endif %}
+      <span class="badge badge-success">Bu hafta {{ stats.done_week }} ta bajarildi</span>
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <nav class="segmented">
+      {% for key, label, ico in views %}
+        <a href="?view={{ key }}{% if project %}&project={{ project }}{% endif %}" class="{% if view == key %}is-active{% endif %}">{% icon ico "size-3.5" %}<span class="hidden sm:inline">{{ label }}</span></a>
+      {% endfor %}
+    </nav>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'task_create' %}{% if view == 'today' %}?today=1{% endif %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Vazifa</button>
+  </div>
+</div>
+
+<form method="get" class="mb-4 flex flex-wrap gap-2 animate-fade-up" hx-get="{% url 'task_board' %}" hx-target="#tasks-region" hx-select="#tasks-region" hx-swap="outerHTML" hx-push-url="true" hx-trigger="change, input changed delay:300ms from:input[name=q]">
+  <input type="hidden" name="view" value="{{ view }}">
+  <label class="relative flex h-10 flex-1 items-center sm:max-w-72">
+    <span class="pointer-events-none absolute left-3 text-ink-3">{% icon "search" "size-4" %}</span>
+    <input type="search" name="q" value="{{ q }}" placeholder="Vazifani qidirish…" autocomplete="off" class="input h-10 pl-9">
+  </label>
+  <select name="project" class="input select h-10 w-auto sm:w-56">
+    <option value="">Barcha loyihalar</option>
+    {% for p in projects %}<option value="{{ p.pk }}" {% if project == p.pk|stringformat:'s' %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+  </select>
+</form>
+
+<div id="tasks-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#tasks-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if view == "board" %}
+  <div x-data="kanban" @dragstart="start($event)" @dragover="over($event)" @drop="drop($event)" @dragend="end()"
+       class="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0 animate-fade-up">
+    {% for col in columns %}
+      <section data-stage="{{ col.status.value }}" class="flex w-[290px] shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface-2/50 transition lg:w-auto lg:min-w-0 lg:flex-1"
+               :class="overStage === '{{ col.status.value }}' && 'ring-2 {{ col.ring }} bg-surface-2'">
+        <header class="flex items-center gap-2 px-3.5 pt-3.5 pb-2.5">
+          <span class="size-2 rounded-full {{ col.dot }}"></span>
+          <h2 class="text-[13px] font-semibold text-ink">{{ col.status.label }}</h2>
+          <span data-count class="rounded-md bg-surface px-1.5 text-xs font-semibold text-ink-3 ring-1 ring-line">{{ col.tasks|length }}</span>
+          {% if col.status.value == "done" %}<span class="ml-auto text-[11px] text-ink-3">14 kun</span>{% endif %}
+        </header>
+        {% if col.status.value != "done" %}
+          <div class="px-2.5 pb-2">{% include "planner/partials/quick_add.html" with status=col.status.value project=project placeholder="Qo‘shish…" %}</div>
+        {% endif %}
+        <div data-list class="flex min-h-32 flex-1 flex-col gap-2 px-2.5 pb-2.5">
+          {% for t in col.tasks %}{% include "planner/partials/task_card.html" %}{% endfor %}
+          <p data-empty class="{% if col.tasks %}hidden{% endif %} flex flex-1 items-center justify-center rounded-xl border border-dashed border-line-strong/70 px-4 py-8 text-center text-xs text-ink-3">Kartani shu yerga torting</p>
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+
+{% elif view == "today" %}
+  <div class="grid gap-4 lg:grid-cols-3">
+    <div class="space-y-4 lg:col-span-2">
+      <div class="card p-3 animate-fade-up">{% include "planner/partials/quick_add.html" with planned_for=today project=project placeholder="Bugun nima qilaman? Yozing va Enter…" %}</div>
+      {% for title, badge, items in groups %}
+        {% if items or forloop.counter == 2 %}
+        <div class="card overflow-hidden animate-fade-up">
+          <div class="card-header"><p class="card-title">{{ title }}</p><span class="badge {{ badge }}">{{ items|length }}</span></div>
+          {% if items %}
+            <ul class="divide-y divide-line">{% for t in items %}{% include "planner/partials/task_row.html" with show_plan=True %}{% endfor %}</ul>
+          {% else %}
+            {% include "components/empty_state.html" with icon="sun" title="Bugunga reja yo'q" text="Yuqoridagi maydonga bugungi eng muhim 3 ta ishni yozing." %}
+          {% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="space-y-4">
+      {% include "planner/partials/pomodoro.html" %}
+      <div class="card overflow-hidden animate-fade-up">
+        <div class="card-header"><p class="card-title">Bugun bajarilgan</p><span class="badge badge-success">{{ done_today|length }}</span></div>
+        {% if done_today %}
+          <ul class="divide-y divide-line">{% for t in done_today %}{% include "planner/partials/task_row.html" %}{% endfor %}</ul>
+        {% else %}
+          <p class="px-5 py-6 text-center text-sm text-ink-3">Birinchi vazifani bajaring — shu yerda paydo bo'ladi.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+{% elif view == "week" %}
+  <div class="mb-3 flex items-center gap-2 animate-fade-up">
+    <a href="?view=week&w={{ offset|add:-1 }}{% if project %}&project={{ project }}{% endif %}" class="btn btn-secondary btn-sm btn-icon" aria-label="Oldingi hafta">{% icon "chevron-left" "size-4" %}</a>
+    <a href="?view=week{% if project %}&project={{ project }}{% endif %}" class="btn btn-secondary btn-sm">Bu hafta</a>
+    <a href="?view=week&w={{ offset|add:1 }}{% if project %}&project={{ project }}{% endif %}" class="btn btn-secondary btn-sm btn-icon" aria-label="Keyingi hafta">{% icon "chevron-right" "size-4" %}</a>
+    <p class="ml-2 text-sm font-medium text-ink-2">{{ week_start|date:"j E" }} — {{ week_end|date:"j E Y" }}</p>
+  </div>
+  <div class="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0 xl:grid xl:grid-cols-7 animate-fade-up">
+    {% for d in days %}
+      <section class="flex w-60 shrink-0 snap-start flex-col rounded-2xl border bg-surface-2/40 xl:w-auto {% if d.is_today %}border-brand-500/50 ring-2 ring-brand-500/15{% else %}border-line{% endif %}">
+        <header class="flex items-baseline justify-between px-3 pt-3 pb-2">
+          <p class="text-[13px] font-semibold {% if d.is_today %}text-brand-600 dark:text-brand-300{% endif %}">{{ d.date|date:"l" }}</p>
+          <p class="text-xs text-ink-3">{{ d.date|date:"j M" }}</p>
+        </header>
+        <div class="flex flex-1 flex-col gap-1.5 px-2 pb-2">
+          {% for t in d.tasks %}
+            <button type="button" hx-get="{% url 'task_edit' t.pk %}" hx-target="#modal-content" class="flex items-start gap-2 rounded-lg border border-line bg-surface p-2 text-left text-xs shadow-soft transition hover:border-line-strong {% if t.is_done %}opacity-55{% endif %}">
+              <span class="mt-1 size-1.5 shrink-0 rounded-full {% if t.project %}{{ t.project.tone|dot }}{% else %}bg-ink-3{% endif %}"></span>
+              <span class="min-w-0 flex-1 font-medium {% if t.is_done %}line-through{% endif %}">{{ t.title }}</span>
+            </button>
+          {% endfor %}
+          <button type="button" hx-get="{% url 'task_create' %}?planned_for={{ d.date|date:'Y-m-d' }}" hx-target="#modal-content" class="mt-auto flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs text-ink-3 transition hover:bg-surface hover:text-ink">{% icon "plus" "size-3.5" %}Qo'shish</button>
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+  {% if inbox %}
+  <div class="card mt-4 overflow-hidden animate-fade-up">
+    <div class="card-header"><div><p class="card-title">Rejalashtirilmagan</p><p class="text-xs text-ink-3">Sanasiz vazifalar — kun belgilang</p></div><span class="badge badge-neutral">{{ inbox|length }}</span></div>
+    <ul class="divide-y divide-line">{% for t in inbox %}{% include "planner/partials/task_row.html" with show_plan=True %}{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+{% else %}
+  <div class="space-y-4">
+    {% for title, badge, items in groups %}
+      {% if items %}
+      <div class="card overflow-hidden animate-fade-up">
+        <div class="card-header"><p class="card-title">{{ title }}</p><span class="badge {{ badge }}">{{ items|length }}</span></div>
+        <ul class="divide-y divide-line">{% for t in items %}{% include "planner/partials/task_row.html" with show_plan=True %}{% endfor %}</ul>
+      </div>
+      {% endif %}
+    {% empty %}{% endfor %}
+    {% if not groups.0.2 and not groups.1.2 and not groups.2.2 and not groups.3.2 %}
+      <div class="card">{% include "components/empty_state.html" with icon="list-todo" title="Vazifalar yo'q" text="Birinchi vazifani qo'shing — N tugmasini bosing." %}</div>
+    {% endif %}
+  </div>
+{% endif %}
+</div>
+{% endblock %}

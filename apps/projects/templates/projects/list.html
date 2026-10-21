@@ -1,0 +1,53 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Loyihalar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Loyihalar</h1>
+    <p class="mt-1 text-sm text-ink-2">Mijoz loyihalari, o'z mahsulotlaringiz va shaxsiy tajribalar.</p>
+  </div>
+  <button type="button" class="btn btn-primary" hx-get="{% url 'project_create' %}" hx-target="#modal-content">{% icon "folder-plus" "size-4" %}Loyiha</button>
+</div>
+
+<nav class="-mx-4 mb-5 flex gap-5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 animate-fade-up">
+  {% for value, label, n in tabs %}
+    <a href="?status={{ value }}" class="tab whitespace-nowrap {% if status == value %}is-active{% endif %}">{{ label }} <span class="text-xs text-ink-3">{{ n }}</span></a>
+  {% endfor %}
+</nav>
+
+<div id="projects-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#projects-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if projects %}
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    {% for p in projects %}
+      <a href="{{ p.get_absolute_url }}" class="card card-hover group relative flex flex-col overflow-hidden animate-fade-up">
+        <div class="h-1 w-full {{ p.tone|dot }}"></div>
+        <div class="flex flex-1 flex-col p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate text-[15px] font-semibold text-ink">{{ p.name }}</p>
+              <p class="truncate text-xs text-ink-3">{% if p.contact %}{{ p.contact.name }}{% else %}{{ p.get_kind_display }}{% endif %}</p>
+            </div>
+            <span class="badge {{ p.status_badge }}">{{ p.get_status_display }}</span>
+          </div>
+          {% if p.description %}<p class="mt-3 line-clamp-2 text-sm text-ink-2">{{ p.description }}</p>{% endif %}
+          {% if p.stack_list %}<div class="mt-3 flex flex-wrap gap-1">{% for s in p.stack_list|slice:":5" %}<span class="rounded-md bg-surface-2 px-1.5 py-0.5 font-mono text-[10.5px] text-ink-2">{{ s }}</span>{% endfor %}</div>{% endif %}
+          <div class="mt-auto pt-4">
+            <div class="mb-1.5 flex items-center justify-between text-xs text-ink-3">
+              <span>{{ p.task_done }} / {{ p.task_total }} vazifa</span>
+              <span class="font-semibold text-ink-2">{{ p.task_done|pct:p.task_total }}%</span>
+            </div>
+            <div class="progress"><span style="width: {{ p.task_done|pct:p.task_total }}%"></span></div>
+            <div class="mt-3 flex items-center justify-between text-xs text-ink-3">
+              {% if p.deadline %}<span class="badge {% if p.status != 'done' %}{{ p.deadline|due_badge }}{% else %}badge-neutral{% endif %}">{% icon "calendar-clock" "size-3" %}{{ p.deadline|date:"j M Y" }}</span>{% else %}<span>Muddatsiz</span>{% endif %}
+              {% if p.budget %}<span class="font-semibold text-ink-2">{{ p.budget|money:p.currency }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="folder-kanban" title="Loyihalar yo'q" text="Mijoz loyihasi, o'z mahsulotingiz yoki o'qish uchun pet-project yarating." %}</div>
+{% endif %}
+</div>
+{% endblock %}

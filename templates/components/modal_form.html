@@ -1,0 +1,28 @@
+{# Modal forma asosi: {% extends "components/modal_form.html" %} — bloklar: attrs, icon, title, subtitle, body, footer #}
+<form {% block attrs %}{% endblock %} hx-target="#modal-content" data-modal-size="{% block size %}md{% endblock %}" novalidate>
+  {% csrf_token %}
+  <div class="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-6 py-4 backdrop-blur">
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="icon-chip {% block tone %}tone-brand{% endblock %}">{% block icon %}{% icon "plus" "size-5" %}{% endblock %}</span>
+      <div class="min-w-0">
+        <h2 class="truncate text-base font-semibold">{% block title %}{% endblock %}</h2>
+        <p class="truncate text-xs text-ink-3">{% block subtitle %}{% endblock %}</p>
+      </div>
+    </div>
+    <button type="button" class="btn btn-ghost btn-icon btn-sm shrink-0" @click="$store.modal.close()" aria-label="Yopish">{% icon "x" "size-4" %}</button>
+  </div>
+  <div class="space-y-4 px-6 py-5">
+    {% include "components/form_errors.html" %}
+    {% block body %}{% endblock %}
+  </div>
+  <div class="sticky bottom-0 flex items-center justify-end gap-2 border-t border-line bg-surface-2/80 px-6 py-4 backdrop-blur">
+    {% block footer %}
+      {% block footer_left %}{% endblock %}
+      <button type="button" class="btn btn-secondary" @click="$store.modal.close()">Bekor qilish</button>
+      <button type="submit" class="btn btn-primary">
+        <svg class="htmx-indicator -ml-1 size-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".3" stroke-width="3"/><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        {% block submit_label %}Saqlash{% endblock %}
+      </button>
+    {% endblock %}
+  </div>
+</form>
