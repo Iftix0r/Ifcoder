@@ -96,11 +96,35 @@ Environment variable'lar (`.env` yoki *Setup Python App → Environment Variable
 
 `passenger_wsgi.py` va `config/wsgi.py` `config.settings.prod` ni ishlatadi — kalitlar o'rnatilmasa ishga tushmaydi.
 
+### Birinchi o'rnatish (Eskiz.uz, Setup Python App)
+
+1. cPanel → *Setup Python App* → **Create**: Python 3.11+, Application root `ifcoder`, URL `iftix0r.uz`,
+   startup file `passenger_wsgi.py`, entry point `application`.
+2. Terminal (SSH):
+
 ```bash
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py collectstatic --noinput
+cd ~/ifcoder
+rm -rf passenger_wsgi.py __pycache__          # cPanel yaratgan namuna fayl
+git init && git remote add origin git@github.com:Iftix0r/Ifcoder.git
+git fetch origin && git checkout -b main --track origin/main
+cp .env.example .env && nano .env              # DJANGO_SECRET_KEY, IFCODER_FERNET_KEY
+./deploy.sh
+source ~/virtualenv/ifcoder/3.11/bin/activate && python manage.py createsuperuser
 ```
+
+### Yangilash
+
+Lokalda `git push` qiling, keyin serverda:
+
+```bash
+cd ~/ifcoder && ./deploy.sh
+```
+
+Skript: `git pull` → `pip install` → migratsiyadan oldin `backup_db` → `migrate` → `collectstatic` →
+`check --deploy` → Passenger restart (`tmp/restart.txt` + `cloudlinux-selector`). Biror qadam xato bersa, to'xtaydi.
+Virtualenv boshqa joyda bo'lsa: `VENV_ACTIVATE=/path/bin/activate ./deploy.sh`.
+
+CSS o'zgargan bo'lsa, push'dan oldin lokalda `npm run css` qiling — serverda Node.js yo'q.
 
 **Muhim:** `IFCODER_FERNET_KEY` yo'qolsa yoki almashsa, vault yozuvlari va 2FA o'qilmaydi. Uni backup'lardan alohida
 (parol menejerida) saqlang.
