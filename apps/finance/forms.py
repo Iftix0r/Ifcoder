@@ -1,6 +1,6 @@
 from apps.core.forms import DateInput, MoneyInput, StyledModelForm
 
-from .models import Category, Debt, Invoice, InvoiceLine, Transaction
+from .models import Category, Credit, Debt, Invoice, InvoiceLine, Transaction
 
 
 class TransactionForm(StyledModelForm):
@@ -66,4 +66,45 @@ class DebtForm(StyledModelForm):
         data = super().clean()
         if data.get("amount") is not None and data.get("paid_amount") and data["paid_amount"] > data["amount"]:
             self.add_error("paid_amount", "Qaytarilgan summa qarzdan ko'p bo'lmasin.")
+        return data
+
+
+class CreditForm(StyledModelForm):
+    wide_fields = ("title",)
+
+    class Meta:
+        model = Credit
+        fields = [
+            "title",
+            "kind",
+            "provider",
+            "currency",
+            "total_amount",
+            "down_payment",
+            "months",
+            "monthly_payment",
+            "first_payment_date",
+            "notes",
+            "is_closed",
+        ]
+        widgets = {
+            "first_payment_date": DateInput(),
+            "total_amount": MoneyInput(),
+            "down_payment": MoneyInput(),
+            "monthly_payment": MoneyInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["monthly_payment"].required = False
+
+    def clean(self):
+        data = super().clean()
+        total, down, months = data.get("total_amount"), data.get("down_payment") or 0, data.get("months")
+        if months == 0:
+            self.add_error("months", "Kamida 1 oy.")
+        if total is not None and down > total:
+            self.add_error("down_payment", "Boshlang'ich to'lov jami summadan oshmasin.")
+        if total is not None and months and not data.get("monthly_payment"):
+            data["monthly_payment"] = round((total - down) / months, 0)
         return data

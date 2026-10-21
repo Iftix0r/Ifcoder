@@ -10,8 +10,8 @@ from django.views.decorators.http import require_POST
 
 from apps.core.crud import delete_done, done, form_modal
 
-from .forms import CategoryForm, DebtForm, InvoiceForm, InvoiceLineForm, TransactionForm
-from .models import Category, Debt, Invoice, InvoiceLine, Kind, Transaction, totals_by_currency
+from .forms import CategoryForm, CreditForm, DebtForm, InvoiceForm, InvoiceLineForm, TransactionForm
+from .models import Category, Credit, CreditPayment, Debt, Invoice, InvoiceLine, Kind, Transaction, totals_by_currency
 
 MONTHS = [
     "",
@@ -372,3 +372,104 @@ def debt_close(request, pk):
         debt.paid_amount = debt.amount
     debt.save()
     return done("Qarz yopildi ✅" if debt.is_closed else "Qayta ochildi.", close=False)
+
+
+# --- Kreditlar va bo'lib to'lash ----------------------------------------------------
+
+
+def credit_list(request):
+    show_closed = request.GET.get("closed") == "1"
+    credits = list(Credit.objects.prefetch_related("payments").filter(**({} if show_closed else {"is_closed": False})))
+    active = [c for c in credits if not c.is_closed]
+    monthly, remaining = {}, {}
+    for c in active:
+        monthly[c.currency] = monthly.get(c.currency, 0) + c.monthly_payment
+        remaining[c.currency] = remaining.get(c.currency, 0) + c.remaining
+    upcoming = sorted((c for c in active if c.next_due), key=lambda c: c.next_due)
+    return render(
+        request,
+        "finance/credit_list.html",
+        {
+            "nav_active": "debts",
+            "credits": credits,
+            "monthly": monthly,
+            "remaining": remaining,
+            "next_credit": upcoming[0] if upcoming else None,
+            "overdue": sum(1 for c in active if c.next_due and c.next_due < timezone.localdate()),
+            "show_closed": show_closed,
+        },
+    )
+
+
+def credit_create(request):
+    return form_modal(
+        request,
+        CreditForm,
+        title="Kredit yoki bo'lib to'lash",
+        icon="credit-card",
+        tone="tone-rose",
+        size="xl",
+        initial={"first_payment_date": _shift(timezone.localdate(), 1)},
+        subtitle="Har oylik to'lov jadvali avtomatik tuziladi",
+    )
+
+
+def credit_edit(request, pk):
+    credit = get_object_or_404(Credit, pk=pk)
+    return form_modal(
+        request,
+        CreditForm,
+        instance=credit,
+        title=credit.title,
+        icon=credit.icon,
+        tone="tone-rose",
+        size="xl",
+        delete_url=reverse("credit_delete", args=[pk]),
+    )
+
+
+@require_POST
+def credit_delete(request, pk):
+    return delete_done(get_object_or_404(Credit, pk=pk), "Kredit o'chirildi.")
+
+
+def _credit_category():
+    category, _ = Category.objects.get_or_create(name="Kredit va nasiya", kind=Kind.EXPENSE, defaults={"tone": "rose"})
+    return category
+
+
+@require_POST
+def credit_pay(request, pk):
+    """Navbatdagi oy to'lovini belgilaydi va chiqimga yozadi."""
+    credit = get_object_or_404(Credit.objects.prefetch_related("payments"), pk=pk)
+    if credit.next_due is None:
+        return done("Bu kredit to'liq to'langan.", close=False)
+    period, amount = credit.paid_count, credit.next_amount
+    tx = Transaction.objects.create(
+        kind=Kind.EXPENSE,
+        amount=amount,
+        currency=credit.currency,
+        category=_credit_category(),
+        description=f"{credit.title}: {period + 1}/{credit.months}-to'lov",
+    )
+    CreditPayment.objects.create(credit=credit, period=period, amount=amount, transaction=tx)
+    if period + 1 >= credit.months:
+        credit.is_closed = True
+        credit.save(update_fields=["is_closed", "updated_at"])
+        return done(f"🎉 «{credit.title}» to'liq yopildi!", close=False)
+    return done(f"{period + 1}/{credit.months}-to'lov yozildi (chiqimga ham).", close=False)
+
+
+@require_POST
+def credit_unpay(request, pk):
+    """Oxirgi to'lovni bekor qiladi (xato bosilgan bo'lsa)."""
+    credit = get_object_or_404(Credit, pk=pk)
+    last = credit.payments.order_by("-period").first()
+    if last:
+        if last.transaction:
+            last.transaction.delete()
+        last.delete()
+        if credit.is_closed:
+            credit.is_closed = False
+            credit.save(update_fields=["is_closed", "updated_at"])
+    return done("Oxirgi to'lov bekor qilindi.", close=False)

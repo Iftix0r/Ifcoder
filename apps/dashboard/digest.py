@@ -69,6 +69,16 @@ def build_digest(today=None) -> str:
             arrow = "←" if d.direction == Debt.Direction.THEY_OWE else "→"
             lines.append(f"• {arrow} {h(d.person)} — {d.due_date:%d.%m}")
 
+    from apps.core.templatetags.ui import money
+    from apps.dashboard.views import due_credits
+
+    credits = due_credits(today)
+    if credits:
+        lines += ["", "💳 <b>Kredit to'lovlari</b>"]
+        for c in credits:
+            late = " — <i>kechikkan</i>" if c.next_due < today else ""
+            lines.append(f"• {h(c.title)}: {money(c.next_amount, c.currency)} — {c.next_due:%d.%m}{late}")
+
     stale = Deal.objects.filter(stage__in=Deal.OPEN_STAGES, expected_close__lt=today).count()
     if stale:
         lines.append(f"\n🎯 Kechikayotgan bitimlar: <b>{stale}</b>")

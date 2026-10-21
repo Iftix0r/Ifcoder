@@ -1,0 +1,80 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Kreditlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Kreditlar va bo'lib to'lash</h1>
+    <p class="mt-1 text-sm text-ink-2">Nasiyaga olingan narsalar va kreditlar — oylik to'lov jadvali bilan.{% if overdue %} <span class="badge badge-danger">{{ overdue }} ta to'lov kechikkan</span>{% endif %}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="?{% if not show_closed %}closed=1{% endif %}" class="btn btn-ghost">{% if show_closed %}{% icon "eye-off" "size-4" %}Yopilganlarni yashirish{% else %}{% icon "eye" "size-4" %}Yopilganlar{% endif %}</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'credit_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Kredit</button>
+  </div>
+</div>
+
+{% include "finance/partials/debt_tabs.html" with tab="credits" %}
+
+<div id="credits-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#credits-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="mb-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+  <div class="card p-4 sm:p-5 animate-fade-up"><span class="icon-chip tone-rose">{% icon "repeat" "size-5" %}</span><p class="mt-4 text-[13px] font-medium text-ink-2">Har oy to'lanadi</p><p class="mt-1 text-lg font-bold tracking-tight sm:text-xl">{{ monthly|totals }}</p></div>
+  <div class="card p-4 sm:p-5 animate-fade-up" style="animation-delay: 40ms"><span class="icon-chip tone-amber">{% icon "wallet" "size-5" %}</span><p class="mt-4 text-[13px] font-medium text-ink-2">Qolgan jami qarz</p><p class="mt-1 text-lg font-bold tracking-tight sm:text-xl">{{ remaining|totals }}</p></div>
+  <div class="card col-span-2 p-4 sm:p-5 lg:col-span-1 animate-fade-up" style="animation-delay: 80ms"><span class="icon-chip tone-brand">{% icon "calendar-clock" "size-5" %}</span><p class="mt-4 text-[13px] font-medium text-ink-2">Keyingi to'lov</p>
+    {% if next_credit %}<p class="mt-1 flex flex-wrap items-center gap-2 text-lg font-bold tracking-tight sm:text-xl">{{ next_credit.next_amount|money:next_credit.currency }} <span class="badge {{ next_credit.next_due|due_badge }}">{{ next_credit.next_due|due_label }}</span></p><p class="mt-0.5 truncate text-xs text-ink-3">{{ next_credit.title }} · {{ next_credit.next_due|date:"j E" }}</p>{% else %}<p class="mt-1 text-lg font-bold">—</p>{% endif %}
+  </div>
+</div>
+
+{% if credits %}
+  <div class="grid items-start gap-4 lg:grid-cols-2">
+    {% for c in credits %}
+      <div class="card overflow-hidden animate-fade-up {% if c.is_closed %}opacity-60{% endif %}" x-data="{ open: false }">
+        <div class="flex items-start gap-3 p-5 pb-4">
+          <span class="icon-chip tone-rose shrink-0">{% icon c.icon "size-5" %}</span>
+          <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'credit_edit' c.pk %}" hx-target="#modal-content">
+            <p class="truncate text-[15px] font-semibold">{{ c.title }}</p>
+            <p class="truncate text-xs text-ink-3">{{ c.get_kind_display }}{% if c.provider %} · {{ c.provider }}{% endif %} · {{ c.months }} oy</p>
+          </div>
+          {% if c.is_closed %}<span class="badge badge-success">Yopilgan</span>{% elif c.next_due %}<span class="badge {{ c.next_due|due_badge }}">{{ c.next_due|due_label }}</span>{% endif %}
+        </div>
+        <div class="grid grid-cols-3 gap-3 px-5 text-sm">
+          <div><p class="text-xs text-ink-3">Oylik</p><p class="font-bold whitespace-nowrap">{{ c.monthly_payment|money:c.currency }}</p></div>
+          <div><p class="text-xs text-ink-3">To'langan</p><p class="font-bold whitespace-nowrap text-emerald-600 dark:text-emerald-400">{{ c.paid_amount|money:c.currency }}</p></div>
+          <div><p class="text-xs text-ink-3">Qoldi</p><p class="font-bold whitespace-nowrap">{{ c.remaining|money:c.currency }}</p></div>
+        </div>
+        <div class="px-5 pt-4">
+          <div class="mb-1.5 flex items-center justify-between text-xs text-ink-3"><span>{{ c.paid_count }} / {{ c.months }} oy to'landi</span><span>tugaydi: {{ c.end_date|date:"M Y" }}</span></div>
+          <div class="progress h-2"><span style="width: {{ c.progress }}%"></span></div>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-line px-5 py-3">
+          {% if c.next_due %}
+            <button type="button" hx-post="{% url 'credit_pay' c.pk %}" hx-confirm="{{ c.next_due|date:'j E' }} uchun {{ c.next_amount|money:c.currency }} to'landi deb belgilansinmi? Chiqimga ham yoziladi." class="btn btn-primary btn-sm">{% icon "check" "size-3.5" %}{{ c.paid_count|add:1 }}-oyni to'ladim</button>
+          {% endif %}
+          {% if c.paid_count %}
+            <button type="button" hx-post="{% url 'credit_unpay' c.pk %}" hx-confirm="Oxirgi to'lov bekor qilinsinmi? Chiqimdan ham o'chiriladi." class="btn btn-ghost btn-sm text-ink-3">{% icon "undo-2" "size-3.5" %}Bekor qilish</button>
+          {% endif %}
+          <button type="button" @click="open = !open" class="btn btn-ghost btn-sm ml-auto">{% icon "calendar-days" "size-3.5" %}Jadval <span class="transition" :class="open && 'rotate-180'">{% icon "chevron-down" "size-3.5" %}</span></button>
+        </div>
+        <div x-cloak x-show="open" x-collapse>
+          <ul class="max-h-80 divide-y divide-line overflow-y-auto border-t border-line bg-surface-2/30">
+            {% for r in c.schedule %}
+              <li class="flex items-center gap-3 px-5 py-2.5 text-sm">
+                <span class="w-6 text-xs font-semibold text-ink-3">{{ r.n }}</span>
+                <span class="flex-1 {% if r.overdue %}font-semibold text-rose-500{% endif %}">{{ r.date|date:"j E Y" }}</span>
+                {% if r.payment %}
+                  <span class="badge badge-success">{% icon "check" "size-3" "3" %}{{ r.payment.amount|money:c.currency }}</span>
+                {% elif r.overdue %}
+                  <span class="badge badge-danger">kechikkan</span>
+                {% else %}
+                  <span class="text-xs text-ink-3">{{ r.expected|money:c.currency }}</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="credit-card" title="Kredit yoki nasiya yo'q" text="Bo'lib to'lashga olingan telefon, texnika yoki bank kreditini qo'shing — har oy eslatib turamiz." %}</div>
+{% endif %}
+</div>
+{% endblock %}

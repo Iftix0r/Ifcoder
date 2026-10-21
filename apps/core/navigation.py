@@ -41,7 +41,7 @@ NAV_SECTIONS: list[tuple[str, list[NavItem]]] = [
         [
             NavItem("finance", "Kirim-chiqim", "wallet", "finance_overview", mobile=True, short="Moliya"),
             NavItem("invoices", "Hisob-fakturalar", "receipt-text", "invoice_list"),
-            NavItem("debts", "Qarzlar", "hand-coins", "debt_list"),
+            NavItem("debts", "Qarz va kreditlar", "hand-coins", "debt_list"),
         ],
     ),
     (

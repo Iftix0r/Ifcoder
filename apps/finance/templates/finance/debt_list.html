@@ -12,6 +12,8 @@
   </div>
 </div>
 
+{% include "finance/partials/debt_tabs.html" with tab="debts" %}
+
 <div id="debts-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#debts-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
 <div class="grid gap-4 lg:grid-cols-2">
   {% include "finance/partials/debt_column.html" with title="Menga qarzdor" items=they_owe total=they_total tone="tone-emerald" direction="they_owe" ico="arrow-down-left" %}

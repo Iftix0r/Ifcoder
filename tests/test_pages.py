@@ -164,7 +164,7 @@ def test_money_input_accepts_spaces(client_in, data):
         },
         **HX,
     )
-    assert resp.status_code in (200, 204)
+    assert resp.status_code == 204
 
 
 def test_habit_toggle(client_in, data):

@@ -1,0 +1,4 @@
+<nav class="-mx-4 mb-5 flex gap-5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 animate-fade-up">
+  <a href="{% url 'debt_list' %}" class="tab whitespace-nowrap {% if tab == 'debts' %}is-active{% endif %}">{% icon "hand-coins" "size-4" %}Qarzlar</a>
+  <a href="{% url 'credit_list' %}" class="tab whitespace-nowrap {% if tab == 'credits' %}is-active{% endif %}">{% icon "credit-card" "size-4" %}Kreditlar va bo'lib to'lash</a>
+</nav>

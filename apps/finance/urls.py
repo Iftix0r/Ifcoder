@@ -22,4 +22,10 @@ urlpatterns = [
     path("debts/<int:pk>/", views.debt_edit, name="debt_edit"),
     path("debts/<int:pk>/delete/", views.debt_delete, name="debt_delete"),
     path("debts/<int:pk>/close/", views.debt_close, name="debt_close"),
+    path("credits/", views.credit_list, name="credit_list"),
+    path("credits/new/", views.credit_create, name="credit_create"),
+    path("credits/<int:pk>/", views.credit_edit, name="credit_edit"),
+    path("credits/<int:pk>/delete/", views.credit_delete, name="credit_delete"),
+    path("credits/<int:pk>/pay/", views.credit_pay, name="credit_pay"),
+    path("credits/<int:pk>/unpay/", views.credit_unpay, name="credit_unpay"),
 ]

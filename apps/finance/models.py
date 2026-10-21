@@ -212,3 +212,126 @@ class Debt(TimeStamped):
     @property
     def remaining(self):
         return max(Decimal(0), self.amount - self.paid_amount)
+
+
+def add_months(day, months):
+    """31-yanvar + 1 oy → 28/29-fevral (oy oxiridan oshib ketmaydi)."""
+    import calendar
+
+    m = day.month - 1 + months
+    year, month = day.year + m // 12, m % 12 + 1
+    return day.replace(year=year, month=month, day=min(day.day, calendar.monthrange(year, month)[1]))
+
+
+class Credit(TimeStamped):
+    """Kredit yoki bo'lib to'lashga olingan narsa: har oy belgilangan summa to'lanadi."""
+
+    class Kind(models.TextChoices):
+        INSTALLMENT = "installment", "Bo'lib to'lash (nasiya)"
+        LOAN = "loan", "Bank krediti"
+        MICRO = "micro", "Mikroqarz"
+        OTHER = "other", "Boshqa"
+
+    KIND_ICON = {"installment": "shopping-bag", "loan": "landmark", "micro": "banknote", "other": "credit-card"}
+
+    title = models.CharField("Nima olindi", max_length=200, help_text="Masalan: iPhone 15, noutbuk, avtomobil")
+    kind = models.CharField("Turi", max_length=12, choices=Kind.choices, default=Kind.INSTALLMENT)
+    provider = models.CharField("Qayerdan", max_length=120, blank=True, help_text="Uzum Nasiya, Alif, bank nomi…")
+    total_amount = models.DecimalField("Jami to'lanadigan summa", max_digits=14, decimal_places=2)
+    down_payment = models.DecimalField("Boshlang'ich to'lov", max_digits=14, decimal_places=2, default=0)
+    months = models.PositiveSmallIntegerField("Necha oyga")
+    monthly_payment = models.DecimalField(
+        "Oylik to'lov",
+        max_digits=14,
+        decimal_places=2,
+        blank=True,
+        help_text="Bo'sh qoldirsangiz, avtomatik hisoblanadi",
+    )
+    currency = models.CharField("Valyuta", max_length=3, choices=Currency.choices, default=Currency.UZS)
+    first_payment_date = models.DateField("Birinchi to'lov sanasi")
+    notes = models.TextField("Izoh", blank=True)
+    is_closed = models.BooleanField("Yopilgan", default=False)
+
+    class Meta:
+        ordering = ["is_closed", "first_payment_date"]
+        verbose_name = "Kredit"
+        verbose_name_plural = "Kreditlar"
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def icon(self):
+        return self.KIND_ICON[self.kind]
+
+    def _payments(self):
+        if not hasattr(self, "_cache"):
+            self._cache = list(self.payments.all())
+        return self._cache
+
+    @property
+    def paid_count(self):
+        return len(self._payments())
+
+    @property
+    def paid_amount(self):
+        return self.down_payment + sum((p.amount for p in self._payments()), Decimal(0))
+
+    @property
+    def remaining(self):
+        return max(Decimal(0), self.total_amount - self.paid_amount)
+
+    @property
+    def progress(self):
+        return round(self.paid_count * 100 / self.months) if self.months else 100
+
+    @property
+    def next_due(self):
+        if self.is_closed or self.paid_count >= self.months:
+            return None
+        return add_months(self.first_payment_date, self.paid_count)
+
+    @property
+    def next_amount(self):
+        """Oxirgi oyda yaxlitlash qoldig'i bilan qolgan summa to'lanadi."""
+        if self.paid_count == self.months - 1:
+            return self.remaining
+        return min(self.monthly_payment, self.remaining)
+
+    @property
+    def end_date(self):
+        return add_months(self.first_payment_date, self.months - 1)
+
+    def schedule(self):
+        paid = {p.period: p for p in self._payments()}
+        today = timezone.localdate()
+        last = max(Decimal(0), self.total_amount - self.down_payment - self.monthly_payment * (self.months - 1))
+        rows = []
+        for i in range(self.months):
+            due = add_months(self.first_payment_date, i)
+            payment = paid.get(i)
+            rows.append(
+                {
+                    "n": i + 1,
+                    "date": due,
+                    "payment": payment,
+                    "expected": last if i == self.months - 1 else self.monthly_payment,
+                    "overdue": payment is None and due < today and not self.is_closed,
+                }
+            )
+        return rows
+
+
+class CreditPayment(models.Model):
+    credit = models.ForeignKey(Credit, on_delete=models.CASCADE, related_name="payments")
+    period = models.PositiveSmallIntegerField("Oy (0 dan)")
+    amount = models.DecimalField("Summa", max_digits=14, decimal_places=2)
+    date = models.DateField("To'langan sana", default=timezone.localdate)
+    transaction = models.ForeignKey(Transaction, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+
+    class Meta:
+        ordering = ["period"]
+        constraints = [models.UniqueConstraint(fields=["credit", "period"], name="uniq_credit_period")]
+
+    def __str__(self):
+        return f"{self.credit}: {self.period + 1}-to'lov"

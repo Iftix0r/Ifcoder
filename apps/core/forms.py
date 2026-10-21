@@ -56,6 +56,13 @@ class MoneyInput(forms.TextInput):
         base = {"inputmode": "numeric", "x-data": "", "x-money": "", "autocomplete": "off"}
         super().__init__({**base, **(attrs or {})})
 
+    def value_from_datadict(self, data, files, name):
+        # JS o'chiq bo'lsa ham «1 250 000» yoki «1 250 000,50» qabul qilinsin
+        value = super().value_from_datadict(data, files, name)
+        if isinstance(value, str):
+            value = "".join(value.split()).replace(" ", "").replace(",", ".")
+        return value
+
     def format_value(self, value):
         if value in (None, ""):
             return ""

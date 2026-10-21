@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from apps.crm.models import Contact, Deal
-from apps.finance.models import Debt, Invoice, Kind, Transaction, totals_by_currency
+from apps.finance.models import Credit, Debt, Invoice, Kind, Transaction, totals_by_currency
 from apps.finance.views import month_series
 from apps.growth.models import Goal, Habit, JournalEntry, LearningItem
 from apps.planner.models import Task, TimeEntry
@@ -21,6 +21,14 @@ def _greeting(hour):
     if 17 <= hour < 22:
         return "Xayrli kech"
     return "Xayrli tun"
+
+
+def due_credits(today, days=3):
+    """Keyingi to'lovi kechikkan yoki `days` kun ichida bo'lgan ochiq kreditlar."""
+    credits = Credit.objects.filter(is_closed=False).prefetch_related("payments")
+    return sorted(
+        (c for c in credits if c.next_due and c.next_due <= today + timedelta(days=days)), key=lambda c: c.next_due
+    )
 
 
 def _alerts(today):
@@ -75,6 +83,16 @@ def _alerts(today):
                 "title": f"{d.person} {verb}",
                 "hint": d.due_date,
                 "url": "/debts/",
+            }
+        )
+    for c in due_credits(today):
+        items.append(
+            {
+                "icon": "credit-card",
+                "tone": "tone-rose",
+                "title": f"{c.title}: {c.paid_count + 1}-oy to'lovi",
+                "hint": c.next_due,
+                "url": "/credits/",
             }
         )
     for deal in Deal.objects.filter(stage__in=Deal.OPEN_STAGES, expected_close__lt=today).select_related("contact")[:5]:
