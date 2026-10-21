@@ -2,7 +2,9 @@ from django.contrib.auth.decorators import login_not_required
 from django.core.cache import cache
 from django.shortcuts import render
 
+from apps.core import telegram
 from apps.crm.models import Activity, Contact, Deal
+from apps.dashboard.digest import lead_message
 
 from .forms import LeadForm
 
@@ -39,6 +41,7 @@ def landing(request):
                 kind=Activity.Kind.MESSAGE,
                 text=f"Saytdan ariza: {service}\n{data['message']}".strip(),
             )
+            telegram.send_message_async(lead_message(contact, deal, service, data["message"]))
             sent = True
             form = LeadForm()
     return render(request, "landing/index.html", {"form": form, "sent": sent})

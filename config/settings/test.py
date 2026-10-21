@@ -10,3 +10,5 @@ STORAGES = {
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 ALLOWED_HOSTS = ["*"]
+TELEGRAM_BOT_TOKEN = ""
+TELEGRAM_CHAT_ID = ""

@@ -5,7 +5,9 @@ from django.contrib.auth.decorators import login_not_required
 from django.core.cache import cache
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
 
+from apps.core import telegram
 from apps.vault import services as vault
 
 from .forms import LoginForm, ProfileForm, StyledPasswordChangeForm
@@ -72,6 +74,7 @@ def settings_view(request):
             "profile_form": profile,
             "password_form": password,
             "has_2fa": vault.has_2fa(request.user),
+            "telegram_ok": telegram.is_configured(),
             "unused_codes": request.user.totp.backup_codes.filter(used_at__isnull=True).count()
             if vault.has_2fa(request.user)
             else 0,
@@ -80,3 +83,12 @@ def settings_view(request):
             else None,
         },
     )
+
+
+@require_POST
+def telegram_test(request):
+    if telegram.send_message(f"✅ <b>Ifcoder</b>: sinov xabari ({telegram.h(request.user.get_username())})."):
+        messages.success(request, "Sinov xabari Telegram'ga yuborildi.")
+    else:
+        messages.error(request, "Yuborilmadi — TELEGRAM_BOT_TOKEN va TELEGRAM_CHAT_ID ni tekshiring.")
+    return redirect("settings")

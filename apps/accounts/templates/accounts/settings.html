@@ -52,6 +52,21 @@
     </div>
   </div>
 
+  <div class="card animate-fade-up">
+    <div class="card-header">
+      <div class="flex items-center gap-3"><span class="icon-chip {% if telegram_ok %}tone-cyan{% else %}tone-amber{% endif %}">{% icon "send" "size-5" %}</span><div><p class="card-title">Telegram bildirishnomalar</p><p class="text-xs text-ink-3">Yangi ariza, ertalabki xulosa, kunlik backup</p></div></div>
+      {% if telegram_ok %}<span class="badge badge-success">Ulangan</span>{% else %}<span class="badge badge-warning">Sozlanmagan</span>{% endif %}
+    </div>
+    <div class="card-body">
+      {% if telegram_ok %}
+        <form method="post" action="{% url 'telegram_test' %}">{% csrf_token %}<button class="btn btn-secondary">{% icon "send" "size-4" %}Sinov xabari yuborish</button></form>
+      {% else %}
+        <p class="text-sm text-ink-2">Serverdagi <code class="font-mono">.env</code> ga <code class="font-mono">TELEGRAM_BOT_TOKEN</code> va <code class="font-mono">TELEGRAM_CHAT_ID</code> yozing. Chat ID'ni bilish: botga /start yozib, <code class="font-mono">python manage.py telegram_setup</code>.</p>
+      {% endif %}
+      <p class="help-text">Cron: <code class="font-mono">daily_digest</code> (ertalab) va <code class="font-mono">backup_db --telegram</code> (kechasi).</p>
+    </div>
+  </div>
+
   <div id="backup" class="card animate-fade-up">
     <div class="card-header">
       <div class="flex items-center gap-3"><span class="icon-chip tone-cyan">{% icon "database-backup" "size-5" %}</span><div><p class="card-title">Zaxira nusxalar</p><p class="text-xs text-ink-3">Cron: <code class="font-mono">manage.py backup_db</code></p></div></div>

@@ -119,3 +119,9 @@ VAULT_FERNET_KEY = env("IFCODER_FERNET_KEY", default="")
 BACKUP_DIR = BASE_DIR / "backups"
 BACKUP_KEEP = 14
 FORMS_URLFIELD_ASSUME_HTTPS = True
+
+# Telegram bildirishnomalar (yangi ariza, ertalabki xulosa, backup). Bo'sh bo'lsa — o'chiq.
+TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
+TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", default="")
+# Xabarlardagi havolalar uchun
+SITE_URL = env("SITE_URL", default="https://iftix0r.uz").rstrip("/")

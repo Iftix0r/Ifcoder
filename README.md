@@ -137,6 +137,21 @@ CSS o'zgargan bo'lsa, push'dan oldin lokalda `npm run css` qiling — serverda N
 
 Oxirgi 14 ta nusxa `backups/` da saqlanadi; Sozlamalar sahifasidan ham olish/yuklab olish mumkin.
 
+### Telegram bildirishnomalar
+
+1. `.env` ga `TELEGRAM_BOT_TOKEN=...` yozing, Telegram'da botga `/start` yuboring.
+2. `python manage.py telegram_setup` — chat ID'ingizni ko'rsatadi → `.env` ga `TELEGRAM_CHAT_ID=...`.
+3. `python manage.py telegram_setup --test` — sinov xabari.
+
+Yuboriladi: saytdan yangi ariza (darhol), ertalabki xulosa va kunlik backup fayli (cron orqali):
+
+```
+0 7 * * *  cd ~/iftix0r.uz && ~/virtualenv/iftix0r.uz/3.11/bin/python manage.py daily_digest >> logs/cron.log 2>&1
+0 3 * * *  cd ~/iftix0r.uz && ~/virtualenv/iftix0r.uz/3.11/bin/python manage.py backup_db --telegram >> logs/cron.log 2>&1
+```
+
+`daily_digest --print` — yubormasdan matnni ko'rish.
+
 ### 2FA'ga kirish yo'qolsa
 
 2FA `/admin/` ni ham qamrab oladi. Authenticator yo'qolsa va zaxira kodlar ham bo'lmasa, serverda:

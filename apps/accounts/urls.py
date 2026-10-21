@@ -7,4 +7,5 @@ urlpatterns = [
     path("login/", views.LoginView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("settings/", views.settings_view, name="settings"),
+    path("settings/telegram-test/", views.telegram_test, name="telegram_test"),
 ]
