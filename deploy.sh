@@ -24,7 +24,7 @@ fi
 source "$VENV_ACTIVATE"
 export DJANGO_SETTINGS_MODULE=config.settings.prod
 
-if [[ ! -f .env ]]; then
+if [[ ! -f .env && -z "${DJANGO_SECRET_KEY:-}" ]]; then
   echo ".env fayli yo'q. Nusxa olib to'ldiring: cp .env.example .env && nano .env" >&2
   exit 1
 fi

@@ -13,6 +13,7 @@ media/
 logs/
 backups/
 staticfiles/
+tmp/
 
 # Firebase service-account (Admin SDK) kaliti — maxfiy, hech qachon repo'ga tushmasin.
 firebase-service-account.json
