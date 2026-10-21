@@ -30,7 +30,12 @@ class Resource(TimeStamped):
     auto_renew = models.BooleanField("Avtomatik yangilanadi", default=False)
     is_active = models.BooleanField("Faol", default=True)
     project = models.ForeignKey(
-        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="resources"
+        "projects.Project",
+        verbose_name="Loyiha",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="resources",
     )
     notes = models.TextField("Izoh", blank=True)
 

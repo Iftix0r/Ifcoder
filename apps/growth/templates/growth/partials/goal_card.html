@@ -1,0 +1,31 @@
+<div id="goal-{{ g.pk }}" class="card flex flex-col overflow-hidden animate-fade-up">
+  <div class="flex items-start gap-3 p-5 pb-4">
+    <span class="icon-chip {{ g.area_tone }} shrink-0">{% icon g.area_icon "size-5" %}</span>
+    <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'goal_edit' g.pk %}" hx-target="#modal-content">
+      <p class="text-[15px] leading-snug font-semibold text-ink">{{ g.title }}</p>
+      <p class="mt-0.5 text-xs text-ink-3">{{ g.get_area_display }}{% if g.target_date %} · {{ g.target_date|date:"j M Y" }}{% endif %}</p>
+    </div>
+    {% if g.target_date and g.status == "active" %}<span class="badge {{ g.target_date|due_badge }}">{{ g.target_date|due_label }}</span>{% endif %}
+  </div>
+  {% if g.why %}<p class="line-clamp-2 px-5 text-sm text-ink-2 italic">“{{ g.why }}”</p>{% endif %}
+  <div class="px-5 pt-4">
+    <div class="mb-1.5 flex items-center justify-between text-xs"><span class="text-ink-3">Progress</span><span class="font-bold">{{ g.progress }}%</span></div>
+    <div class="progress h-2"><span style="width: {{ g.progress }}%"></span></div>
+  </div>
+  <ul class="mt-3 flex-1 space-y-0.5 px-3">
+    {% for m in g.milestones.all %}
+      <li class="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-2/60">
+        <button type="button" hx-post="{% url 'milestone_toggle' m.pk %}" hx-target="#goal-{{ g.pk }}" hx-swap="outerHTML" class="check size-[18px] {% if m.done %}is-done{% endif %}" aria-label="Bajarildi">{% if m.done %}{% icon "check" "size-3" "3" %}{% endif %}</button>
+        <span class="flex-1 text-sm {% if m.done %}text-ink-3 line-through{% else %}text-ink{% endif %}">{{ m.title }}</span>
+        <button type="button" hx-post="{% url 'milestone_delete' m.pk %}" hx-target="#goal-{{ g.pk }}" hx-swap="outerHTML" class="rounded p-0.5 text-ink-3 opacity-0 transition group-hover:opacity-100 hover:text-rose-500" aria-label="O'chirish">{% icon "x" "size-3.5" %}</button>
+      </li>
+    {% endfor %}
+  </ul>
+  <form hx-post="{% url 'milestone_add' g.pk %}" hx-target="#goal-{{ g.pk }}" hx-swap="outerHTML" class="mt-2 border-t border-line p-3">
+    {% csrf_token %}
+    <label class="relative flex items-center">
+      <span class="pointer-events-none absolute left-3 text-ink-3">{% icon "plus" "size-4" %}</span>
+      <input name="title" required maxlength="200" autocomplete="off" placeholder="Keyingi bosqich…" class="input h-9 border-transparent bg-transparent pl-9 shadow-none hover:border-line">
+    </label>
+  </form>
+</div>

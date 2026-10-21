@@ -1,0 +1,40 @@
+{% load static %}<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{{ inv.number }} — Hisob-faktura</title>
+  <link rel="stylesheet" href="{% static 'dist/app.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <style>@page { size: A4; margin: 14mm; } @media print { .no-print { display: none !important; } body { background: #fff; } }</style>
+</head>
+<body class="bg-canvas text-ink">
+  <div class="no-print mx-auto flex max-w-3xl justify-end gap-2 px-6 pt-6">
+    <button onclick="window.print()" class="btn btn-primary">{% icon "printer" "size-4" %}Chop etish / PDF saqlash</button>
+  </div>
+  <article class="mx-auto my-6 max-w-3xl rounded-2xl border border-line bg-white p-10 text-slate-900 shadow-soft print:my-0 print:border-0 print:p-0 print:shadow-none">
+    <header class="flex items-start justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <img src="{% static 'img/logo.svg' %}" alt="" class="size-11">
+        <div><p class="font-display text-xl font-extrabold">Ifcoder</p><p class="text-xs text-slate-500">{{ user.get_full_name|default:user.username }}{% if user.email %} · {{ user.email }}{% endif %}</p></div>
+      </div>
+      <div class="text-right">
+        <p class="text-xs font-semibold tracking-widest text-slate-400 uppercase">Hisob-faktura</p>
+        <p class="font-mono text-xl font-bold">{{ inv.number }}</p>
+        <p class="mt-1 text-xs text-slate-500">Sana: {{ inv.issued_date|date:"d.m.Y" }}{% if inv.due_date %}<br>To'lov muddati: {{ inv.due_date|date:"d.m.Y" }}{% endif %}</p>
+      </div>
+    </header>
+    <section class="mt-10 grid grid-cols-2 gap-6 text-sm">
+      <div><p class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Kimga</p><p class="mt-1 font-semibold">{{ inv.contact.name }}</p>{% if inv.contact.company %}<p class="text-slate-600">{{ inv.contact.company }}</p>{% endif %}{% if inv.contact.phone %}<p class="text-slate-600">{{ inv.contact.phone }}</p>{% endif %}{% if inv.contact.email %}<p class="text-slate-600">{{ inv.contact.email }}</p>{% endif %}</div>
+      {% if inv.project %}<div><p class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Loyiha</p><p class="mt-1 font-semibold">{{ inv.project.name }}</p></div>{% endif %}
+    </section>
+    <table class="mt-10 w-full text-sm">
+      <thead><tr class="border-b-2 border-slate-900 text-left text-xs tracking-wider text-slate-500 uppercase"><th class="py-2">Xizmat</th><th class="py-2 text-right">Miqdor</th><th class="py-2 text-right">Narx</th><th class="py-2 text-right">Jami</th></tr></thead>
+      <tbody>{% for l in lines %}<tr class="border-b border-slate-200"><td class="py-3 pr-4">{{ l.description }}</td><td class="py-3 text-right">{{ l.quantity|floatformat:"-2" }}</td><td class="py-3 text-right whitespace-nowrap">{{ l.unit_price|money:inv.currency }}</td><td class="py-3 text-right font-semibold whitespace-nowrap">{{ l.total|money:inv.currency }}</td></tr>{% endfor %}</tbody>
+    </table>
+    <div class="mt-6 flex justify-end"><div class="w-64 rounded-xl bg-slate-50 p-4"><div class="flex items-center justify-between"><span class="text-sm text-slate-500">Jami to'lov</span><span class="text-xl font-extrabold">{{ inv.total|money:inv.currency }}</span></div></div></div>
+    {% if inv.notes %}<section class="mt-10 border-t border-slate-200 pt-6 text-sm whitespace-pre-wrap text-slate-600">{{ inv.notes }}</section>{% endif %}
+    <footer class="mt-12 text-center text-xs text-slate-400">Hamkorligingiz uchun rahmat!</footer>
+  </article>
+</body>
+</html>

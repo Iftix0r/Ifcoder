@@ -9,7 +9,18 @@ class ProjectForm(StyledModelForm):
     class Meta:
         model = Project
         fields = [
-            "name", "kind", "status", "contact", "start_date", "deadline", "budget", "currency",
-            "repo_url", "live_url", "stack", "tone", "description",
+            "name",
+            "kind",
+            "status",
+            "contact",
+            "start_date",
+            "deadline",
+            "budget",
+            "currency",
+            "repo_url",
+            "live_url",
+            "stack",
+            "tone",
+            "description",
         ]
         widgets = {"start_date": DateInput(), "deadline": DateInput(), "budget": MoneyInput()}

@@ -1,0 +1,8 @@
+<div id="secret-{{ secret.pk }}" class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none"
+     data-text="{{ value }}" x-data="copy($el.dataset.text)" hx-get="{% url 'secret_hide' secret.pk %}" hx-trigger="load delay:30s" hx-swap="outerHTML">
+  <input readonly value="{{ value }}" @focus="$el.select()" class="input h-9 min-w-0 flex-1 bg-surface-2/60 font-mono text-xs sm:w-64 sm:flex-none" aria-label="{{ secret.name }}">
+  <button type="button" @click="run()" class="btn btn-secondary btn-icon btn-sm shrink-0" title="Nusxa olish" aria-label="Nusxa olish">
+    <span x-show="!copied">{% icon "copy" "size-4" %}</span><span x-cloak x-show="copied" class="text-emerald-500">{% icon "check" "size-4" "3" %}</span>
+  </button>
+  <button type="button" hx-get="{% url 'secret_hide' secret.pk %}" hx-target="#secret-{{ secret.pk }}" hx-swap="outerHTML" class="btn btn-secondary btn-icon btn-sm shrink-0" title="Yashirish" aria-label="Yashirish">{% icon "eye-off" "size-4" %}</button>
+</div>

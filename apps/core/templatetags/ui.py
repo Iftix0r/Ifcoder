@@ -109,9 +109,7 @@ def due_label(value):
         return "Kecha"
     if d < 0:
         return f"{-d} kun o'tdi"
-    if d < 7:
-        return f"{d} kundan keyin"
-    return value.strftime("%d.%m.%Y")
+    return f"{d} kundan keyin"
 
 
 @register.filter

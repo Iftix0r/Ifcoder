@@ -1,0 +1,71 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}{{ inv.number }}{% endblock %}
+{% block content %}
+<div id="invoice-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#invoice-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<a href="{% url 'invoice_list' %}" class="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-3 transition hover:text-ink">{% icon "arrow-left" "size-4" %}Hisob-fakturalar</a>
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <div class="flex items-center gap-2"><h1 class="font-mono text-2xl font-bold tracking-tight">{{ inv.number }}</h1><span class="badge {{ inv.status_badge }}">{{ inv.status_label }}</span></div>
+    <p class="mt-1 text-sm text-ink-2"><a href="{{ inv.contact.get_absolute_url }}" class="font-medium hover:text-brand-600">{{ inv.contact }}</a>{% if inv.project %} · <a href="{{ inv.project.get_absolute_url }}" class="hover:text-brand-600">{{ inv.project }}</a>{% endif %} · {{ inv.issued_date|date:"j E Y" }}</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'invoice_print' inv.pk %}" target="_blank" hx-boost="false" class="btn btn-secondary">{% icon "printer" "size-4" %}Chop etish / PDF</a>
+    <button type="button" class="btn btn-secondary btn-icon" hx-get="{% url 'invoice_edit' inv.pk %}" hx-target="#modal-content" aria-label="Tahrirlash">{% icon "pencil" "size-4" %}</button>
+    {% if inv.status == "draft" %}<button type="button" class="btn btn-primary" hx-post="{% url 'invoice_status' inv.pk %}" hx-vals='{"status": "sent"}'>{% icon "send" "size-4" %}Yuborildi</button>{% endif %}
+    {% if inv.status == "sent" %}<button type="button" class="btn btn-primary" hx-post="{% url 'invoice_status' inv.pk %}" hx-vals='{"status": "paid"}'>{% icon "circle-check" "size-4" %}To'landi</button>{% endif %}
+  </div>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="card overflow-hidden lg:col-span-2 animate-fade-up">
+    <div class="card-header"><p class="card-title">Xizmatlar</p><span class="text-lg font-bold">{{ inv.total|money:inv.currency }}</span></div>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead><tr><th>Xizmat</th><th class="text-right">Miqdor</th><th class="text-right">Narx</th><th class="text-right">Jami</th><th></th></tr></thead>
+        <tbody>
+          {% for l in lines %}
+            <tr>
+              <td class="font-medium text-ink">{{ l.description }}</td>
+              <td class="text-right">{{ l.quantity|floatformat:"-2" }}</td>
+              <td class="text-right whitespace-nowrap">{{ l.unit_price|money:inv.currency }}</td>
+              <td class="text-right font-semibold whitespace-nowrap text-ink">{{ l.total|money:inv.currency }}</td>
+              <td class="w-10"><button type="button" hx-post="{% url 'invoice_line_delete' l.pk %}" hx-confirm="Qator o'chirilsinmi?" class="btn btn-ghost btn-icon btn-sm text-ink-3 hover:text-rose-500" aria-label="O'chirish">{% icon "x" "size-3.5" %}</button></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="py-8 text-center text-ink-3">Pastdagi formadan birinchi xizmatni qo'shing.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <form hx-post="{% url 'invoice_detail' inv.pk %}" hx-swap="none" class="grid gap-2 border-t border-line bg-surface-2/40 p-4 sm:grid-cols-[1fr_6rem_10rem_auto]">
+      {% csrf_token %}
+      <div>{{ form.description }}</div>{{ form.quantity }}{{ form.unit_price }}
+      <button class="btn btn-primary">{% icon "plus" "size-4" %}Qo'shish</button>
+    </form>
+  </div>
+  <div class="space-y-4">
+    <div class="card card-body animate-fade-up">
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between"><dt class="text-ink-3">Sana</dt><dd class="font-medium">{{ inv.issued_date|date:"j E Y" }}</dd></div>
+        <div class="flex justify-between"><dt class="text-ink-3">To'lov muddati</dt><dd class="font-medium">{{ inv.due_date|date:"j E Y"|default:"—" }}</dd></div>
+        <div class="flex justify-between"><dt class="text-ink-3">Valyuta</dt><dd class="font-medium">{{ inv.get_currency_display }}</dd></div>
+        {% if inv.paid_at %}<div class="flex justify-between"><dt class="text-ink-3">To'langan</dt><dd class="font-medium text-emerald-600">{{ inv.paid_at|date:"j E Y" }}</dd></div>{% endif %}
+      </dl>
+      {% if inv.notes %}<p class="prose-note mt-4 border-t border-line pt-4">{{ inv.notes }}</p>{% endif %}
+    </div>
+    <div class="card card-body animate-fade-up">
+      <p class="mb-3 text-xs font-semibold tracking-wider text-ink-3 uppercase">Holatni o'zgartirish</p>
+      <div class="flex flex-wrap gap-2">
+        {% for value, label in inv.Status.choices %}
+          <button type="button" hx-post="{% url 'invoice_status' inv.pk %}" hx-vals='{"status": "{{ value }}"}' class="btn btn-sm {% if inv.status == value %}btn-primary{% else %}btn-secondary{% endif %}">{{ label }}</button>
+        {% endfor %}
+      </div>
+      {% if payments %}
+        <p class="mt-4 text-xs text-ink-3">Bog'langan to'lovlar:</p>
+        <ul class="mt-1 space-y-1 text-sm">{% for p in payments %}<li class="flex justify-between"><span>{{ p.date|date:"j M Y" }}</span><span class="font-semibold text-emerald-600">+{{ p.amount|money:p.currency }}</span></li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

@@ -1,118 +1,127 @@
 # Ifcoder
 
-iftix0r.uz uchun shaxsiy CRM/boshqaruv tizimi: loyihalar, mijozlar, botlar, moliya, infratuzilma,
-kontent va xavfsizlik (API kalitlar, 2FA, backup) bitta panelda.
+Dasturchining shaxsiy ish tizimi: **ish rejalari, CRM, moliya va shaxsiy rivojlanish** bitta panelda.
+Ochiq landing sahifa (`/`) arizalari avtomatik CRM'ga lid + bitim bo'lib tushadi.
+
+**Stack:** Django 5.2 · SQLite (yoki `DATABASE_URL`) · HTMX · Alpine.js · Tailwind CSS v4 · cPanel (Passenger).
+Dizayn tizimi AIMarkaz bilan bir xil (indigo → violet, yorug'/qorong'i rejim, ⌘K paneli).
+
+## Bo'limlar
+
+| Bo'lim | Manzil | Nima |
+|---|---|---|
+| Bugun | `/dashboard/` | Kunlik reja, odatlar, «E'tibor talab qiladi», moliya grafigi, maqsad va loyihalar |
+| Vazifalar | `/tasks/` | Kanban (drag & drop), Bugun, Hafta, Ro'yxat; tezkor qo'shish; vazifa taymeri |
+| Loyihalar | `/projects/` | Progress, vazifalar, vaqt, tushum/xarajat, eslatmalar, resurs va kalitlar |
+| Vaqt hisobi | `/time/` | Taymer yozuvlari, 14 kunlik grafik, loyihalar bo'yicha vaqt |
+| Mijozlar | `/contacts/` | Mijoz kartasi, aloqalar tarixi (qo'ng'iroq/uchrashuv/xabar), keyingi aloqa eslatmasi |
+| Bitimlar | `/deals/` | Voronka kanbani: Yangi → Aloqa → Taklif → Muzokara → Yutildi/Yo'qotildi |
+| Kirim-chiqim | `/finance/` | Oylik hisob, 6 oylik grafik, xarajatlar tarkibi, toifalar (so'm va $) |
+| Hisob-fakturalar | `/invoices/` | Xizmat qatorlari, holatlar, chop etish/PDF; «To'landi» → kirim avtomatik yoziladi |
+| Qarzlar | `/debts/` | Menga qarzdor / men qarzdorman, qisman qaytarish, muddatlar |
+| Maqsadlar | `/goals/` | Bosqichlar (checklist) bilan progress |
+| Odatlar | `/habits/` | Kunlik belgilash, seriya 🔥, 26 haftalik heatmap |
+| O'rganish | `/learning/` | Kitob, kurs, ko'nikmalar — progress va xulosalar |
+| Kundalik | `/journal/` | Kayfiyat, energiya, yutuqlar, o'rganilganlar, ertangi ish |
+| Eslatmalar | `/notes/` | Eslatma, kod parchasi, havola, g'oya; teglar, qadash, nusxa olish |
+| Resurslar | `/resources/` | Domen, server, obuna, SSL — tugash sanasi va oylik xarajat |
+| Maxfiy kalitlar | `/vault/` | Fernet bilan shifrlangan API kalit/parollar, 30 soniyada yashiriladi |
+| Sozlamalar | `/accounts/settings/` | Profil, parol, 2FA (TOTP + zaxira kodlar), backup |
+
+Tezkor tugmalar: `Ctrl+K` yoki `/` — qidiruv, `N` — yangi vazifa.
+
+## Lokal ishga tushirish
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py createsuperuser
+.venv/bin/python manage.py runserver
+```
+
+`manage.py` default'da `config.settings.dev` ni ishlatadi (DEBUG, dev uchun Fernet kaliti).
+
+### CSS (Tailwind)
+
+Serverda Node.js kerak emas — CSS lokal build qilinadi va `static/dist/app.css` repoga qo'shiladi:
+
+```bash
+npm install
+npm run css          # bir marta
+npm run css:watch    # ishlab chiqishda
+npm run vendor       # htmx / alpine / lucide ikonlarni yangilash
+```
+
+### Testlar va lint
+
+```bash
+.venv/bin/pytest
+.venv/bin/ruff check . && .venv/bin/ruff format --check .
+```
 
 ## Tuzilma
 
-- `clients/` — Mijozlar (ism, telefon, telegram, email, izoh)
-- `projects/` — Loyihalar (nomi, mijoz, holati, repo havolasi, muddat)
-- `bots/` — Botlar (nomi, platforma, holati, tegishli loyiha/mijoz)
-- `finance/` — Moliya: daromadlar, xarajatlar, hisob-fakturalar (chop etish/PDF ko'rinishi bilan)
-- `infrastructure/` — Infratuzilma: domenlar, serverlar, SSL sertifikatlar (muddati yaqinlashayotganlarini kuzatish)
-- `content/` — Kontent: blog postlar va SMM/video g'oyalar bazasi (ichki boshqaruv, saytga chiqarilmaydi)
-- `vault/` — Sozlamalar/xavfsizlik: shifrlangan API kalitlar, 2FA (TOTP), avtomatik DB backup
-- `dashboard/` — Statistika sahifasi va boshqaruv paneli (`/panel/`) — barcha bo'limlar bo'yicha umumiy ko'rinish
+```
+config/settings/   base, dev, prod, test
+apps/core/         ikonlar, template teglar ({% icon %}, |money, |due_label), modal CRUD yordamchilari, navigatsiya, ⌘K qidiruv
+apps/accounts/     kirish (brute-force himoyasi), sozlamalar
+apps/planner/      vazifalar, taymer, vaqt hisobi
+apps/projects/     loyihalar
+apps/crm/          mijozlar, bitimlar, aloqalar tarixi
+apps/finance/      tranzaksiyalar, toifalar, hisob-fakturalar, qarzlar
+apps/growth/       maqsadlar, odatlar, o'rganish, kundalik
+apps/notes/        eslatmalar va kod parchalari
+apps/resources/    domen, server, obunalar
+apps/vault/        shifrlangan kalitlar, 2FA, backup
+apps/dashboard/    «Bugun» sahifasi
+apps/landing/      ochiq sahifa va ariza formasi
+templates/         layouts, partials (sidebar, topbar, ⌘K, modal, toast), components
+assets/app.css     Tailwind manbasi → static/dist/app.css
+mobile/            Flutter ilova (alohida loyiha)
+```
 
-`/panel/` — o'ziga xos (custom) boshqaruv paneli.
-`/admin/` — Django'ning standart (default) admin paneli — 2FA bilan qamrab olinmaydi, shu sababli
-2FA'dan qulflanib qolsangiz shu yerdan kirib qayta sozlashingiz mumkin (pastga qarang).
+Barcha panel sahifalari login talab qiladi (`LoginRequiredMiddleware`); ochiqlari `@login_not_required` bilan belgilangan.
 
-## Ishga tushirish
+## Production (cPanel)
+
+Environment variable'lar (`.env` yoki *Setup Python App → Environment Variables*):
+
+| Variable | Nima uchun |
+|---|---|
+| `DJANGO_SECRET_KEY` | `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
+| `IFCODER_FERNET_KEY` | Vault va 2FA shifrlash kaliti: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
+| `DATABASE_URL` | ixtiyoriy, default `sqlite:///db.sqlite3` |
+| `SECURE_SSL_REDIRECT` | SSL hali ulanmagan bo'lsa `False` |
+
+`passenger_wsgi.py` va `config/wsgi.py` `config.settings.prod` ni ishlatadi — kalitlar o'rnatilmasa ishga tushmaydi.
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
+python manage.py collectstatic --noinput
 ```
 
-Keyin `http://127.0.0.1:8000/panel/` manziliga kirib (login talab qilinadi) boshqaruv panelini ko'rasiz;
-`http://127.0.0.1:8000/admin/` orqali esa Django'ning standart admin paneliga kirasiz.
+**Muhim:** `IFCODER_FERNET_KEY` yo'qolsa yoki almashsa, vault yozuvlari va 2FA o'qilmaydi. Uni backup'lardan alohida
+(parol menejerida) saqlang.
 
-## API kalitlar va shifrlash kaliti
+### Backup
 
-`vault` ilovasi API kalitlarni (Telegram bot token, Click/Payme va h.k.) va 2FA maxfiy kodlarini
-`cryptography.fernet.Fernet` bilan shifrlab saqlaydi. Shifrlash kaliti `IFCODER_FERNET_KEY`
-environment variable orqali beriladi; `config/settings.py` ichida faqat lokal ishlab chiqish
-uchun fallback qiymat bor.
+```
+0 3 * * * cd ~/ifcoder && ~/virtualenv/ifcoder/3.11/bin/python manage.py backup_db >> logs/cron.log 2>&1
+```
 
-**Muhim**: bu kalit yo'qolsa yoki almashtirilsa, mavjud vault yozuvlari (API kalitlar, 2FA
-maxfiy kodlari) butunlay o'qib bo'lmaydigan holga keladi. Production serverda (cPanel yoki
-Passenger orqali) `IFCODER_FERNET_KEY`ni haqiqiy environment variable sifatida o'rnating va
-uni DB backup'laridan alohida, xavfsiz joyda (masalan parol menejerida) saqlang — DB backup
-tiklansa-yu, kalit boshqa joyda bo'lmasa, vault ma'lumotlari yo'qoladi.
+Oxirgi 14 ta nusxa `backups/` da saqlanadi; Sozlamalar sahifasidan ham olish/yuklab olish mumkin.
 
-Yangi kalit generatsiya qilish:
+### 2FA'ga kirish yo'qolsa
+
+2FA `/admin/` ni ham qamrab oladi. Authenticator yo'qolsa va zaxira kodlar ham bo'lmasa, serverda:
 
 ```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+python manage.py disable_2fa <username>
 ```
 
-## Production sozlamalari (cPanel)
+## Eski versiya
 
-`config/settings.py` quyidagi environment variable'larni o'qiydi (cPanel'da *Setup Python App →
-Environment Variables* bo'limidan qo'shiladi). Hech biri o'rnatilmasa, lokal ishlab chiqish
-uchun xavfsiz fallback qiymatlar ishlatiladi — production'da barchasini o'rnating:
-
-| Variable | Nima uchun | Misol |
-|---|---|---|
-| `DJANGO_SECRET_KEY` | Django'ning kripto imzo kaliti | `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
-| `DJANGO_DEBUG` | `False` qilib qo'yilsa, xatoliklar oshkor qilinmaydi va HTTPS/cookie xavfsizlik sozlamalari yoqiladi | `False` |
-| `IFCODER_FERNET_KEY` | Vault (API kalitlar, 2FA) shifrlash kaliti — yuqoriga qarang | (generatsiya qilingan Fernet kalit) |
-
-`DJANGO_DEBUG=False` o'rnatilganda avtomatik yoqiladigan sozlamalar: `SECURE_SSL_REDIRECT`,
-`SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, HSTS (`SECURE_HSTS_SECONDS=31536000` va
-subdomenlar/preload). Bular sayt Let's Encrypt SSL bilan ishlagani uchun xavfsiz — agar hali
-SSL sertifikat ulanmagan bo'lsa, avval uni yoqing, aks holda saytga HTTP orqali kirib bo'lmay
-qoladi.
-
-cPanel/Passenger SSL'ni tashqarida (Apache/LiteSpeed) tugatib, ilovaga oddiy HTTP orqali
-uzatadi — shu sababli `SECURE_PROXY_SSL_HEADER` va `CSRF_TRUSTED_ORIGINS` ham `DEBUG=False`
-bilan birga avtomatik sozlanadi (aks holda cheksiz redirect yoki CSRF xatoligi chiqishi mumkin).
-Yangi domen qo'shsangiz, uni `ALLOWED_HOSTS`ga (`config/settings.py`) va `CSRF_TRUSTED_ORIGINS`
-ro'yxatiga ham qo'shishni unutmang.
-
-Qo'shimcha production tafsilotlari:
-- `/robots.txt` butun saytni qidiruv tizimlaridan yashiradi (`Disallow: /`) — bu shaxsiy CRM,
-  ommaviy indekslanishi kerak emas.
-- `DEBUG=False` bo'lganda `templates/404.html` va `templates/500.html` ishlatiladi (Django
-  standart oq sahifasi o'rniga).
-
-## 2FA (ikki bosqichli tasdiqlash)
-
-`/panel/vault/2fa/setup/` orqali yoqiladi: Google Authenticator (yoki shunga o'xshash ilova)
-bilan QR kodni skanerlang, ilovadagi 6 xonali kodni kiriting. Tasdiqlangandan so'ng 8 ta bir
-martalik zaxira kod ko'rsatiladi — ularni xavfsiz joyga saqlang (faqat bir marta ko'rsatiladi).
-
-2FA yoqilgandan keyin har bir login'da `/panel/*` sahifalariga kirishdan oldin kod so'raladi.
-`/admin/` ataylab 2FA bilan qamrab olinmagan — agar authenticator ilovaga kirish imkoni
-bo'lmasa, `/admin/`ga oddiy parol bilan kirib, `Vault > 2FA qurilmalar` bo'limidan o'z
-qurilmangizni o'chirib, `/panel/vault/2fa/setup/`dan qayta sozlashingiz mumkin.
-
-## Avtomatik backup
-
-`manage.py backup_db` buyrug'i SQLite ma'lumotlar bazasidan (`sqlite3`ning xavfsiz `.backup()`
-API'si orqali) `backups/` papkasiga zaxira nusxa oladi va eng oxirgi 14 tasidan boshqasini
-avtomatik o'chiradi. `backups/` `.gitignore`ga qo'shilgan va `STATIC_ROOT`dan tashqarida —
-hech qachon `/static/` orqali ochilmaydi.
-
-Qo'lda ishga tushirish:
-
-```bash
-python manage.py backup_db
-```
-
-Server'da avtomatik ishlashi uchun cron'ga qo'shing (masalan, har kuni soat 03:00'da):
-
-```
-0 3 * * * cd /path/to/Ifcoder && /path/to/venv/bin/python manage.py backup_db >> backups/cron.log 2>&1
-```
-
-Backup ro'yxati, qo'lda backup olish va yuklab olish `/panel/vault/backups/` sahifasida ham mavjud.
-
-**Eslatma**: `IFCODER_FERNET_KEY` DB fayli ichida saqlanmaydi — backup'ni tiklashda shifrlash
-kalitini ham alohida qo'yish kerak, aks holda vault yozuvlari o'qilmaydi (yuqoridagi bo'limga
-qarang).
+Oldingi kod (Telegram userbot, mijoz portali, tiketlar, operator joylashuvi API) `legacy-v1` git tegida saqlangan:
+`git checkout legacy-v1`.

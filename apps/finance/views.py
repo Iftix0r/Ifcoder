@@ -13,7 +13,21 @@ from apps.core.crud import delete_done, done, form_modal
 from .forms import CategoryForm, DebtForm, InvoiceForm, InvoiceLineForm, TransactionForm
 from .models import Category, Debt, Invoice, InvoiceLine, Kind, Transaction, totals_by_currency
 
-MONTHS = ["", "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"]
+MONTHS = [
+    "",
+    "Yanvar",
+    "Fevral",
+    "Mart",
+    "Aprel",
+    "May",
+    "Iyun",
+    "Iyul",
+    "Avgust",
+    "Sentabr",
+    "Oktabr",
+    "Noyabr",
+    "Dekabr",
+]
 
 
 def _month(request):
@@ -47,7 +61,13 @@ def month_series(months=6, currency="UZS"):
     series = []
     for i in range(months):
         m = _shift(start, i)
-        series.append({"label": MONTHS[m.month][:3], "income": data.get(m, {}).get("income", 0), "expense": data.get(m, {}).get("expense", 0)})
+        series.append(
+            {
+                "label": MONTHS[m.month][:3],
+                "income": data.get(m, {}).get("income", 0),
+                "expense": data.get(m, {}).get("expense", 0),
+            }
+        )
     peak = max([max(s["income"], s["expense"]) for s in series] + [1])
     for s in series:
         s["income_h"] = round(float(s["income"]) * 100 / float(peak))
@@ -119,7 +139,9 @@ def transaction_create(request):
             initial[key] = request.GET[key]
     is_income = initial["kind"] == Kind.INCOME
     return form_modal(
-        request, TransactionForm, initial=initial,
+        request,
+        TransactionForm,
+        initial=initial,
         title="Kirim qo'shish" if is_income else "Chiqim qo'shish",
         icon="trending-up" if is_income else "trending-down",
         tone="tone-emerald" if is_income else "tone-rose",
@@ -130,7 +152,11 @@ def transaction_create(request):
 def transaction_edit(request, pk):
     tx = get_object_or_404(Transaction, pk=pk)
     return form_modal(
-        request, TransactionForm, instance=tx, title=f"{tx.get_kind_display()}", icon="wallet",
+        request,
+        TransactionForm,
+        instance=tx,
+        title=f"{tx.get_kind_display()}",
+        icon="wallet",
         tone="tone-emerald" if tx.kind == Kind.INCOME else "tone-rose",
         delete_url=reverse("transaction_delete", args=[pk]),
     )
@@ -152,7 +178,9 @@ def category_list(request):
 @require_POST
 def category_delete(request, pk):
     get_object_or_404(Category, pk=pk).delete()
-    return render(request, "finance/partials/categories.html", {"form": CategoryForm(), "categories": Category.objects.all()})
+    return render(
+        request, "finance/partials/categories.html", {"form": CategoryForm(), "categories": Category.objects.all()}
+    )
 
 
 # --- Hisob-fakturalar ---------------------------------------------------------------------
@@ -189,15 +217,26 @@ def invoice_create(request):
         if request.GET.get(key):
             initial[key] = request.GET[key]
     return form_modal(
-        request, InvoiceForm, initial=initial, title="Yangi hisob-faktura", icon="receipt-text", tone="tone-cyan",
-        subtitle="Keyingi qadamda xizmatlar qatorini qo'shasiz", redirect=lambda inv: inv.get_absolute_url(),
+        request,
+        InvoiceForm,
+        initial=initial,
+        title="Yangi hisob-faktura",
+        icon="receipt-text",
+        tone="tone-cyan",
+        subtitle="Keyingi qadamda xizmatlar qatorini qo'shasiz",
+        redirect=lambda inv: inv.get_absolute_url(),
     )
 
 
 def invoice_edit(request, pk):
     inv = get_object_or_404(Invoice, pk=pk)
     return form_modal(
-        request, InvoiceForm, instance=inv, title=inv.number, icon="receipt-text", tone="tone-cyan",
+        request,
+        InvoiceForm,
+        instance=inv,
+        title=inv.number,
+        icon="receipt-text",
+        tone="tone-cyan",
         delete_url=reverse("invoice_delete", args=[pk]),
     )
 
@@ -237,15 +276,25 @@ def invoice_status(request, pk):
     if status == Invoice.Status.PAID:
         inv.paid_at = inv.paid_at or timezone.localdate()
         if not inv.payments.exists() and inv.total:
-            category = Category.objects.filter(kind=Kind.INCOME).first()
+            incomes = Category.objects.filter(kind=Kind.INCOME)
+            category = incomes.filter(name__istartswith="Loyiha").first() or incomes.first()
             Transaction.objects.create(
-                kind=Kind.INCOME, amount=inv.total, currency=inv.currency, category=category, date=inv.paid_at,
-                description=f"{inv.number} bo'yicha to'lov", contact=inv.contact, project=inv.project, invoice=inv,
+                kind=Kind.INCOME,
+                amount=inv.total,
+                currency=inv.currency,
+                category=category,
+                date=inv.paid_at,
+                description=f"{inv.number} bo'yicha to'lov",
+                contact=inv.contact,
+                project=inv.project,
+                invoice=inv,
             )
     else:
         inv.paid_at = None
     inv.save()
-    message = "To'langan deb belgilandi — kirim avtomatik yozildi." if status == Invoice.Status.PAID else "Holat yangilandi."
+    message = (
+        "To'langan deb belgilandi — kirim avtomatik yozildi." if status == Invoice.Status.PAID else "Holat yangilandi."
+    )
     return done(message, close=False)
 
 
@@ -288,14 +337,24 @@ def debt_list(request):
 def debt_create(request):
     direction = request.GET.get("direction", Debt.Direction.THEY_OWE)
     return form_modal(
-        request, DebtForm, initial={"direction": direction}, title="Yangi qarz", icon="hand-coins", tone="tone-amber",
+        request,
+        DebtForm,
+        initial={"direction": direction},
+        title="Yangi qarz",
+        icon="hand-coins",
+        tone="tone-amber",
     )
 
 
 def debt_edit(request, pk):
     debt = get_object_or_404(Debt, pk=pk)
     return form_modal(
-        request, DebtForm, instance=debt, title=debt.person, icon="hand-coins", tone="tone-amber",
+        request,
+        DebtForm,
+        instance=debt,
+        title=debt.person,
+        icon="hand-coins",
+        tone="tone-amber",
         delete_url=reverse("debt_delete", args=[pk]),
     )
 

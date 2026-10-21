@@ -48,7 +48,18 @@ class DebtForm(StyledModelForm):
 
     class Meta:
         model = Debt
-        fields = ["direction", "person", "contact", "amount", "paid_amount", "currency", "date", "due_date", "reason", "is_closed"]
+        fields = [
+            "direction",
+            "person",
+            "contact",
+            "amount",
+            "paid_amount",
+            "currency",
+            "date",
+            "due_date",
+            "reason",
+            "is_closed",
+        ]
         widgets = {"date": DateInput(), "due_date": DateInput(), "amount": MoneyInput(), "paid_amount": MoneyInput()}
 
     def clean(self):

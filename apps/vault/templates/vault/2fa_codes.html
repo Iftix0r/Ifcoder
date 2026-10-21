@@ -1,0 +1,18 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Zaxira kodlar{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-lg card overflow-hidden animate-fade-up">
+  <div class="p-6 text-center">
+    <span class="icon-chip tone-emerald mx-auto size-14 rounded-2xl">{% icon "shield-check" "size-6" %}</span>
+    <h1 class="mt-4 text-xl font-bold">2FA yoqildi</h1>
+    <p class="mt-1 text-sm text-ink-2">Telefon yo'qolsa, shu kodlar bilan kirasiz. Har biri bir marta ishlaydi va <b>faqat hozir</b> ko'rsatiladi.</p>
+  </div>
+  <div class="mx-6 grid grid-cols-2 gap-2 rounded-2xl border border-line bg-surface-2/60 p-4 font-mono text-sm">
+    {% for c in codes %}<span class="rounded-lg bg-surface px-3 py-2 text-center">{{ c }}</span>{% endfor %}
+  </div>
+  <div class="flex gap-2 p-6" x-data="copy('{{ codes|join:' '|escapejs }}')">
+    <button type="button" @click="run()" class="btn btn-secondary flex-1"><span x-show="!copied" class="flex items-center gap-2">{% icon "copy" "size-4" %}Nusxa olish</span><span x-cloak x-show="copied">Olindi ✓</span></button>
+    <a href="{% url 'settings' %}" class="btn btn-primary flex-1">Saqladim</a>
+  </div>
+</div>
+{% endblock %}

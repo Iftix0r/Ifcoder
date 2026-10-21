@@ -1,0 +1,53 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Maxfiy kalitlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Maxfiy kalitlar</h1>
+    <p class="mt-1 text-sm text-ink-2">API kalitlar, bot tokenlar, server parollari — Fernet bilan shifrlangan.</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <form method="get" hx-get="{% url 'vault_list' %}" hx-target="#vault-region" hx-select="#vault-region" hx-swap="outerHTML" hx-push-url="true" hx-trigger="input changed delay:300ms from:input[name=q]">
+      <label class="relative flex h-10 items-center sm:w-60">
+        <span class="pointer-events-none absolute left-3 text-ink-3">{% icon "search" "size-4" %}</span>
+        <input type="search" name="q" value="{{ q }}" placeholder="Qidirish…" autocomplete="off" class="input h-10 pl-9">
+      </label>
+    </form>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'secret_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}<span class="hidden sm:inline">Kalit</span></button>
+  </div>
+</div>
+
+{% if not has_2fa %}
+<div class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] p-4 sm:flex-row sm:items-center animate-fade-up">
+  <span class="icon-chip tone-amber shrink-0">{% icon "shield-alert" "size-5" %}</span>
+  <div class="flex-1"><p class="text-sm font-semibold">2FA yoqilmagan</p><p class="text-xs text-ink-2">Parol sizib chiqsa ham kalitlar himoyalangan bo'lishi uchun ikki bosqichli tasdiqlashni yoqing.</p></div>
+  <a href="{% url '2fa_setup' %}" class="btn btn-secondary btn-sm">{% icon "shield-check" "size-4" %}2FA yoqish</a>
+</div>
+{% endif %}
+
+<div id="vault-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#vault-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="card overflow-hidden animate-fade-up">
+  {% if secrets %}
+    <ul class="divide-y divide-line">
+      {% for s in secrets %}
+        <li class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
+          <div class="flex min-w-0 flex-1 cursor-pointer items-center gap-3" hx-get="{% url 'secret_edit' s.pk %}" hx-target="#modal-content">
+            <span class="icon-chip tone-amber size-9 shrink-0 rounded-lg">{% icon s.icon "size-4" %}</span>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold">{{ s.name }}</p>
+              <p class="truncate text-xs text-ink-3">{{ s.get_kind_display }}{% if s.login %} · {{ s.login }}{% endif %}{% if s.project %} · {{ s.project }}{% endif %}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 sm:w-[26rem] sm:justify-end">
+            {% include "vault/partials/hidden.html" with secret=s %}
+            {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener" hx-boost="false" class="btn btn-ghost btn-icon btn-sm shrink-0" aria-label="Havola">{% icon "external-link" "size-4" %}</a>{% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {% include "components/empty_state.html" with icon="key-round" title="Kalitlar yo'q" text="Telegram bot token, Click/Payme kalitlari, server parollari — bitta xavfsiz joyda." %}
+  {% endif %}
+</div>
+</div>
+{% endblock %}

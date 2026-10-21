@@ -1,0 +1,44 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Kundalik{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Kundalik</h1>
+    <p class="mt-1 text-sm text-ink-2">Har kuni 3 daqiqa: nima qildim, nimani o'rgandim, ertaga nima qilaman.</p>
+  </div>
+  <a href="{% url 'journal_today' %}" class="btn btn-primary">{% icon "notebook-pen" "size-4" %}{% if has_today %}Bugungini tahrirlash{% else %}Bugungi kundalik{% endif %}</a>
+</div>
+
+<div class="mb-4 grid gap-4 lg:grid-cols-3">
+  <div class="card card-body lg:col-span-2 animate-fade-up">
+    <div class="mb-3 flex items-center justify-between"><p class="card-title">Oxirgi 30 kun</p><span class="badge badge-brand">{{ written }} / 30 kun yozildi</span></div>
+    <div class="grid grid-cols-10 gap-1.5 sm:grid-cols-15">
+      {% for d in streak_days %}
+        <a href="{% url 'journal_edit' d.date|date:'Y-m-d' %}" title="{{ d.date|date:'j M' }}" class="flex aspect-square items-center justify-center rounded-lg text-base transition hover:scale-110 {% if d.entry %}bg-surface-2{% else %}border border-dashed border-line-strong text-[10px] text-ink-3{% endif %}">{% if d.entry %}{{ d.entry.mood_emoji }}{% else %}{{ d.date|date:"j" }}{% endif %}</a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-4 lg:grid-cols-1">
+    <div class="card p-5 animate-fade-up"><p class="text-xs text-ink-3">O'rtacha kayfiyat</p><p class="mt-1 text-2xl font-bold">{{ avg_mood|default:"—" }} <span class="text-sm font-medium text-ink-3">/ 5</span></p></div>
+    <div class="card p-5 animate-fade-up"><p class="text-xs text-ink-3">O'rtacha energiya</p><p class="mt-1 text-2xl font-bold">{{ avg_energy|default:"—" }} <span class="text-sm font-medium text-ink-3">/ 5</span></p></div>
+  </div>
+</div>
+
+<div class="space-y-3">
+  {% for e in entries %}
+    <a href="{% url 'journal_edit' e.date|date:'Y-m-d' %}" class="card card-hover block p-5 animate-fade-up">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">{{ e.mood_emoji }}</span>
+        <div class="flex-1"><p class="font-semibold">{{ e.date|date:"l, j E Y" }}</p><p class="text-xs text-ink-3">Energiya: {{ e.energy }}/5</p></div>
+      </div>
+      <div class="mt-3 grid gap-3 text-sm md:grid-cols-3">
+        {% if e.wins %}<div><p class="text-[11px] font-semibold tracking-wider text-emerald-600 uppercase dark:text-emerald-400">Yutuqlar</p><p class="mt-1 line-clamp-3 text-ink-2">{{ e.wins }}</p></div>{% endif %}
+        {% if e.lessons %}<div><p class="text-[11px] font-semibold tracking-wider text-brand-600 uppercase dark:text-brand-300">O'rgandim</p><p class="mt-1 line-clamp-3 text-ink-2">{{ e.lessons }}</p></div>{% endif %}
+        {% if e.tomorrow %}<div><p class="text-[11px] font-semibold tracking-wider text-amber-600 uppercase dark:text-amber-400">Ertaga</p><p class="mt-1 line-clamp-3 text-ink-2">{{ e.tomorrow }}</p></div>{% endif %}
+      </div>
+    </a>
+  {% empty %}
+    <div class="card">{% include "components/empty_state.html" with icon="notebook-pen" title="Hali kundalik yozilmagan" text="Kun oxirida 3 daqiqa ajrating — bir oydan keyin o'sishingizni ko'rasiz." action_url="/journal/today/" action_label="Birinchisini yozish" action_icon="pencil" %}</div>
+  {% endfor %}
+</div>
+{% endblock %}

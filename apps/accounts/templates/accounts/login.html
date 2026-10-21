@@ -1,0 +1,14 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Kirish · Ifcoder{% endblock %}
+{% block form %}
+<h1 class="text-[28px] font-bold tracking-tight">Xush kelibsiz 👋</h1>
+<p class="mt-2 text-sm text-ink-2">Ish tizimingizga kiring.</p>
+<form method="post" class="mt-8 space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/form_errors.html" %}
+  {% include "components/field.html" with field=form.username prefix="user" %}
+  {% include "components/field.html" with field=form.password prefix="lock-keyhole" %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn btn-primary btn-lg w-full">Kirish {% icon "arrow-right" "size-4" %}</button>
+</form>
+{% endblock %}

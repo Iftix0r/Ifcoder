@@ -1,0 +1,23 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Maqsadlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Maqsadlar</h1>
+    <p class="mt-1 text-sm text-ink-2">Katta maqsadni kichik bosqichlarga bo'ling — har bir bosqich progressni oshiradi.</p>
+  </div>
+  <button type="button" class="btn btn-primary" hx-get="{% url 'goal_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Maqsad</button>
+</div>
+<nav class="-mx-4 mb-5 flex gap-5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 animate-fade-up">
+  {% for value, label, n in tabs %}<a href="?status={{ value }}" class="tab whitespace-nowrap {% if status == value %}is-active{% endif %}">{{ label }} <span class="text-xs text-ink-3">{{ n }}</span></a>{% endfor %}
+</nav>
+<div id="goals-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#goals-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if goals %}
+  <div class="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {% for g in goals %}{% include "growth/partials/goal_card.html" %}{% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="goal" title="Bu yerda hali maqsad yo'q" text="Masalan: «Yil oxirigacha 3 ta SaaS mijoz», «IELTS 7.0», «Go tilini o'rganish»." %}</div>
+{% endif %}
+</div>
+{% endblock %}

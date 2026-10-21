@@ -11,8 +11,19 @@ class ContactForm(StyledModelForm):
     class Meta:
         model = Contact
         fields = [
-            "name", "kind", "company", "position", "phone", "telegram", "email", "website",
-            "status", "source", "next_contact", "tags", "notes",
+            "name",
+            "kind",
+            "company",
+            "position",
+            "phone",
+            "telegram",
+            "email",
+            "website",
+            "status",
+            "source",
+            "next_contact",
+            "tags",
+            "notes",
         ]
         widgets = {"next_contact": DateInput()}
 
@@ -30,7 +41,11 @@ class ActivityForm(StyledFormMixin, forms.ModelForm):
     class Meta:
         model = Activity
         fields = ["kind", "text"]
-        widgets = {"text": forms.Textarea(attrs={"rows": 2, "placeholder": "Nima bo'ldi? Masalan: narx kelishildi, ertaga TZ yuboradi"})}
+        widgets = {
+            "text": forms.Textarea(
+                attrs={"rows": 2, "placeholder": "Nima bo'ldi? Masalan: narx kelishildi, ertaga TZ yuboradi"}
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

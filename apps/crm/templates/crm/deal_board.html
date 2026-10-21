@@ -22,7 +22,7 @@
   </div>
 </div>
 
-<div id="deals-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#deals-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div id="deals-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body, kanban:moved from:body" hx-select="#deals-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
   <div x-data="kanban" @dragstart="start($event)" @dragover="over($event)" @drop="drop($event)" @dragend="end()"
        class="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0 animate-fade-up">
     {% for col in columns %}

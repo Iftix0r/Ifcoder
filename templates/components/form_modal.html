@@ -13,7 +13,7 @@
         {{ field }} {{ field.label }}
       </label>
     {% else %}
-      {% include "components/field.html" with field=field wrapper_class=field.field.wide|yesno:"sm:col-span-2," %}
+      <div class="{% if field.field.wide %}sm:col-span-2{% endif %}">{% include "components/field.html" with field=field %}</div>
     {% endif %}
   {% endfor %}
   {% for field in form.hidden_fields %}{{ field }}{% endfor %}

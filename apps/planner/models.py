@@ -23,7 +23,12 @@ class Task(TimeStamped):
     status = models.CharField("Holati", max_length=6, choices=Status.choices, default=Status.TODO)
     priority = models.PositiveSmallIntegerField("Muhimlik", choices=Priority.choices, default=Priority.MEDIUM)
     project = models.ForeignKey(
-        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks"
+        "projects.Project",
+        verbose_name="Loyiha",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="tasks",
     )
     contact = models.ForeignKey(
         "crm.Contact", verbose_name="Mijoz", null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks"
@@ -58,7 +63,12 @@ class Task(TimeStamped):
 class TimeEntry(models.Model):
     task = models.ForeignKey(Task, null=True, blank=True, on_delete=models.SET_NULL, related_name="time_entries")
     project = models.ForeignKey(
-        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="time_entries"
+        "projects.Project",
+        verbose_name="Loyiha",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="time_entries",
     )
     note = models.CharField("Izoh", max_length=250, blank=True)
     started_at = models.DateTimeField("Boshlandi", default=timezone.now)
@@ -68,6 +78,9 @@ class TimeEntry(models.Model):
         ordering = ["-started_at"]
         verbose_name = "Vaqt yozuvi"
         verbose_name_plural = "Vaqt yozuvlari"
+
+    def __str__(self):
+        return self.label
 
     @property
     def is_running(self):

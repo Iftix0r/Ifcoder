@@ -1,0 +1,56 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Eslatmalar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Eslatmalar</h1>
+    <p class="mt-1 text-sm text-ink-2">Ikkinchi miya: kod parchalari, buyruqlar, havolalar va g'oyalar.</p>
+  </div>
+  <button type="button" class="btn btn-primary" hx-get="{% url 'note_create' %}{% if kind %}?kind={{ kind }}{% endif %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Eslatma</button>
+</div>
+
+<form method="get" class="mb-4 flex flex-wrap items-center gap-2 animate-fade-up" hx-get="{% url 'note_list' %}" hx-target="#notes-region" hx-select="#notes-region" hx-swap="outerHTML" hx-push-url="true" hx-trigger="change, input changed delay:300ms from:input[name=q]">
+  <label class="relative flex h-10 flex-1 items-center sm:max-w-80">
+    <span class="pointer-events-none absolute left-3 text-ink-3">{% icon "search" "size-4" %}</span>
+    <input type="search" name="q" value="{{ q }}" placeholder="Matn, kod yoki teg bo'yicha…" autocomplete="off" class="input h-10 pl-9">
+  </label>
+  <div class="segmented">
+    <label class="cursor-pointer"><input type="radio" name="kind" value="" class="peer sr-only" {% if not kind %}checked{% endif %}><span class="inline-flex h-8 items-center rounded-[10px] px-3 text-[13px] font-medium text-ink-3 peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-soft">Barchasi</span></label>
+    {% for v, label in kinds %}
+      <label class="cursor-pointer"><input type="radio" name="kind" value="{{ v }}" class="peer sr-only" {% if kind == v %}checked{% endif %}><span class="inline-flex h-8 items-center rounded-[10px] px-3 text-[13px] font-medium whitespace-nowrap text-ink-3 peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-soft">{{ label }}</span></label>
+    {% endfor %}
+  </div>
+  {% if tag %}<input type="hidden" name="tag" value="{{ tag }}"><a href="?" class="badge badge-brand">#{{ tag }} {% icon "x" "size-3" %}</a>{% endif %}
+</form>
+{% if tags and not tag %}<div class="mb-5 flex flex-wrap gap-1.5 animate-fade-up">{% for t in tags %}<a href="?tag={{ t|urlencode }}" class="badge badge-neutral hover:text-ink">#{{ t }}</a>{% endfor %}</div>{% endif %}
+
+<div id="notes-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#notes-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if notes %}
+  <div class="columns-1 gap-4 sm:columns-2 xl:columns-3">
+    {% for n in notes %}
+      <article class="card card-hover group mb-4 break-inside-avoid cursor-pointer overflow-hidden animate-fade-up" hx-get="{% url 'note_view' n.pk %}" hx-target="#modal-content">
+        <div class="flex items-start gap-3 p-4 pb-3">
+          <span class="icon-chip {{ n.tone }} size-8 shrink-0 rounded-lg">{% icon n.icon "size-4" %}</span>
+          <div class="min-w-0 flex-1">
+            <p class="text-[14.5px] leading-snug font-semibold">{{ n.title }}</p>
+            <p class="mt-0.5 truncate text-xs text-ink-3">{{ n.updated_at|ago }}{% if n.project %} · {{ n.project }}{% endif %}{% if n.language %} · {{ n.language }}{% endif %}</p>
+          </div>
+          <button type="button" hx-post="{% url 'note_pin' n.pk %}" @click.stop class="rounded-md p-1 transition {% if n.pinned %}text-brand-500{% else %}text-ink-3 opacity-0 group-hover:opacity-100{% endif %} hover:bg-surface-2" title="Qadash">{% icon "pin" "size-3.5" %}</button>
+        </div>
+        {% if n.body %}
+          {% if n.kind == "snippet" %}
+            <pre class="mx-4 mb-4 max-h-48 overflow-hidden rounded-lg border border-line bg-surface-2 p-3 font-mono text-[11.5px] leading-relaxed text-ink-2">{{ n.body|truncatechars:600 }}</pre>
+          {% else %}
+            <p class="line-clamp-6 px-4 pb-4 text-sm leading-relaxed whitespace-pre-line text-ink-2">{{ n.body }}</p>
+          {% endif %}
+        {% endif %}
+        {% if n.url %}<p class="mx-4 mb-4 truncate rounded-lg bg-surface-2 px-2.5 py-1.5 text-xs text-brand-600 dark:text-brand-300">{{ n.url }}</p>{% endif %}
+        {% if n.tag_list %}<div class="flex flex-wrap gap-1 px-4 pb-4">{% for t in n.tag_list %}<span class="badge badge-neutral">#{{ t }}</span>{% endfor %}</div>{% endif %}
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="sticky-note" title="Eslatma topilmadi" text="Deploy buyruqlari, SQL so'rovlar, foydali havolalar — keyin ⌘K bilan bir zumda topasiz." %}</div>
+{% endif %}
+</div>
+{% endblock %}

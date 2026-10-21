@@ -25,7 +25,12 @@ class Note(TimeStamped):
     tags = models.CharField("Teglar", max_length=200, blank=True)
     pinned = models.BooleanField("Qadab qo'yish", default=False)
     project = models.ForeignKey(
-        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="notes"
+        "projects.Project",
+        verbose_name="Loyiha",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="notes",
     )
 
     class Meta:

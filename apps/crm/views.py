@@ -36,12 +36,18 @@ def contact_list(request):
     )
     if q:
         qs = qs.filter(
-            Q(name__icontains=q) | Q(company__icontains=q) | Q(phone__icontains=q) | Q(telegram__icontains=q) | Q(tags__icontains=q)
+            Q(name__icontains=q)
+            | Q(company__icontains=q)
+            | Q(phone__icontains=q)
+            | Q(telegram__icontains=q)
+            | Q(tags__icontains=q)
         )
     if status in Contact.Status.values:
         qs = qs.filter(status=status)
     counts = dict(Contact.objects.values_list("status").annotate(n=Count("id")))
-    tabs = [("", "Barchasi", sum(counts.values()))] + [(v, label, counts.get(v, 0)) for v, label in Contact.Status.choices]
+    tabs = [("", "Barchasi", sum(counts.values()))] + [
+        (v, label, counts.get(v, 0)) for v, label in Contact.Status.choices
+    ]
     return render(
         request,
         "crm/contact_list.html",
@@ -72,7 +78,12 @@ def contact_detail(request, pk):
 
 def contact_create(request):
     return form_modal(
-        request, ContactForm, title="Yangi mijoz", icon="user-plus", tone="tone-cyan", size="xl",
+        request,
+        ContactForm,
+        title="Yangi mijoz",
+        icon="user-plus",
+        tone="tone-cyan",
+        size="xl",
         subtitle="Mijoz, potentsial mijoz yoki hamkor",
     )
 
@@ -80,7 +91,13 @@ def contact_create(request):
 def contact_edit(request, pk):
     contact = get_object_or_404(Contact, pk=pk)
     return form_modal(
-        request, ContactForm, instance=contact, title=contact.name, icon="user-pen", tone="tone-cyan", size="xl",
+        request,
+        ContactForm,
+        instance=contact,
+        title=contact.name,
+        icon="user-pen",
+        tone="tone-cyan",
+        size="xl",
         delete_url=reverse("contact_delete", args=[pk]),
     )
 
@@ -119,7 +136,11 @@ def activity_delete(request, pk):
     return render(
         request,
         "crm/partials/timeline.html",
-        {"contact": contact, "activities": contact.activities.select_related("deal")[:50], "activity_form": ActivityForm()},
+        {
+            "contact": contact,
+            "activities": contact.activities.select_related("deal")[:50],
+            "activity_form": ActivityForm(),
+        },
     )
 
 
@@ -179,11 +200,19 @@ def deal_create(request):
         deal = form.save(commit=False)
         deal.set_stage(deal.stage)
         deal.save()
-        Activity.objects.create(contact=deal.contact, deal=deal, kind=Activity.Kind.STAGE, text=f"Yangi bitim: «{deal.title}»")
+        Activity.objects.create(
+            contact=deal.contact, deal=deal, kind=Activity.Kind.STAGE, text=f"Yangi bitim: «{deal.title}»"
+        )
         return deal
 
     return form_modal(
-        request, DealForm, title="Yangi bitim", icon="target", tone="tone-violet", initial=initial, save=save,
+        request,
+        DealForm,
+        title="Yangi bitim",
+        icon="target",
+        tone="tone-violet",
+        initial=initial,
+        save=save,
         subtitle="Buyurtma, taklif yoki potentsial ish",
     )
 
@@ -200,9 +229,17 @@ def deal_edit(request, pk):
         return obj
 
     return form_modal(
-        request, DealForm, instance=deal, title=deal.title, icon="target", tone="tone-violet", save=save,
-        subtitle=f"Mijoz: {deal.contact}", delete_url=reverse("deal_delete", args=[pk]),
-        template="crm/partials/deal_form.html", extra={"deal": deal},
+        request,
+        DealForm,
+        instance=deal,
+        title=deal.title,
+        icon="target",
+        tone="tone-violet",
+        save=save,
+        subtitle=f"Mijoz: {deal.contact}",
+        delete_url=reverse("deal_delete", args=[pk]),
+        template="crm/partials/deal_form.html",
+        extra={"deal": deal},
     )
 
 

@@ -1,0 +1,58 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}O'rganish{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">O'rganish</h1>
+    <div class="mt-2 flex flex-wrap gap-2 text-sm">
+      <span class="badge badge-brand">{{ stats.active }} ta jarayonda</span>
+      <span class="badge badge-success">Bu yil {{ stats.done_year }} ta tugatildi</span>
+      <span class="badge badge-neutral">📚 {{ stats.books_year }} ta kitob</span>
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <nav class="segmented">
+      <a href="?" class="{% if not kind %}is-active{% endif %}">Barchasi</a>
+      {% for v, label in kinds %}<a href="?kind={{ v }}" class="{% if kind == v %}is-active{% endif %}">{{ label|truncatewords:1|cut:"…" }}</a>{% endfor %}
+    </nav>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'learning_create' %}{% if kind %}?kind={{ kind }}{% endif %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Qo'shish</button>
+  </div>
+</div>
+
+<div id="learning-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#learning-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% for label, items in groups %}
+  {% if items %}
+  <section class="mb-6">
+    <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-ink-2">{{ label }} <span class="badge badge-neutral">{{ items|length }}</span></h2>
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {% for it in items %}
+        <div class="card card-hover flex flex-col p-4 animate-fade-up">
+          <div class="flex items-start gap-3">
+            <span class="icon-chip {% if it.kind == 'book' %}tone-amber{% elif it.kind == 'course' %}tone-brand{% elif it.kind == 'skill' %}tone-violet{% else %}tone-cyan{% endif %} shrink-0">{% icon it.icon "size-5" %}</span>
+            <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'learning_edit' it.pk %}" hx-target="#modal-content">
+              <p class="line-clamp-2 text-[14.5px] leading-snug font-semibold">{{ it.title }}</p>
+              <p class="mt-0.5 truncate text-xs text-ink-3">{{ it.get_kind_display }}{% if it.author %} · {{ it.author }}{% endif %}</p>
+            </div>
+            {% if it.url %}<a href="{{ it.url }}" target="_blank" rel="noopener" hx-boost="false" class="btn btn-ghost btn-icon btn-sm shrink-0" aria-label="Ochish">{% icon "external-link" "size-4" %}</a>{% endif %}
+          </div>
+          {% if it.takeaways %}<p class="mt-3 line-clamp-3 text-sm text-ink-2">{{ it.takeaways }}</p>{% endif %}
+          <div class="mt-auto flex items-center gap-3 pt-4">
+            <div class="flex-1"><div class="progress"><span style="width: {{ it.progress }}%"></span></div></div>
+            <span class="text-xs font-semibold">{{ it.progress }}%</span>
+            {% if it.status != "done" and it.status != "dropped" %}
+              <button type="button" hx-post="{% url 'learning_bump' it.pk %}" class="btn btn-secondary btn-sm h-7 px-2 text-[11px]" title="+10%">+10%</button>
+            {% elif it.rating %}
+              <span class="text-xs text-amber-500">{% for i in "12345" %}{% if forloop.counter <= it.rating %}★{% else %}<span class="text-ink-3/40">★</span>{% endif %}{% endfor %}</span>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+{% empty %}{% endfor %}
+{% if not groups.0.1 and not groups.1.1 and not groups.2.1 and not groups.3.1 %}
+  <div class="card">{% include "components/empty_state.html" with icon="graduation-cap" title="O'rganish ro'yxati bo'sh" text="Kitoblar, kurslar, o'rganmoqchi bo'lgan texnologiyalar — hammasi shu yerda kuzatiladi." %}</div>
+{% endif %}
+</div>
+{% endblock %}

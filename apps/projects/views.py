@@ -70,7 +70,9 @@ def project_create(request):
     if request.GET.get("deal", "").isdigit():
         deal = Deal.objects.filter(pk=request.GET["deal"]).select_related("contact").first()
         if deal:
-            initial.update(name=deal.title, contact=deal.contact_id, budget=deal.value, currency=deal.currency, status="active")
+            initial.update(
+                name=deal.title, contact=deal.contact_id, budget=deal.value, currency=deal.currency, status="active"
+            )
     if request.GET.get("contact"):
         initial["contact"] = request.GET["contact"]
 
@@ -82,15 +84,28 @@ def project_create(request):
         return project
 
     return form_modal(
-        request, ProjectForm, title="Yangi loyiha", icon="folder-plus", tone="tone-violet", size="xl",
-        initial=initial, save=save, redirect=lambda p: p.get_absolute_url(),
+        request,
+        ProjectForm,
+        title="Yangi loyiha",
+        icon="folder-plus",
+        tone="tone-violet",
+        size="xl",
+        initial=initial,
+        save=save,
+        redirect=lambda p: p.get_absolute_url(),
     )
 
 
 def project_edit(request, pk):
     project = get_object_or_404(Project, pk=pk)
     return form_modal(
-        request, ProjectForm, instance=project, title=project.name, icon="folder-pen", tone="tone-violet", size="xl",
+        request,
+        ProjectForm,
+        instance=project,
+        title=project.name,
+        icon="folder-pen",
+        tone="tone-violet",
+        size="xl",
         delete_url=reverse("project_delete", args=[pk]),
     )
 

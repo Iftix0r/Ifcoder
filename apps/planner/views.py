@@ -21,7 +21,12 @@ COLUMNS = [
     (Task.Status.DOING, "bg-amber-500", "ring-amber-500/30"),
     (Task.Status.DONE, "bg-emerald-500", "ring-emerald-500/30"),
 ]
-VIEWS = [("board", "Kanban", "square-kanban"), ("today", "Bugun", "sun"), ("week", "Hafta", "calendar-range"), ("list", "Ro'yxat", "list")]
+VIEWS = [
+    ("board", "Kanban", "square-kanban"),
+    ("today", "Bugun", "sun"),
+    ("week", "Hafta", "calendar-range"),
+    ("list", "Ro'yxat", "list"),
+]
 
 
 def _filtered(request):
@@ -59,7 +64,11 @@ def board(request):
                 "dot": dot,
                 "ring": ring,
                 "tasks": list(
-                    (qs.filter(status=status, completed_at__gte=cutoff).order_by("-completed_at") if status == Task.Status.DONE else qs.filter(status=status))[:100]
+                    (
+                        qs.filter(status=status, completed_at__gte=cutoff).order_by("-completed_at")
+                        if status == Task.Status.DONE
+                        else qs.filter(status=status)
+                    )[:100]
                 ),
             }
             for status, dot, ring in COLUMNS
@@ -67,8 +76,18 @@ def board(request):
     elif view == "today":
         ctx["groups"] = [
             ("Muddati o'tgan", "badge-danger", open_qs.filter(Q(due_date__lt=today) | Q(planned_for__lt=today))),
-            ("Bugun", "badge-brand", open_qs.filter(Q(planned_for=today) | Q(due_date=today, planned_for__isnull=True)).exclude(due_date__lt=today)),
-            ("Jarayonda", "badge-warning", open_qs.filter(status=Task.Status.DOING).exclude(Q(planned_for__lte=today) | Q(due_date__lte=today))),
+            (
+                "Bugun",
+                "badge-brand",
+                open_qs.filter(Q(planned_for=today) | Q(due_date=today, planned_for__isnull=True)).exclude(
+                    due_date__lt=today
+                ),
+            ),
+            (
+                "Jarayonda",
+                "badge-warning",
+                open_qs.filter(status=Task.Status.DOING).exclude(Q(planned_for__lte=today) | Q(due_date__lte=today)),
+            ),
         ]
         ctx["done_today"] = qs.filter(completed_at__date=today)
     elif view == "week":
@@ -76,7 +95,9 @@ def board(request):
         offset = int(w) if w.lstrip("-").isdigit() else 0
         start = today - timedelta(days=today.weekday()) + timedelta(weeks=offset)
         days = [start + timedelta(days=i) for i in range(7)]
-        week_qs = qs.filter(Q(planned_for__range=(days[0], days[-1])) | Q(planned_for__isnull=True, due_date__range=(days[0], days[-1])))
+        week_qs = qs.filter(
+            Q(planned_for__range=(days[0], days[-1])) | Q(planned_for__isnull=True, due_date__range=(days[0], days[-1]))
+        )
         by_day = {d: [] for d in days}
         for t in week_qs:
             by_day.setdefault(t.planned_for or t.due_date, []).append(t)
@@ -92,7 +113,13 @@ def board(request):
             ("Muddati o'tgan", "badge-danger", open_qs.filter(due_date__lt=today).order_by("due_date")),
             ("Muddatli", "badge-brand", open_qs.filter(due_date__gte=today).order_by("due_date")),
             ("Muddatsiz", "badge-neutral", open_qs.filter(due_date__isnull=True)),
-            ("Bajarilgan (oxirgi 30 kun)", "badge-success", qs.filter(status=Task.Status.DONE, completed_at__gte=timezone.now() - timedelta(days=30)).order_by("-completed_at")[:50]),
+            (
+                "Bajarilgan (oxirgi 30 kun)",
+                "badge-success",
+                qs.filter(status=Task.Status.DONE, completed_at__gte=timezone.now() - timedelta(days=30)).order_by(
+                    "-completed_at"
+                )[:50],
+            ),
         ]
     ctx["stats"] = {
         "open": Task.objects.exclude(status=Task.Status.DONE).count(),
@@ -123,8 +150,13 @@ def task_create(request):
         return task
 
     return form_modal(
-        request, TaskForm, title="Yangi vazifa", icon="list-todo", subtitle="Bitta aniq, bajariladigan qadam yozing",
-        initial=_initial(request), save=save,
+        request,
+        TaskForm,
+        title="Yangi vazifa",
+        icon="list-todo",
+        subtitle="Bitta aniq, bajariladigan qadam yozing",
+        initial=_initial(request),
+        save=save,
     )
 
 
@@ -141,9 +173,15 @@ def task_edit(request, pk):
 
     spent = sum(e.minutes for e in task.time_entries.all())
     return form_modal(
-        request, TaskForm, instance=task, title="Vazifa", icon="square-pen", save=save,
+        request,
+        TaskForm,
+        instance=task,
+        title="Vazifa",
+        icon="square-pen",
+        save=save,
         subtitle=f"Sarflangan vaqt: {spent // 60} soat {spent % 60} daq" if spent else "Hali vaqt yozilmagan",
-        delete_url=reverse("task_delete", args=[pk]), template="planner/partials/task_form.html",
+        delete_url=reverse("task_delete", args=[pk]),
+        template="planner/partials/task_form.html",
         extra={"task": task},
     )
 
@@ -211,7 +249,9 @@ def task_move(request, pk):
             if running and running.task_id == task.pk:
                 services.stop_timer()
     services.reorder(Task, order)
-    return JsonResponse({"ok": True, "toast": "Bajarildi! 🎉" if status == Task.Status.DONE and task.status == status else ""})
+    return JsonResponse(
+        {"ok": True, "toast": "Bajarildi! 🎉" if status == Task.Status.DONE and task.status == status else ""}
+    )
 
 
 # --- Taymer ---------------------------------------------------------------------------
@@ -242,9 +282,11 @@ def timer_chip(request):
 def time_report(request):
     today = timezone.localdate()
     period = request.GET.get("period", "week")
-    start = {"week": today - timedelta(days=today.weekday()), "month": today.replace(day=1), "30": today - timedelta(days=29)}.get(
-        period, today - timedelta(days=today.weekday())
-    )
+    start = {
+        "week": today - timedelta(days=today.weekday()),
+        "month": today.replace(day=1),
+        "30": today - timedelta(days=29),
+    }.get(period, today - timedelta(days=today.weekday()))
     entries = list(
         TimeEntry.objects.select_related("task", "project").filter(started_at__date__gte=start).order_by("-started_at")
     )
@@ -283,15 +325,30 @@ def time_report(request):
 
 
 def entry_create(request):
-    return form_modal(request, TimeEntryForm, title="Vaqtni qo'lda yozish", icon="timer", tone="tone-amber",
-                      initial={"started_at": timezone.localtime().replace(second=0, microsecond=0) - timedelta(hours=1),
-                               "ended_at": timezone.localtime().replace(second=0, microsecond=0)})
+    return form_modal(
+        request,
+        TimeEntryForm,
+        title="Vaqtni qo'lda yozish",
+        icon="timer",
+        tone="tone-amber",
+        initial={
+            "started_at": timezone.localtime().replace(second=0, microsecond=0) - timedelta(hours=1),
+            "ended_at": timezone.localtime().replace(second=0, microsecond=0),
+        },
+    )
 
 
 def entry_edit(request, pk):
     entry = get_object_or_404(TimeEntry, pk=pk)
-    return form_modal(request, TimeEntryForm, instance=entry, title="Vaqt yozuvi", icon="timer", tone="tone-amber",
-                      delete_url=reverse("entry_delete", args=[pk]))
+    return form_modal(
+        request,
+        TimeEntryForm,
+        instance=entry,
+        title="Vaqt yozuvi",
+        icon="timer",
+        tone="tone-amber",
+        delete_url=reverse("entry_delete", args=[pk]),
+    )
 
 
 @require_POST

@@ -14,7 +14,13 @@ class Secret(TimeStamped):
         SSH = "ssh", "SSH / server"
         OTHER = "other", "Boshqa"
 
-    KIND_ICON = {"api_key": "key-round", "password": "lock-keyhole", "token": "bot", "ssh": "terminal", "other": "shield"}
+    KIND_ICON = {
+        "api_key": "key-round",
+        "password": "lock-keyhole",
+        "token": "bot",
+        "ssh": "terminal",
+        "other": "shield",
+    }
 
     name = models.CharField("Nomi", max_length=150)
     kind = models.CharField("Turi", max_length=10, choices=Kind.choices, default=Kind.API_KEY)
@@ -23,7 +29,12 @@ class Secret(TimeStamped):
     encrypted_value = models.TextField(editable=False)
     notes = models.TextField("Izoh", blank=True)
     project = models.ForeignKey(
-        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="secrets"
+        "projects.Project",
+        verbose_name="Loyiha",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="secrets",
     )
 
     class Meta:
@@ -57,6 +68,9 @@ class TOTPDevice(models.Model):
         verbose_name = "2FA qurilma"
         verbose_name_plural = "2FA qurilmalar"
 
+    def __str__(self):
+        return f"2FA: {self.user}"
+
     @property
     def secret(self):
         return decrypt(self.encrypted_secret)
@@ -66,3 +80,6 @@ class BackupCode(models.Model):
     device = models.ForeignKey(TOTPDevice, on_delete=models.CASCADE, related_name="backup_codes")
     code_hash = models.CharField(max_length=200, editable=False)
     used_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Zaxira kod #{self.pk}"

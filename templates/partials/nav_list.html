@@ -10,8 +10,7 @@
             <a href="{{ item.href }}" title="{{ item.label }}" @click="$store.sidebar.mobileOpen = false"
                class="nav-link {% active item.key %} {% if not mobile %}collapsed:justify-center collapsed:px-0{% endif %}">
               {% icon item.icon "size-[18px] shrink-0" "1.9" %}
-              <span class="truncate {% if not mobile %}collapsed:hidden{% endif %}">{{ item.label }}</span>">tez orada</span>
-              {% endif %}
+              <span class="truncate {% if not mobile %}collapsed:hidden{% endif %}">{{ item.label }}</span>
             </a>
           </li>
         {% endfor %}

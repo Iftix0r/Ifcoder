@@ -1,0 +1,14 @@
+{% extends "layouts/auth.html" %}
+{% block title %}2FA · Ifcoder{% endblock %}
+{% block form %}
+<span class="icon-chip tone-emerald size-12 rounded-2xl">{% icon "shield-check" "size-6" %}</span>
+<h1 class="mt-5 text-[28px] font-bold tracking-tight">Tasdiqlash kodi</h1>
+<p class="mt-2 text-sm text-ink-2">Authenticator ilovadagi 6 xonali kodni yoki zaxira kodni kiriting.</p>
+<form method="post" class="mt-8 space-y-4" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  {% include "components/field.html" with field=form.code prefix="key-round" %}
+  <button class="btn btn-primary btn-lg w-full">Tasdiqlash {% icon "arrow-right" "size-4" %}</button>
+</form>
+<form method="post" action="{% url 'logout' %}" class="mt-4 text-center">{% csrf_token %}<button class="text-sm text-ink-3 hover:text-ink">Boshqa akkaunt bilan kirish</button></form>
+{% endblock %}

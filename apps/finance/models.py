@@ -56,10 +56,20 @@ class Transaction(TimeStamped):
     date = models.DateField("Sana", default=timezone.localdate)
     description = models.CharField("Izoh", max_length=250, blank=True)
     contact = models.ForeignKey(
-        "crm.Contact", verbose_name="Mijoz", null=True, blank=True, on_delete=models.SET_NULL, related_name="transactions"
+        "crm.Contact",
+        verbose_name="Mijoz",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="transactions",
     )
     project = models.ForeignKey(
-        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="transactions"
+        "projects.Project",
+        verbose_name="Loyiha",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="transactions",
     )
     invoice = models.ForeignKey("Invoice", null=True, blank=True, on_delete=models.SET_NULL, related_name="payments")
 
@@ -92,7 +102,12 @@ class Invoice(TimeStamped):
     number = models.CharField("Raqami", max_length=30, unique=True)
     contact = models.ForeignKey("crm.Contact", verbose_name="Mijoz", on_delete=models.PROTECT, related_name="invoices")
     project = models.ForeignKey(
-        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="invoices"
+        "projects.Project",
+        verbose_name="Loyiha",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="invoices",
     )
     currency = models.CharField("Valyuta", max_length=3, choices=Currency.choices, default=Currency.UZS)
     issued_date = models.DateField("Sana", default=timezone.localdate)
@@ -124,9 +139,12 @@ class Invoice(TimeStamped):
     def status_badge(self):
         if self.is_overdue:
             return "badge-danger"
-        return {"draft": "badge-neutral", "sent": "badge-warning", "paid": "badge-success", "cancelled": "badge-neutral"}[
-            self.status
-        ]
+        return {
+            "draft": "badge-neutral",
+            "sent": "badge-warning",
+            "paid": "badge-success",
+            "cancelled": "badge-neutral",
+        }[self.status]
 
     @property
     def status_label(self):
@@ -136,7 +154,9 @@ class Invoice(TimeStamped):
     def next_number(cls):
         year = timezone.localdate().year
         prefix = f"INV-{year}-"
-        last = cls.objects.filter(number__startswith=prefix).order_by("-number").values_list("number", flat=True).first()
+        last = (
+            cls.objects.filter(number__startswith=prefix).order_by("-number").values_list("number", flat=True).first()
+        )
         seq = int(last.rsplit("-", 1)[1]) + 1 if last and last.rsplit("-", 1)[1].isdigit() else 1
         return f"{prefix}{seq:03d}"
 
@@ -149,6 +169,9 @@ class InvoiceLine(models.Model):
 
     class Meta:
         ordering = ["pk"]
+
+    def __str__(self):
+        return self.description
 
     @property
     def total(self):
@@ -163,7 +186,12 @@ class Debt(TimeStamped):
     direction = models.CharField("Yo'nalish", max_length=8, choices=Direction.choices, default=Direction.THEY_OWE)
     person = models.CharField("Kim", max_length=150)
     contact = models.ForeignKey(
-        "crm.Contact", verbose_name="Mijoz (CRM)", null=True, blank=True, on_delete=models.SET_NULL, related_name="debts"
+        "crm.Contact",
+        verbose_name="Mijoz (CRM)",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="debts",
     )
     amount = models.DecimalField("Summa", max_digits=14, decimal_places=2)
     paid_amount = models.DecimalField("Qaytarilgan", max_digits=14, decimal_places=2, default=0)

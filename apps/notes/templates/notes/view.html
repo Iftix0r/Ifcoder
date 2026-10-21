@@ -1,0 +1,36 @@
+<div data-modal-size="xl">
+  <div class="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-6 py-4 backdrop-blur">
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="icon-chip {{ note.tone }}">{% icon note.icon "size-5" %}</span>
+      <div class="min-w-0">
+        <h2 class="truncate text-base font-semibold">{{ note.title }}</h2>
+        <p class="truncate text-xs text-ink-3">{{ note.get_kind_display }} · {{ note.updated_at|date:"j E Y, H:i" }}{% if note.project %} · {{ note.project }}{% endif %}</p>
+      </div>
+    </div>
+    <div class="flex shrink-0 items-center gap-1">
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" hx-get="{% url 'note_edit' note.pk %}" hx-target="#modal-content" aria-label="Tahrirlash">{% icon "pencil" "size-4" %}</button>
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="$store.modal.close()" aria-label="Yopish">{% icon "x" "size-4" %}</button>
+    </div>
+  </div>
+  <div class="space-y-4 px-6 py-5">
+    {% if note.url %}
+      <a href="{{ note.url }}" target="_blank" rel="noopener" class="flex items-center gap-2 truncate rounded-xl border border-line bg-surface-2/60 px-3 py-2.5 text-sm text-brand-600 hover:underline dark:text-brand-300">{% icon "external-link" "size-4 shrink-0" %}{{ note.url }}</a>
+    {% endif %}
+    {% if note.body %}
+      <div class="relative" data-text="{{ note.body }}" x-data="copy($el.dataset.text)">
+        <button type="button" @click="run()" class="btn btn-secondary btn-sm absolute top-2 right-2 z-10">
+          <span x-show="!copied" class="flex items-center gap-1.5">{% icon "copy" "size-3.5" %}Nusxa</span>
+          <span x-cloak x-show="copied" class="flex items-center gap-1.5 text-emerald-500">{% icon "check" "size-3.5" "3" %}Olindi</span>
+        </button>
+        {% if note.kind == "snippet" %}
+          <pre class="code-block max-h-[60vh] pr-24">{{ note.body }}</pre>
+        {% else %}
+          <div class="prose-note max-h-[60vh] overflow-y-auto rounded-xl border border-line bg-surface-2/40 p-4 pr-24 text-ink">{{ note.body|linkify }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
+    {% if note.tag_list %}
+      <div class="flex flex-wrap gap-1.5">{% for t in note.tag_list %}<span class="badge badge-neutral">#{{ t }}</span>{% endfor %}</div>
+    {% endif %}
+  </div>
+</div>

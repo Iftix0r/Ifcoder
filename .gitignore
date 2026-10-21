@@ -1,15 +1,19 @@
 venv/
+.venv/
+node_modules/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
 db.sqlite3
+*.sqlite3-journal
 .env
-staticfiles/
 public/
 media/
-*.sqlite3-journal
+logs/
 backups/
+staticfiles/
 
-# Firebase service-account (Admin SDK) kaliti — mobileapi/push.py FIREBASE_CREDENTIALS_FILE
-# orqali o'qiydi. Bu maxfiy kalit, hech qachon repo'ga tushmasligi kerak.
+# Firebase service-account (Admin SDK) kaliti — maxfiy, hech qachon repo'ga tushmasin.
 firebase-service-account.json
 *firebase-adminsdk*.json

@@ -1,0 +1,27 @@
+<div class="card overflow-hidden animate-fade-up">
+  <div class="card-header">
+    <div class="flex items-center gap-3"><span class="icon-chip {{ tone }}">{% icon ico "size-5" %}</span><div><p class="card-title">{{ title }}</p><p class="text-sm font-bold">{{ total|totals }}</p></div></div>
+    <button type="button" class="btn btn-ghost btn-sm btn-icon" hx-get="{% url 'debt_create' %}?direction={{ direction }}" hx-target="#modal-content" aria-label="Qo'shish">{% icon "plus" "size-4" %}</button>
+  </div>
+  {% if items %}
+    <ul class="divide-y divide-line">
+      {% for d in items %}
+        <li class="group flex items-center gap-3 px-5 py-3.5 transition hover:bg-surface-2/50 {% if d.is_closed %}opacity-55{% endif %}">
+          <span class="avatar size-9 text-xs">{{ d.person|initials }}</span>
+          <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'debt_edit' d.pk %}" hx-target="#modal-content">
+            <p class="truncate text-sm font-semibold {% if d.is_closed %}line-through{% endif %}">{{ d.person }}</p>
+            <p class="truncate text-xs text-ink-3">{{ d.reason|default:"—" }} · {{ d.date|date:"j M Y" }}</p>
+            {% if d.paid_amount and not d.is_closed %}<div class="progress mt-1.5 w-32"><span style="width: {{ d.paid_amount|pct:d.amount }}%"></span></div>{% endif %}
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-bold whitespace-nowrap">{{ d.remaining|money:d.currency }}</p>
+            {% if d.due_date and not d.is_closed %}<span class="badge {{ d.due_date|due_badge }}">{{ d.due_date|due_label }}</span>{% elif d.paid_amount and not d.is_closed %}<p class="text-[11px] text-ink-3">{{ d.amount|money:d.currency }} dan</p>{% endif %}
+          </div>
+          <button type="button" hx-post="{% url 'debt_close' d.pk %}" class="btn btn-ghost btn-icon btn-sm" title="{% if d.is_closed %}Qayta ochish{% else %}Yopish (to'liq qaytarildi){% endif %}">{% if d.is_closed %}{% icon "rotate-ccw" "size-4" %}{% else %}{% icon "check" "size-4" %}{% endif %}</button>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="px-5 py-10 text-center text-sm text-ink-3">Qarz yo'q 👌</p>
+  {% endif %}
+</div>

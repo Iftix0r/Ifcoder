@@ -1,0 +1,21 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Qarzlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Qarzlar</h1>
+    <p class="mt-1 text-sm text-ink-2">Kim kimga qancha qarz — esdan chiqmasin.{% if overdue %} <span class="badge badge-danger">{{ overdue }} ta muddati o'tgan</span>{% endif %}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="?{% if not show_closed %}closed=1{% endif %}" class="btn btn-ghost">{% if show_closed %}{% icon "eye-off" "size-4" %}Yopilganlarni yashirish{% else %}{% icon "eye" "size-4" %}Yopilganlar{% endif %}</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'debt_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Qarz</button>
+  </div>
+</div>
+
+<div id="debts-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#debts-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="grid gap-4 lg:grid-cols-2">
+  {% include "finance/partials/debt_column.html" with title="Menga qarzdor" items=they_owe total=they_total tone="tone-emerald" direction="they_owe" ico="arrow-down-left" %}
+  {% include "finance/partials/debt_column.html" with title="Men qarzdorman" items=i_owe total=i_total tone="tone-rose" direction="i_owe" ico="arrow-up-right" %}
+</div>
+</div>
+{% endblock %}

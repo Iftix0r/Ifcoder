@@ -1,0 +1,54 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Resurslar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Resurslar</h1>
+    <div class="mt-2 flex flex-wrap gap-2 text-sm">
+      <span class="badge badge-neutral">Oylik xarajat ≈ {{ monthly|totals }}</span>
+      {% if expiring %}<span class="badge badge-warning">{{ expiring }} tasi 30 kun ichida tugaydi</span>{% endif %}
+    </div>
+  </div>
+  <button type="button" class="btn btn-primary" hx-get="{% url 'resource_create' %}{% if kind %}?kind={{ kind }}{% endif %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Resurs</button>
+</div>
+
+<nav class="-mx-4 mb-4 flex gap-5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 animate-fade-up">
+  <a href="?" class="tab {% if not kind %}is-active{% endif %}">Barchasi</a>
+  {% for v, label in kinds %}<a href="?kind={{ v }}" class="tab whitespace-nowrap {% if kind == v %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+</nav>
+
+<div id="resources-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#resources-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="card overflow-hidden animate-fade-up">
+  {% if resources %}
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead><tr><th>Nomi</th><th class="hidden sm:table-cell">Provayder</th><th class="hidden lg:table-cell">Loyiha</th><th>Tugash sanasi</th><th class="text-right">Narxi</th></tr></thead>
+      <tbody>
+        {% for r in resources %}
+          <tr class="cursor-pointer {% if not r.is_active %}opacity-50{% endif %}" hx-get="{% url 'resource_edit' r.pk %}" hx-target="#modal-content">
+            <td>
+              <div class="flex items-center gap-3">
+                <span class="icon-chip tone-cyan size-8 shrink-0 rounded-lg">{% icon r.icon "size-4" %}</span>
+                <div class="min-w-0"><p class="truncate font-semibold text-ink">{{ r.name }}</p><p class="truncate text-xs text-ink-3">{{ r.get_kind_display }}{% if r.ip_address %} · <span class="font-mono">{{ r.ip_address }}</span>{% endif %}</p></div>
+              </div>
+            </td>
+            <td class="hidden sm:table-cell">{{ r.provider|default:"—" }}</td>
+            <td class="hidden lg:table-cell">{% if r.project %}<span class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full {{ r.project.tone|dot }}"></span>{{ r.project }}</span>{% else %}—{% endif %}</td>
+            <td class="whitespace-nowrap">
+              {% if r.renews_on %}
+                <span class="badge {{ r.renews_on|due_badge }}">{{ r.renews_on|date:"j M Y" }}</span>
+                {% if r.auto_renew %}<span class="ml-1 text-ink-3" title="Avtomatik yangilanadi">{% icon "refresh-cw" "size-3 inline" %}</span>{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td class="text-right whitespace-nowrap">{% if r.cost %}<span class="font-semibold text-ink">{{ r.cost|money:r.currency }}</span><span class="text-xs text-ink-3"> / {{ r.get_billing_display|lower }}</span>{% else %}<span class="text-ink-3">{{ r.get_billing_display }}</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {% include "components/empty_state.html" with icon="server" title="Resurs yo'q" text="Domenlar, VPS, hosting va obunalarni qo'shing — tugashidan oldin bosh sahifada eslatamiz." %}
+  {% endif %}
+</div>
+</div>
+{% endblock %}

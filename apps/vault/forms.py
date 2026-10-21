@@ -8,7 +8,9 @@ from .models import Secret
 class SecretForm(StyledModelForm):
     value = forms.CharField(
         label="Maxfiy qiymat",
-        widget=forms.Textarea(attrs={"rows": 3, "class": "font-mono text-[13px]", "spellcheck": "false", "autocomplete": "off"}),
+        widget=forms.Textarea(
+            attrs={"rows": 3, "class": "font-mono text-[13px]", "spellcheck": "false", "autocomplete": "off"}
+        ),
         help_text="Bazada Fernet bilan shifrlangan holda saqlanadi.",
     )
 

@@ -88,7 +88,12 @@ class Deal(TimeStamped):
     position = models.PositiveIntegerField(default=0)
     expected_close = models.DateField("Kutilayotgan sana", null=True, blank=True)
     project = models.ForeignKey(
-        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="deals"
+        "projects.Project",
+        verbose_name="Loyiha",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="deals",
     )
     note = models.TextField("Izoh", blank=True)
     closed_at = models.DateTimeField(null=True, blank=True)
@@ -118,7 +123,13 @@ class Activity(models.Model):
         MESSAGE = "message", "Xabar"
         STAGE = "stage", "Bosqich"
 
-    ICONS = {"note": "sticky-note", "call": "phone", "meeting": "calendar-clock", "message": "send", "stage": "git-commit-horizontal"}
+    ICONS = {
+        "note": "sticky-note",
+        "call": "phone",
+        "meeting": "calendar-clock",
+        "message": "send",
+        "stage": "git-commit-horizontal",
+    }
 
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="activities")
     deal = models.ForeignKey(Deal, null=True, blank=True, on_delete=models.SET_NULL, related_name="activities")
@@ -128,6 +139,9 @@ class Activity(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.text[:60]
 
     @property
     def icon(self):

@@ -78,6 +78,9 @@ class Milestone(models.Model):
     class Meta:
         ordering = ["position", "pk"]
 
+    def __str__(self):
+        return self.title
+
 
 class Habit(TimeStamped):
     title = models.CharField("Odat", max_length=120)
@@ -128,6 +131,9 @@ class HabitLog(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["habit", "date"], name="uniq_habit_day")]
 
+    def __str__(self):
+        return f"{self.habit} — {self.date}"
+
 
 class LearningItem(TimeStamped):
     class Kind(models.TextChoices):
@@ -173,12 +179,8 @@ class JournalEntry(TimeStamped):
     MOODS = {1: "😞", 2: "😕", 3: "😐", 4: "🙂", 5: "🤩"}
 
     date = models.DateField("Sana", default=timezone.localdate, unique=True)
-    mood = models.PositiveSmallIntegerField(
-        "Kayfiyat", default=4, choices=[(k, f"{v} {k}") for k, v in MOODS.items()]
-    )
-    energy = models.PositiveSmallIntegerField(
-        "Energiya", default=3, choices=[(i, str(i)) for i in range(1, 6)]
-    )
+    mood = models.PositiveSmallIntegerField("Kayfiyat", default=4, choices=[(k, f"{v} {k}") for k, v in MOODS.items()])
+    energy = models.PositiveSmallIntegerField("Energiya", default=3, choices=[(i, str(i)) for i in range(1, 6)])
     wins = models.TextField("Bugungi yutuqlar", blank=True)
     lessons = models.TextField("Nimani o'rgandim", blank=True)
     tomorrow = models.TextField("Ertangi eng muhim ish", blank=True)

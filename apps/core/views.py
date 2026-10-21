@@ -11,7 +11,13 @@ from .search import global_search
 @require_GET
 def robots_txt(request):
     # Faqat ochiq landing sahifa indekslanadi — panel shaxsiy.
-    lines = ["User-agent: *", "Allow: /$", "Disallow: /", "", f"Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml"]
+    lines = [
+        "User-agent: *",
+        "Allow: /$",
+        "Disallow: /",
+        "",
+        f"Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml",
+    ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
 
 

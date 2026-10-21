@@ -1,0 +1,61 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Odatlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Odatlar</h1>
+    <div class="mt-2 flex flex-wrap gap-2 text-sm">
+      <span class="badge badge-brand">Bugun {{ done_today }} / {{ active_count }}</span>
+      <span class="badge badge-warning">🔥 Eng uzun seriya: {{ best_streak }} kun</span>
+    </div>
+  </div>
+  <button type="button" class="btn btn-primary" hx-get="{% url 'habit_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Odat</button>
+</div>
+
+<div id="habits-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#habits-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if habits %}
+  <div class="space-y-4">
+    {% for h in habits %}
+      <div class="card overflow-hidden animate-fade-up {% if not h.is_active %}opacity-60{% endif %}">
+        <div class="flex flex-col gap-4 p-5 lg:flex-row lg:items-center">
+          <div class="flex min-w-0 items-center gap-3 lg:w-72">
+            <button type="button" hx-post="{% url 'habit_toggle' h.pk %}" hx-vals='{"date": "{{ today|date:'Y-m-d' }}"}'
+                    class="flex size-12 shrink-0 items-center justify-center rounded-2xl text-2xl transition active:scale-90 {% if h.done_today %}bg-brand-gradient shadow-glow{% else %}border-2 border-dashed border-line-strong bg-surface-2 grayscale hover:grayscale-0{% endif %}"
+                    title="{% if h.done_today %}Bugun bajarildi{% else %}Bugun bajarildi deb belgilash{% endif %}">{{ h.emoji }}</button>
+            <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'habit_edit' h.pk %}" hx-target="#modal-content">
+              <p class="truncate text-[15px] font-semibold">{{ h.title }}</p>
+              <p class="truncate text-xs text-ink-3">{{ h.cue|default:"Har kuni" }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            {% for d in h.last7 %}
+              <button type="button" hx-post="{% url 'habit_toggle' h.pk %}" hx-vals='{"date": "{{ d.date|date:'Y-m-d' }}"}' class="flex w-9 flex-col items-center gap-1" title="{{ d.date|date:'j M' }}">
+                <span class="text-[10px] font-medium text-ink-3">{{ d.date|date:"D"|slice:":2" }}</span>
+                <span class="flex size-8 items-center justify-center rounded-lg text-xs font-semibold transition {% if d.done %}{{ h.tone|dot }} text-white{% else %}bg-surface-2 text-ink-3 hover:bg-surface-3{% endif %}">{% if d.done %}{% icon "check" "size-3.5" "3" %}{% else %}{{ d.date|date:"j" }}{% endif %}</span>
+              </button>
+            {% endfor %}
+          </div>
+          <div class="flex gap-6 lg:ml-auto">
+            <div><p class="text-xs text-ink-3">Seriya</p><p class="text-lg font-bold">🔥 {{ h.streak }}</p></div>
+            <div><p class="text-xs text-ink-3">30 kun</p><p class="text-lg font-bold">{{ h.rate }}%</p></div>
+          </div>
+        </div>
+        <div class="overflow-x-auto border-t border-line bg-surface-2/30 px-5 py-4">
+          <div class="flex w-max gap-[3px]">
+            {% for week in h.weeks %}
+              <div class="flex flex-col gap-[3px]">
+                {% for d in week %}
+                  <span class="size-3 rounded-[3px] {% if d.future %}bg-transparent{% elif d.done %}{{ h.tone|dot }}{% else %}bg-surface-3{% endif %}" title="{{ d.date|date:'j M Y' }}"></span>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="repeat" title="Odatlar yo'q" text="Masalan: 🏃 Yugurish, 📚 20 bet kitob, 🇬🇧 Ingliz tili 15 daqiqa, 💻 1 ta LeetCode." %}</div>
+{% endif %}
+</div>
+{% endblock %}
