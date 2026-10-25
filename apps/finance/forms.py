@@ -1,3 +1,5 @@
+from django import forms
+
 from apps.core.forms import DateInput, MoneyInput, StyledModelForm
 
 from .models import Category, Credit, Debt, Invoice, InvoiceLine, Transaction
@@ -40,7 +42,11 @@ class InvoiceLineForm(StyledModelForm):
     class Meta:
         model = InvoiceLine
         fields = ["description", "quantity", "unit_price"]
-        widgets = {"unit_price": MoneyInput()}
+        widgets = {
+            "description": forms.TextInput(attrs={"placeholder": "Xizmat nomi, masalan: Dizayn"}),
+            "quantity": forms.NumberInput(attrs={"placeholder": "Soni"}),
+            "unit_price": MoneyInput(attrs={"placeholder": "Narxi"}),
+        }
 
 
 class DebtForm(StyledModelForm):

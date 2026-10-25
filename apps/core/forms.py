@@ -19,9 +19,12 @@ class StyledFormMixin:
                 css = "file-input"
             elif isinstance(widget, forms.Textarea):
                 css = "input textarea"
-                widget.attrs.setdefault("rows", 3)
+                # Django Textarea default'da rows="10" (satr) qo'yadi — modal formani ekrandan oshirib yuboradi
+                if widget.attrs.get("rows") in (None, "10"):
+                    widget.attrs["rows"] = 3
             elif isinstance(widget, forms.Select):
                 css = "input select"
+                self._humanize_empty_choice(field)
             else:
                 css = "input"
             widget.attrs["class"] = f"{css} {widget.attrs.get('class', '')}".strip()
@@ -29,6 +32,20 @@ class StyledFormMixin:
                 field.wide = True
             if isinstance(widget, forms.CheckboxInput):
                 field.is_checkbox = True
+
+    @staticmethod
+    def _humanize_empty_choice(field):
+        """«---------» o'rniga tushunarli bo'sh variant."""
+        if isinstance(field, forms.ModelChoiceField):
+            if field.empty_label is not None:
+                field.empty_label = EMPTY_CHOICE
+        elif isinstance(field, forms.ChoiceField):
+            field.choices = [
+                (v, EMPTY_CHOICE if v == "" and label == "---------" else label) for v, label in field.choices
+            ]
+
+
+EMPTY_CHOICE = "— Tanlanmagan —"
 
 
 class StyledModelForm(StyledFormMixin, forms.ModelForm):
