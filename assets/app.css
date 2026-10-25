@@ -87,6 +87,16 @@
   body {
     @apply bg-canvas text-ink font-sans antialiased;
     font-feature-settings: "cv11", "ss01", "ss03";
+    /* Yuqori burchaklarda yumshoq brend nurlanishi — tekis fonga chuqurlik beradi */
+    background-image:
+      radial-gradient(900px 480px at 100% -8%, rgb(99 102 241 / var(--glow-a, 0.07)), transparent 65%),
+      radial-gradient(700px 420px at 20% -12%, rgb(139 92 246 / var(--glow-b, 0.05)), transparent 65%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+  .dark body {
+    --glow-a: 0.13;
+    --glow-b: 0.08;
   }
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
@@ -210,7 +220,7 @@
       hover:bg-surface-2 hover:text-ink;
   }
   .nav-link.is-active {
-    @apply bg-brand-500/10 text-brand-700 dark:bg-brand-500/15 dark:text-white;
+    @apply bg-brand-500/10 font-semibold text-brand-700 ring-1 ring-brand-500/15 ring-inset dark:bg-brand-500/15 dark:text-white dark:ring-brand-400/20;
   }
   .nav-link.is-active::before {
     content: "";
@@ -364,6 +374,26 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .code-block {
     @apply overflow-x-auto rounded-xl border border-line bg-surface-2 p-4 font-mono text-[12.5px] leading-relaxed text-ink;
   }
+  /* KPI kartasi: yorliq + ikon bir qatorda, katta raqam, izoh; burchakda ton rangidagi nurlanish */
+  .stat {
+    @apply relative block overflow-hidden p-4 sm:p-5;
+  }
+  .stat-glow {
+    @apply pointer-events-none absolute -top-14 -right-14 size-36 rounded-full opacity-[0.13] blur-2xl transition-opacity duration-300 dark:opacity-[0.18];
+    background: currentColor;
+  }
+  .stat:hover .stat-glow { @apply opacity-25 dark:opacity-30; }
+  .stat-label { @apply min-w-0 text-[13px] leading-snug font-medium text-ink-2; }
+  .stat-value { @apply mt-3 flex flex-wrap items-baseline gap-x-1 text-xl font-bold tracking-tight text-ink tabular-nums sm:text-2xl; }
+  .stat-hint { @apply mt-1 flex items-center gap-1 truncate text-xs text-ink-3; }
+
+  /* Karta sarlavhasidagi "Hammasi →" havolasi */
+  .link-more {
+    @apply inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-ink-3 transition-colors hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-300;
+  }
+  .link-more svg { @apply transition-transform duration-200; }
+  .link-more:hover svg { @apply translate-x-0.5; }
+
   .check {
     @apply flex size-5 shrink-0 items-center justify-center rounded-md border-2 border-line-strong text-white transition hover:border-brand-500;
   }

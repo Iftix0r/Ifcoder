@@ -125,11 +125,12 @@ def home(request):
     month_tx = Transaction.objects.filter(date__gte=month_start)
     pipeline = totals_by_currency(Deal.objects.filter(stage__in=Deal.OPEN_STAGES), "value")
 
+    plan_total = done_today + today_tasks.count()
     kpis = [
         {
             "label": "Bugungi reja",
             "value": done_today,
-            "suffix": f" / {done_today + today_tasks.count()}",
+            "suffix": f" / {plan_total}",
             "icon": "list-checks",
             "tone": "brand",
             "hint": "bajarildi",
@@ -179,6 +180,8 @@ def home(request):
             "today": today,
             "kpis": kpis,
             "today_tasks": today_tasks[:12],
+            "done_today": done_today,
+            "plan_total": plan_total,
             "habits": habits,
             "habits_done": sum(1 for h in habits if h.done_today),
             "alerts": _alerts(today),

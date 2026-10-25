@@ -3,10 +3,10 @@
   <div class="absolute inset-x-5 top-6 bottom-8 flex flex-col justify-between">{% for i in "1234" %}<div class="border-t border-dashed border-line"></div>{% endfor %}</div>
   <div class="relative flex h-full items-end gap-3 sm:gap-5">
     {% for s in series %}
-      <div class="relative flex h-full flex-1 items-end justify-center gap-1" title="{{ s.label }}: +{{ s.income|num }} / −{{ s.expense|num }}">
-        <div class="bg-brand-gradient w-full max-w-6 rounded-t-md transition-all duration-700" style="height: {% if s.income_h %}{{ s.income_h }}{% else %}2{% endif %}%"></div>
-        <div class="w-full max-w-6 rounded-t-md bg-rose-400/70" style="height: {% if s.expense_h %}{{ s.expense_h }}{% else %}2{% endif %}%"></div>
-        <span class="absolute top-full mt-2 text-[11px] text-ink-3">{{ s.label }}</span>
+      <div class="group/bar relative flex h-full flex-1 items-end justify-center gap-1 rounded-lg transition-colors hover:bg-surface-2/70" title="{{ s.label }}: +{{ s.income|num }} / −{{ s.expense|num }}">
+        <div class="bg-brand-gradient w-full max-w-6 rounded-t-md transition-all duration-700 group-hover/bar:brightness-110" style="height: {% if s.income_h %}{{ s.income_h }}{% else %}2{% endif %}%"></div>
+        <div class="w-full max-w-6 rounded-t-md bg-rose-400/70 transition-colors group-hover/bar:bg-rose-400" style="height: {% if s.expense_h %}{{ s.expense_h }}{% else %}2{% endif %}%"></div>
+        <span class="absolute top-full mt-2 text-[11px] text-ink-3 transition-colors group-hover/bar:font-semibold group-hover/bar:text-ink">{{ s.label }}</span>
       </div>
     {% endfor %}
   </div>

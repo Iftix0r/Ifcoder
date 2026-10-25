@@ -36,7 +36,7 @@
 <div id="tasks-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#tasks-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
 {% if view == "board" %}
   <div x-data="kanban" @dragstart="start($event)" @dragover="over($event)" @drop="drop($event)" @dragend="end()"
-       class="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0 animate-fade-up">
+       class="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:-mx-8 lg:scroll-px-8 lg:px-8 animate-fade-up">
     {% for col in columns %}
       <section data-stage="{{ col.status.value }}" class="flex w-[290px] shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface-2/50 transition lg:w-auto lg:min-w-0 lg:flex-1"
                :class="overStage === '{{ col.status.value }}' && 'ring-2 {{ col.ring }} bg-surface-2'">
@@ -94,7 +94,7 @@
     <a href="?view=week&w={{ offset|add:1 }}{% if project %}&project={{ project }}{% endif %}" class="btn btn-secondary btn-sm btn-icon" aria-label="Keyingi hafta">{% icon "chevron-right" "size-4" %}</a>
     <p class="ml-2 text-sm font-medium text-ink-2">{{ week_start|date:"j E" }} — {{ week_end|date:"j E Y" }}</p>
   </div>
-  <div class="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0 xl:grid xl:grid-cols-7 animate-fade-up">
+  <div class="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:-mx-8 lg:scroll-px-8 lg:px-8 xl:grid xl:grid-cols-7 animate-fade-up">
     {% for d in days %}
       <section class="flex w-60 shrink-0 snap-start flex-col rounded-2xl border bg-surface-2/40 xl:w-auto {% if d.is_today %}border-brand-500/50 ring-2 ring-brand-500/15{% else %}border-line{% endif %}">
         <header class="flex items-baseline justify-between px-3 pt-3 pb-2">

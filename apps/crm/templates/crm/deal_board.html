@@ -24,7 +24,7 @@
 
 <div id="deals-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body, kanban:moved from:body" hx-select="#deals-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
   <div x-data="kanban" @dragstart="start($event)" @dragover="over($event)" @drop="drop($event)" @dragend="end()"
-       class="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0 animate-fade-up">
+       class="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:-mx-8 lg:scroll-px-8 lg:px-8 animate-fade-up">
     {% for col in columns %}
       <section data-stage="{{ col.stage.value }}" class="flex w-[272px] shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface-2/50 transition 2xl:w-auto 2xl:min-w-0 2xl:flex-1"
                :class="overStage === '{{ col.stage.value }}' && 'ring-2 {{ col.ring }} bg-surface-2'">
