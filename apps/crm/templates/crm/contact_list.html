@@ -15,7 +15,7 @@
 <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between animate-fade-up">
   <nav class="-mx-4 flex gap-5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0">
     {% for value, label, n in tabs %}
-      <a href="?status={{ value }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="tab whitespace-nowrap {% if status == value %}is-active{% endif %}">{{ label }} <span class="text-xs text-ink-3">{{ n }}</span></a>
+      <a href="?status={{ value }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="tab whitespace-nowrap {% if status == value %}is-active{% endif %}">{{ label }} <span class="tab-count">{{ n }}</span></a>
     {% endfor %}
   </nav>
   <form method="get" hx-get="{% url 'contact_list' %}" hx-target="#contacts-region" hx-select="#contacts-region" hx-swap="outerHTML" hx-push-url="true" hx-trigger="input changed delay:300ms from:input[name=q]">

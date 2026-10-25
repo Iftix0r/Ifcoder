@@ -1,40 +1,37 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-25 16:32:28_  ·  branch: `main`
+_Updated: 2026-10-25 16:38:08_  ·  branch: `main`
 
 ## Uncommitted changes
 ```
  M .anchor/session-state.md
- M apps/crm/templates/crm/deal_board.html
- M apps/dashboard/templates/dashboard/home.html
- M apps/dashboard/views.py
- M apps/finance/templates/finance/credit_list.html
- M apps/finance/templates/finance/overview.html
- M apps/finance/templates/finance/partials/bars.html
- M apps/planner/templates/planner/board.html
- M apps/projects/templates/projects/detail.html
+ M apps/crm/templates/crm/contact_list.html
+ M apps/growth/templates/growth/goal_list.html
+ M apps/growth/templates/growth/habit_list.html
+ M apps/projects/templates/projects/list.html
  M assets/app.css
  M static/dist/app.css
+ M templates/partials/nav_list.html
+ M templates/partials/sidebar_collapse.html
 ```
 
 Diff stat:
 ```
- .anchor/session-state.md                          | 53 ++++-------------------
- apps/crm/templates/crm/deal_board.html            |  2 +-
- apps/dashboard/templates/dashboard/home.html      | 37 +++++++++-------
- apps/dashboard/views.py                           |  5 ++-
- apps/finance/templates/finance/credit_list.html   |  8 ++--
- apps/finance/templates/finance/overview.html      |  8 ++--
- apps/finance/templates/finance/partials/bars.html |  8 ++--
- apps/planner/templates/planner/board.html         |  4 +-
- apps/projects/templates/projects/detail.html      |  2 +-
- assets/app.css                                    | 32 +++++++++++++-
- static/dist/app.css                               |  2 +-
- 11 files changed, 83 insertions(+), 78 deletions(-)
+ .anchor/session-state.md                     | 45 +++++-----------------------
+ apps/crm/templates/crm/contact_list.html     |  2 +-
+ apps/growth/templates/growth/goal_list.html  |  2 +-
+ apps/growth/templates/growth/habit_list.html | 26 ++++++++++------
+ apps/projects/templates/projects/list.html   |  2 +-
+ assets/app.css                               |  6 +++-
+ static/dist/app.css                          |  2 +-
+ templates/partials/nav_list.html             |  4 +--
+ templates/partials/sidebar_collapse.html     |  2 +-
+ 9 files changed, 36 insertions(+), 55 deletions(-)
 ```
 
 ## Recent commits
 ```
+2e769a5 egy
 fd730fb 133ss
 225dd66 ewgse
 9d5f9ee qwd
@@ -42,7 +39,6 @@ f28128d chore: ignore tmp/ and allow deploy without .env file
 7ecca72 docs: add deploy guide to README and refresh session state
 e756455 chore: reformat code, add __str__ methods and fix UI bugs
 6ca0331 qdwq
-d82844b qwdfq
 ```
 
 ## Resume

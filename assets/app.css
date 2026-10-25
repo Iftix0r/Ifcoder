@@ -216,7 +216,7 @@
 
   /* --- Sidebar navigatsiya --- */
   .nav-link {
-    @apply relative flex h-9 items-center gap-3 rounded-xl px-2.5 text-[13.5px] font-medium text-ink-2 transition-colors duration-150
+    @apply relative flex h-[34px] items-center gap-3 rounded-xl px-2.5 text-[13.5px] font-medium text-ink-2 transition-colors duration-150
       hover:bg-surface-2 hover:text-ink;
   }
   .nav-link.is-active {
@@ -240,6 +240,10 @@
   .tab.is-active {
     @apply text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-brand-500;
   }
+  .tab-count {
+    @apply inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-surface-3 px-1.5 text-[10.5px] font-semibold text-ink-3 tabular-nums transition-colors;
+  }
+  .tab.is-active .tab-count { @apply bg-brand-500/12 text-brand-600 dark:bg-brand-500/20 dark:text-brand-300; }
 
   /* --- Skeleton --- */
   .skeleton {

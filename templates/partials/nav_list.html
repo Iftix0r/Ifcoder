@@ -1,8 +1,8 @@
-<nav class="nav-scroll flex-1 space-y-4 overflow-y-auto overscroll-contain px-3 py-3" aria-label="Asosiy menyu" {% if not mobile %}data-sidebar-nav{% endif %}>
+<nav class="nav-scroll flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3" aria-label="Asosiy menyu" {% if not mobile %}data-sidebar-nav{% endif %}>
   {% for title, items in nav_sections %}
     <div>
       {% if title %}
-        <p class="mb-1.5 px-2.5 text-[10.5px] font-semibold tracking-[0.08em] text-ink-3 uppercase {% if not mobile %}collapsed:invisible collapsed:h-0 collapsed:mb-0{% endif %}">{{ title }}</p>
+        <p class="mb-1 px-2.5 text-[10.5px] font-semibold tracking-[0.08em] text-ink-3 uppercase {% if not mobile %}collapsed:invisible collapsed:h-0 collapsed:mb-0{% endif %}">{{ title }}</p>
       {% endif %}
       <ul class="space-y-0.5">
         {% for item in items %}

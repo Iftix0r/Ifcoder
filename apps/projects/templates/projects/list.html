@@ -11,7 +11,7 @@
 
 <nav class="-mx-4 mb-5 flex gap-5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 animate-fade-up">
   {% for value, label, n in tabs %}
-    <a href="?status={{ value }}" class="tab whitespace-nowrap {% if status == value %}is-active{% endif %}">{{ label }} <span class="text-xs text-ink-3">{{ n }}</span></a>
+    <a href="?status={{ value }}" class="tab whitespace-nowrap {% if status == value %}is-active{% endif %}">{{ label }} <span class="tab-count">{{ n }}</span></a>
   {% endfor %}
 </nav>
 

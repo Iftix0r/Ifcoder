@@ -40,15 +40,23 @@
             <div><p class="text-xs text-ink-3">30 kun</p><p class="text-lg font-bold">{{ h.rate }}%</p></div>
           </div>
         </div>
-        <div class="overflow-x-auto border-t border-line bg-surface-2/30 px-5 py-4">
-          <div class="flex w-max gap-[3px]">
-            {% for week in h.weeks %}
-              <div class="flex flex-col gap-[3px]">
-                {% for d in week %}
-                  <span class="size-3 rounded-[3px] {% if d.future %}bg-transparent{% elif d.done %}{{ h.tone|dot }}{% else %}bg-surface-3{% endif %}" title="{{ d.date|date:'j M Y' }}"></span>
-                {% endfor %}
-              </div>
-            {% endfor %}
+        <div class="flex flex-col gap-3 border-t border-line bg-surface-2/30 px-5 py-4 md:flex-row md:items-end md:justify-between">
+          <div class="overflow-x-auto">
+            <div class="flex w-max gap-[3px]">
+              {% for week in h.weeks %}
+                <div class="flex flex-col gap-[3px]">
+                  <span class="h-3.5 w-3 overflow-visible text-[10px] leading-none whitespace-nowrap text-ink-3">{% if week.0.date.day <= 7 %}{{ week.0.date|date:"M" }}{% endif %}</span>
+                  {% for d in week %}
+                    <span class="size-3 rounded-[3px] transition {% if d.future %}bg-transparent{% elif d.done %}{{ h.tone|dot }} hover:ring-2 hover:ring-brand-500/30{% else %}bg-surface-3 hover:bg-line-strong{% endif %}" title="{{ d.date|date:'j M Y' }}{% if d.done %} · bajarildi{% endif %}"></span>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="flex shrink-0 items-center gap-3 text-[11px] text-ink-3">
+            <span class="flex items-center gap-1.5"><span class="size-3 rounded-[3px] bg-surface-3"></span>O'tkazildi</span>
+            <span class="flex items-center gap-1.5"><span class="size-3 rounded-[3px] {{ h.tone|dot }}"></span>Bajarildi</span>
+            <span class="hidden text-ink-3/70 md:inline">· {{ h.weeks|length }} hafta</span>
           </div>
         </div>
       </div>
