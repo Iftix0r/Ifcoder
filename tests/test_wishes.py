@@ -79,3 +79,12 @@ def test_demo_wishes_command(db, settings, tmp_path):
     assert Wish.objects.count() == len(WISHES) and all(w.image for w in Wish.objects.all())
     assert not any(w.saved or w.is_bought for w in Wish.objects.all())
     assert not Transaction.objects.exists()
+
+
+def test_media_served_only_to_logged_in(client, client_in, settings, tmp_path):
+    (tmp_path / "wishes").mkdir()
+    (tmp_path / "wishes" / "x.jpg").write_bytes(b"jpg")
+    settings.MEDIA_ROOT = tmp_path
+    assert client_in.get("/media/wishes/x.jpg").status_code == 200
+    client_in.logout()
+    assert client.get("/media/wishes/x.jpg").status_code == 302
