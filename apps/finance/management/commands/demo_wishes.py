@@ -100,6 +100,21 @@ WISHES = [
      "Dunyo IT bozorini ko'rish, investor va hamkorlar bilan tanishish."),
     ("pullup", "Uy sport burchagi (turnik, gantellar)", 2_500_000, "UZS", "medium", None, "",
      "Har kuni 20 daqiqa — vaqt bo'lmasa ham sport to'xtamasin."),
+    # Islomiy orzular
+    ("hajj", "Ota-onamni Hajga yuborish", 160_000_000, "UZS", "high", None, "",
+     "Ota-onamning duosi — eng katta boylik. Ularni Baytullohga yuborish — eng katta orzum."),
+    ("umrah", "Umra ziyorati", 25_000_000, "UZS", "high", None, "",
+     "Makka va Madinani ziyorat qilish, qalbni poklash."),
+    ("qurbon", "Qurbon hayitida qurbonlik", 4_000_000, "UZS", "high", None, "",
+     "Har yili sunnatni ado etish, yaqinlar va muhtojlar bilan ulashish."),
+    ("quran", "Qur'on va tajvid kursi", 2_000_000, "UZS", "high", None, "",
+     "Qur'onni to'g'ri va chiroyli o'qishni o'rganish."),
+    ("arabic", "Arab tili kursi", 3_000_000, "UZS", "medium", None, "",
+     "Qur'onni tarjimasiz tushunish uchun."),
+    ("iftar", "Ramazonda iftorlik va ehson", 5_000_000, "UZS", "medium", None, "",
+     "Ro'zadorlarni iftor qildirish va muhtojlarga yordam berish."),
+    ("masjid", "Masjid obodonligiga hissa", 10_000_000, "UZS", "medium", None, "",
+     "Sadaqai joriya — savobi to'xtamaydigan xayr."),
 ]  # fmt: skip
 
 

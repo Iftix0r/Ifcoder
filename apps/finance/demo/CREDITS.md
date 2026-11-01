@@ -46,3 +46,10 @@ Barcha rasmlar Wikimedia Commons'dan olingan (800px gacha kichraytirilgan).
 | company.jpg | File:Cowork Videmonte.jpg | Hipersyl | CC BY-SA 4.0 |
 | summit.jpg | File:Partners Lisbon Web Summit 2017 (24379233448).jpg | Web Summit | CC BY 2.0 |
 | pullup.jpg | File:Pull-up bar.JPG | Santeri Viinamäki | CC BY 4.0 |
+| hajj.jpg | File:The Kaaba during Hajj - edited.jpg | Adli Wahid (Basile Morin tahriri) | CC BY-SA 4.0 |
+| umrah.jpg | File:Masjid Nabawi The Prophet's Mosque, Madina.jpg | Muhammad Mahdi Karim | GFDL 1.2 |
+| qurbon.jpg | File:Flock of sheep in the meadows.jpg | Fabio Pani | CC BY-SA 4.0 |
+| quran.jpg | File:Mushaf Tajweed (Verse 18).png | Animax Fan 2016 | CC0 |
+| arabic.jpg | File:Learning Arabic calligraphy.jpg | Aieman Khimji | CC BY 2.0 |
+| iftar.jpg | File:Iftar (meal eaten after sunset while fasting) with friends in Ramadan.jpg | Mhizabdoul | CC BY 4.0 |
+| masjid.jpg | File:Hazrati Imam Mosque 01.jpg | Bgag | CC0 |
