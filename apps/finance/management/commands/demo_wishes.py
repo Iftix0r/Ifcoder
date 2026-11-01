@@ -115,6 +115,25 @@ WISHES = [
      "Ro'zadorlarni iftor qildirish va muhtojlarga yordam berish."),
     ("masjid", "Masjid obodonligiga hissa", 10_000_000, "UZS", "medium", None, "",
      "Sadaqai joriya — savobi to'xtamaydigan xayr."),
+    # Ehson va sadaqa
+    ("orphans", "Yetim bolalarga maktab anjomlari", 3_000_000, "UZS", "high", None, "",
+     "Yetimlarga mehr ko'rsatish — eng savobli ishlardan."),
+    ("food", "Muhtoj oilalarga oziq-ovqat to'plami", 4_000_000, "UZS", "high", None, "",
+     "Ramazon va hayit oldidan mahalladagi muhtojlarga."),
+    ("well", "Suv qudug'i qazdirish", 20_000_000, "UZS", "medium", None, "",
+     "Suv ichirish — eng afzal sadaqalardan, savobi yillar davomida yetib turadi."),
+    ("student", "Muhtoj talabaning kontraktini to'lash", 15_000_000, "UZS", "medium", None, "",
+     "Ilm yo'lida yordam — sadaqai joriya."),
+    ("quran_gift", "Masjid va madrasaga Qur'on hadya qilish", 2_000_000, "UZS", "medium", None, "",
+     "Har o'qilganida savobi menga ham yetsin."),
+    ("rugs", "Masjidga gilam va joynamoz hadya qilish", 6_000_000, "UZS", "medium", None, "",
+     "Namozxonlar uchun qulaylik."),
+    ("tree", "Mevali ko'chatlar ekish", 1_000_000, "UZS", "medium", None, "",
+     "Ekkan daraxtimdan yegan har bir jon menga sadaqa bo'lib yoziladi."),
+    ("wheelchair", "Nogironlarga aravacha hadya qilish", 3_000_000, "UZS", "medium", None, "",
+     "Yurishi qiyin insonga harakat erkinligini sovg'a qilish."),
+    ("medicine", "Bemorlarga dori-darmon yordami", 5_000_000, "UZS", "medium", None, "",
+     "Davolanishga puli yetmaganlarga yordam qo'lini cho'zish."),
 ]  # fmt: skip
 
 

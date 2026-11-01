@@ -53,3 +53,12 @@ Barcha rasmlar Wikimedia Commons'dan olingan (800px gacha kichraytirilgan).
 | arabic.jpg | File:Learning Arabic calligraphy.jpg | Aieman Khimji | CC BY 2.0 |
 | iftar.jpg | File:Iftar (meal eaten after sunset while fasting) with friends in Ramadan.jpg | Mhizabdoul | CC BY 4.0 |
 | masjid.jpg | File:Hazrati Imam Mosque 01.jpg | Bgag | CC0 |
+| orphans.jpg | File:Back to school snacks water bottle notebook backpack (20503811429).jpg | Personal Creations | CC BY 2.0 |
+| food.jpg | File:Capital Area Food Bank (20160330-FNS-SLS-0009).jpg | USDAgov | Public domain |
+| well.jpg | File:Water pump 1-2.jpg | Daniel Schwen, Ralf Roletschek | CC BY-SA 3.0 |
+| student.jpg | File:Typical College Graduation Ceremony.jpg | Rica Rentutar | CC BY 4.0 |
+| quran_gift.jpg | File:Holy Quran Archive.jpg | 787IYO | CC0 |
+| rugs.jpg | File:Carpet pattern in mosque (26589791610).jpg | Thomas Quine | CC BY 2.0 |
+| tree.jpg | File:Tree Sapling (6969599012).jpg | USDA NRCS South Dakota | Public domain |
+| wheelchair.jpg | File:Wheelchair from Wheelchair Foundation in Russia,.jpg | Davronov Alexander | CC BY-SA 4.0 |
+| medicine.jpg | File:Pills and medicines 02.jpg | BuhaM | CC BY-SA 4.0 |
