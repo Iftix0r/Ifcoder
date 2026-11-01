@@ -49,6 +49,7 @@ NAV_SECTIONS: list[tuple[str, list[NavItem]]] = [
         "Rivojlanish",
         [
             NavItem("goals", "Maqsadlar", "goal", "goal_list"),
+            NavItem("intentions", "Niyatlar", "hand-heart", "intention_list"),
             NavItem("habits", "Odatlar", "repeat", "habit_list"),
             NavItem("learning", "O'rganish", "graduation-cap", "learning_list"),
             NavItem("journal", "Kundalik", "notebook-pen", "journal_list"),

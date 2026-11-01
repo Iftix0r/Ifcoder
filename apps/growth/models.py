@@ -7,6 +7,18 @@ from django.utils import timezone
 from apps.core.models import TONE_CHOICES, TimeStamped
 
 
+def streak_of(dates):
+    """Bugun (yoki kecha) bilan tugaydigan ketma-ket kunlar soni."""
+    day = timezone.localdate()
+    if day not in dates:
+        day -= timedelta(days=1)
+    n = 0
+    while day in dates:
+        n += 1
+        day -= timedelta(days=1)
+    return n
+
+
 class Goal(TimeStamped):
     class Area(models.TextChoices):
         CAREER = "career", "Karyera"
@@ -108,15 +120,7 @@ class Habit(TimeStamped):
 
     @property
     def streak(self):
-        dates = self.done_dates()
-        day = timezone.localdate()
-        if day not in dates:
-            day -= timedelta(days=1)
-        n = 0
-        while day in dates:
-            n += 1
-            day -= timedelta(days=1)
-        return n
+        return streak_of(self.done_dates())
 
     def rate(self, days=30):
         today = timezone.localdate()
@@ -197,3 +201,92 @@ class JournalEntry(TimeStamped):
     @property
     def mood_emoji(self):
         return self.MOODS.get(self.mood, "🙂")
+
+
+class Intention(TimeStamped):
+    """Niyat: Ibodat, oila, xulq, sog'liq… — har kunlik amal yoki bir martalik erishiladigan maqsad."""
+
+    class Category(models.TextChoices):
+        WORSHIP = "worship", "Ibodat"
+        FAMILY = "family", "Oila"
+        CHARACTER = "character", "Xulq-odob"
+        HEALTH = "health", "Sog'liq"
+        KNOWLEDGE = "knowledge", "Ilm"
+        MONEY = "money", "Moliya"
+        CHARITY = "charity", "Ehson"
+        WORK = "work", "Ish va biznes"
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Jarayonda"
+        ACHIEVED = "achieved", "Erishildi"
+        PAUSED = "paused", "To'xtatilgan"
+
+    CATEGORY_STYLE = {
+        "worship": ("moon-star", "tone-emerald"),
+        "family": ("users-round", "tone-rose"),
+        "character": ("smile", "tone-amber"),
+        "health": ("heart-pulse", "tone-cyan"),
+        "knowledge": ("book-open", "tone-violet"),
+        "money": ("wallet", "tone-brand"),
+        "charity": ("hand-heart", "tone-emerald"),
+        "work": ("briefcase", "tone-brand"),
+    }
+
+    title = models.CharField("Niyat", max_length=200)
+    category = models.CharField("Toifa", max_length=10, choices=Category.choices, default=Category.CHARACTER)
+    why = models.TextField("Nega bu niyat?", blank=True)
+    is_daily = models.BooleanField(
+        "Har kunlik amal", default=False, help_text="Belgilansa, har kuni «Bugun amal qildim» deb qayd etasiz"
+    )
+    status = models.CharField("Holati", max_length=8, choices=Status.choices, default=Status.ACTIVE)
+    target_date = models.DateField("Muddat", null=True, blank=True)
+    achieved_at = models.DateField("Erishilgan sana", null=True, blank=True)
+    reflection = models.TextField("Erishgach: nima o'zgardi?", blank=True)
+
+    class Meta:
+        ordering = ["-is_daily", "target_date", "created_at"]
+        verbose_name = "Niyat"
+        verbose_name_plural = "Niyatlar"
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def icon(self):
+        return self.CATEGORY_STYLE[self.category][0]
+
+    @property
+    def tone(self):
+        return self.CATEGORY_STYLE[self.category][1]
+
+    @property
+    def is_achieved(self):
+        return self.status == self.Status.ACHIEVED
+
+    def done_dates(self):
+        if not hasattr(self, "_dates"):
+            self._dates = {log.date for log in self.logs.all()}
+        return self._dates
+
+    @property
+    def done_today(self):
+        return timezone.localdate() in self.done_dates()
+
+    @property
+    def streak(self):
+        return streak_of(self.done_dates())
+
+    @property
+    def done_count(self):
+        return len(self.done_dates())
+
+
+class IntentionLog(models.Model):
+    intention = models.ForeignKey(Intention, on_delete=models.CASCADE, related_name="logs")
+    date = models.DateField(default=timezone.localdate)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["intention", "date"], name="uniq_intention_day")]
+
+    def __str__(self):
+        return f"{self.intention} — {self.date}"

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Goal, Habit, HabitLog, JournalEntry, LearningItem, Milestone
+from .models import Goal, Habit, HabitLog, Intention, JournalEntry, LearningItem, Milestone
 
 for model in (
     Goal,
@@ -9,5 +9,6 @@ for model in (
     HabitLog,
     LearningItem,
     JournalEntry,
+    Intention,
 ):
     admin.site.register(model)

@@ -8,8 +8,8 @@ from django.views.decorators.http import require_POST
 
 from apps.core.crud import delete_done, done, form_modal
 
-from .forms import GoalForm, HabitForm, JournalForm, LearningForm
-from .models import Goal, Habit, HabitLog, JournalEntry, LearningItem, Milestone
+from .forms import GoalForm, HabitForm, IntentionForm, JournalForm, LearningForm
+from .models import Goal, Habit, HabitLog, Intention, IntentionLog, JournalEntry, LearningItem, Milestone
 
 # --- Maqsadlar --------------------------------------------------------------------------
 
@@ -310,3 +310,108 @@ def journal_edit(request, day):
 def journal_delete(request, pk):
     get_object_or_404(JournalEntry, pk=pk).delete()
     return redirect("journal_list")
+
+
+# --- Niyatlar ---------------------------------------------------------------------------
+
+
+def intention_list(request):
+    status = request.GET.get("status", Intention.Status.ACTIVE)
+    if status not in Intention.Status.values:
+        status = "all"
+    category = request.GET.get("category", "")
+    intentions = list(Intention.objects.prefetch_related("logs"))
+    by_status = [i for i in intentions if status == "all" or i.status == status]
+    shown = [i for i in by_status if not category or i.category == category]
+    if status == Intention.Status.ACHIEVED:
+        shown.sort(key=lambda i: i.achieved_at or date.min, reverse=True)
+    status_counts = {v: sum(1 for i in intentions if i.status == v) for v in Intention.Status.values}
+    status_tabs = [(v, label, status_counts[v]) for v, label in Intention.Status.choices]
+    status_tabs.append(("all", "Barchasi", len(intentions)))
+    category_tabs = [
+        (v, label, n) for v, label in Intention.Category.choices if (n := sum(1 for i in by_status if i.category == v))
+    ]
+    daily = [i for i in intentions if i.is_daily and i.status == Intention.Status.ACTIVE]
+    return render(
+        request,
+        "growth/intention_list.html",
+        {
+            "nav_active": "intentions",
+            "intentions": shown,
+            "status": status,
+            "category": category,
+            "status_tabs": status_tabs,
+            "category_tabs": category_tabs,
+            "total": len(intentions),
+            "achieved": status_counts[Intention.Status.ACHIEVED],
+            "daily_count": len(daily),
+            "daily_done": sum(1 for i in daily if i.done_today),
+            "best_streak": max((i.streak for i in daily), default=0),
+        },
+    )
+
+
+def intention_create(request):
+    category = request.GET.get("category")
+    return form_modal(
+        request,
+        IntentionForm,
+        initial={"category": category} if category in Intention.Category.values else None,
+        title="Yangi niyat",
+        icon="hand-heart",
+        tone="tone-emerald",
+        subtitle="Yaxshi niyat — yarim amal",
+        success="Niyat qo'shildi 🤲",
+    )
+
+
+def intention_edit(request, pk):
+    intention = get_object_or_404(Intention, pk=pk)
+    return form_modal(
+        request,
+        IntentionForm,
+        instance=intention,
+        title=intention.title,
+        icon=intention.icon,
+        tone=intention.tone,
+        delete_url=reverse("intention_delete", args=[pk]),
+    )
+
+
+@require_POST
+def intention_delete(request, pk):
+    return delete_done(get_object_or_404(Intention, pk=pk), "Niyat o'chirildi.")
+
+
+@require_POST
+def intention_achieve(request, pk):
+    """«Erishildi» — qayta bosilsa jarayonga qaytadi."""
+    intention = get_object_or_404(Intention, pk=pk)
+    if intention.is_achieved:
+        intention.status, intention.achieved_at = Intention.Status.ACTIVE, None
+        intention.save()
+        return done("Niyat yana jarayonda.", close=False)
+    intention.status, intention.achieved_at = Intention.Status.ACHIEVED, timezone.localdate()
+    intention.save()
+    return done(f"🎉 Alhamdulillah! «{intention.title}» — niyatingizga erishdingiz!", close=False)
+
+
+@require_POST
+def intention_pause(request, pk):
+    intention = get_object_or_404(Intention, pk=pk)
+    paused = intention.status == Intention.Status.PAUSED
+    intention.status = Intention.Status.ACTIVE if paused else Intention.Status.PAUSED
+    intention.save()
+    return done("Davom ettirildi 💪" if paused else "To'xtatildi — qachon tayyor bo'lsangiz, qaytasiz.", close=False)
+
+
+@require_POST
+def intention_checkin(request, pk):
+    """Har kunlik niyat: bugun amal qildim / belgini olib tashlash."""
+    intention = get_object_or_404(Intention, pk=pk)
+    log = IntentionLog.objects.filter(intention=intention, date=timezone.localdate()).first()
+    if log:
+        log.delete()
+        return done("Bugungi belgi olib tashlandi.", close=False)
+    IntentionLog.objects.create(intention=intention)
+    return done("Barakalla! Bugun ham niyatingizga sodiq qoldingiz ✨", close=False)

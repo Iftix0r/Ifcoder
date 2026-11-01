@@ -1,6 +1,6 @@
 from apps.core.forms import DateInput, StyledModelForm
 
-from .models import Goal, Habit, JournalEntry, LearningItem
+from .models import Goal, Habit, Intention, JournalEntry, LearningItem
 
 
 class GoalForm(StyledModelForm):
@@ -32,3 +32,12 @@ class JournalForm(StyledModelForm):
         model = JournalEntry
         fields = ["date", "mood", "energy", "wins", "lessons", "tomorrow", "notes"]
         widgets = {"date": DateInput()}
+
+
+class IntentionForm(StyledModelForm):
+    wide_fields = ("title",)
+
+    class Meta:
+        model = Intention
+        fields = ["title", "category", "is_daily", "target_date", "status", "why", "reflection"]
+        widgets = {"target_date": DateInput()}

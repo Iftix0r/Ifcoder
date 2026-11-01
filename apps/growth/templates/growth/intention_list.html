@@ -1,0 +1,76 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Niyatlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Niyatlar</h1>
+    <p class="mt-1 text-sm text-ink-2">Yaxshi niyat — yarim amal. Har kunlik niyatlarni belgilab boring, erishganlaringizni nishonlang.</p>
+  </div>
+  <button type="button" class="btn btn-primary" hx-get="{% url 'intention_create' %}{% if category %}?category={{ category }}{% endif %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Niyat</button>
+</div>
+
+<div id="intentions-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#intentions-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="mb-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+  <div class="card stat animate-fade-up"><span class="stat-glow tone-brand"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Jami niyatlar</p><span class="icon-chip tone-brand size-9 shrink-0">{% icon "hand-heart" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">{{ total }} ta</p></div>
+  <div class="card stat animate-fade-up" style="animation-delay: 40ms"><span class="stat-glow tone-emerald"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Erishildi</p><span class="icon-chip tone-emerald size-9 shrink-0">{% icon "trophy" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">{{ achieved }} ta <span class="text-sm font-medium text-ink-3">· {{ achieved|pct:total }}%</span></p></div>
+  <div class="card stat animate-fade-up" style="animation-delay: 80ms"><span class="stat-glow tone-amber"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Bugun amal qilindi</p><span class="icon-chip tone-amber size-9 shrink-0">{% icon "check-check" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">{{ daily_done }} / {{ daily_count }}</p></div>
+  <div class="card stat animate-fade-up" style="animation-delay: 120ms"><span class="stat-glow tone-rose"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Eng uzun seriya</p><span class="icon-chip tone-rose size-9 shrink-0">{% icon "flame" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">🔥 {{ best_streak }} kun</p></div>
+</div>
+
+<nav class="-mx-4 mb-4 flex gap-5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 animate-fade-up">
+  {% for value, label, n in status_tabs %}<a href="?status={{ value }}" class="tab whitespace-nowrap {% if status == value %}is-active{% endif %}">{{ label }} <span class="tab-count">{{ n }}</span></a>{% endfor %}
+</nav>
+{% if category_tabs %}
+<div class="-mx-4 mb-5 overflow-x-auto px-4 sm:mx-0 sm:px-0 animate-fade-up">
+  <nav class="segmented w-max">
+    <a href="?status={{ status }}" class="{% if not category %}is-active{% endif %}">Hammasi</a>
+    {% for v, label, n in category_tabs %}<a href="?status={{ status }}&category={{ v }}" class="whitespace-nowrap {% if category == v %}is-active{% endif %}">{{ label }} · {{ n }}</a>{% endfor %}
+  </nav>
+</div>
+{% endif %}
+
+{% if intentions %}
+  <div class="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {% for n in intentions %}
+      <div class="card flex flex-col overflow-hidden animate-fade-up {% if n.status == 'paused' %}opacity-60{% endif %}">
+        <div class="flex items-start gap-3 p-5 pb-3">
+          {% if n.is_daily and n.status == 'active' %}
+            <button type="button" hx-post="{% url 'intention_checkin' n.pk %}"
+                    class="flex size-11 shrink-0 items-center justify-center rounded-2xl transition active:scale-90 {% if n.done_today %}bg-brand-gradient text-white shadow-glow{% else %}border-2 border-dashed border-line-strong bg-surface-2 text-ink-3 hover:text-ink-1{% endif %}"
+                    title="{% if n.done_today %}Bugun amal qilindi — olib tashlash{% else %}Bugun amal qildim{% endif %}">{% if n.done_today %}{% icon "check" "size-5" "3" %}{% else %}{% icon n.icon "size-5" %}{% endif %}</button>
+          {% else %}
+            <span class="icon-chip {{ n.tone }} shrink-0">{% if n.is_achieved %}{% icon "trophy" "size-5" %}{% else %}{% icon n.icon "size-5" %}{% endif %}</span>
+          {% endif %}
+          <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'intention_edit' n.pk %}" hx-target="#modal-content">
+            <p class="text-[15px] font-semibold leading-snug">{{ n.title }}</p>
+            <p class="mt-0.5 text-xs text-ink-3">{{ n.get_category_display }}{% if n.is_daily %} · har kuni{% endif %}</p>
+          </div>
+          {% if n.is_achieved %}<span class="badge badge-success shrink-0">Erishildi</span>{% elif n.status == 'paused' %}<span class="badge badge-neutral shrink-0">To'xtatilgan</span>{% elif n.target_date %}<span class="badge {{ n.target_date|due_badge }} shrink-0">{{ n.target_date|due_label }}</span>{% endif %}
+        </div>
+        {% if n.why %}<p class="mb-3 line-clamp-2 px-5 text-sm italic text-ink-2">«{{ n.why }}»</p>{% endif %}
+        {% if n.is_achieved and n.reflection %}<p class="mx-5 mb-3 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">{{ n.reflection }}</p>{% endif %}
+        {% if n.is_daily %}
+          <div class="flex gap-6 px-5 pb-3 text-sm">
+            <div><p class="text-xs text-ink-3">Seriya</p><p class="font-bold">🔥 {{ n.streak }} kun</p></div>
+            <div><p class="text-xs text-ink-3">Jami amal</p><p class="font-bold">{{ n.done_count }} kun</p></div>
+          </div>
+        {% endif %}
+        <div class="mt-auto flex flex-wrap items-center gap-2 border-t border-line px-5 py-3">
+          {% if n.is_achieved %}
+            <span class="text-xs text-ink-3">{% icon "calendar-check" "size-3.5 inline" %} {{ n.achieved_at|date:"j E Y" }}</span>
+            <button type="button" hx-post="{% url 'intention_achieve' n.pk %}" hx-confirm="Niyat yana «Jarayonda»ga qaytarilsinmi?" class="btn btn-ghost btn-sm ml-auto text-ink-3">{% icon "undo-2" "size-3.5" %}Qayta ochish</button>
+          {% else %}
+            {% if n.status == 'active' %}
+              <button type="button" hx-post="{% url 'intention_achieve' n.pk %}" hx-confirm="«{{ n.title }}» — niyatingizga erishdingizmi?" class="btn btn-primary btn-sm">{% icon "trophy" "size-3.5" %}Erishildi</button>
+            {% endif %}
+            <button type="button" hx-post="{% url 'intention_pause' n.pk %}" class="btn btn-ghost btn-sm ml-auto text-ink-3">{% if n.status == 'paused' %}{% icon "play" "size-3.5" %}Davom ettirish{% else %}{% icon "pause" "size-3.5" %}To'xtatish{% endif %}</button>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% if status == 'achieved' %}{% include "components/empty_state.html" with icon="trophy" title="Hali erishilgan niyat yo'q" text="Niyatingizga erishganda «Erishildi» tugmasini bosing — shu yerda nishonlanadi." %}{% else %}{% include "components/empty_state.html" with icon="hand-heart" title="Bu yerda niyat yo'q" text="Masalan: «Besh vaqt namozni o'z vaqtida o'qish», «Ota-onamga har kuni qo'ng'iroq qilish», «Qarzsiz yashash»." %}{% endif %}</div>
+{% endif %}
+</div>
+{% endblock %}
