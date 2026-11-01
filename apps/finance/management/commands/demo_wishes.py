@@ -1,4 +1,3 @@
-from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,74 +9,53 @@ from apps.finance.models import Wish, add_months
 
 DEMO_DIR = Path(__file__).resolve().parents[2] / "demo"
 
-# (rasm, nomi, narxi, valyuta, muhimlik, necha oydan keyin olish, havola, nega kerak, [(necha oy oldin, summa, izoh)])
+# (rasm, nomi, narxi, valyuta, muhimlik, necha oydan keyin olish, havola, nega kerak)
+# Pul qo'shilmaydi — har bir orzu 0 dan boshlanadi, yig'ishni egasi o'zi boshlaydi.
 WISHES = [
     ("iphone", "iPhone 17 Pro", 17_500_000, "UZS", "high", 4, "https://www.apple.com/iphone-17-pro/",
-     "Zo'r kamera — mijozlarga ishlarimni ko'rsatish va kontent qilish uchun.",
-     [(2, 3_000_000, "Maoshdan"), (1, 3_000_000, "Maoshdan"), (0, 1_500_000, "Loyiha bonusi")]),
+     "Zo'r kamera — mijozlarga ishlarimni ko'rsatish va kontent qilish uchun."),
     ("macbook", "MacBook Pro 16\" (M4 Pro)", 38_000_000, "UZS", "high", 7, "https://www.apple.com/macbook-pro/",
-     "Asosiy ish qurolim: tez build, bir vaqtda bir nechta loyiha va Docker.",
-     [(3, 5_000_000, "Birinchi qadam"), (2, 4_000_000, "Maoshdan"), (1, 4_000_000, "Maoshdan")]),
+     "Asosiy ish qurolim: tez build, bir vaqtda bir nechta loyiha va Docker."),
     ("bmw", "BMW M5", 120_000, "USD", "low", None, "https://www.bmw.com/",
-     "Katta orzu — bir kun albatta minaman!",
-     [(1, 300, "Boshlanishi 😎")]),
+     "Katta orzu — bir kun albatta minaman!"),
     ("monitor", "Apple Studio Display (5K monitor)", 22_000_000, "UZS", "medium", 10, "",
-     "Kod va dizaynni katta, aniq ekranda ko'rish — ko'z ham kam charchaydi.",
-     [(0, 2_000_000, "")]),
+     "Kod va dizaynni katta, aniq ekranda ko'rish — ko'z ham kam charchaydi."),
     ("keyboard", "Mexanik klaviatura", 1_800_000, "UZS", "medium", None, "",
-     "Yozish yoqimli bo'lsa, kod ham ko'proq yoziladi.",
-     [(1, 1_000_000, ""), (0, 800_000, "Freelance buyurtma")]),
+     "Yozish yoqimli bo'lsa, kod ham ko'proq yoziladi."),
     ("chair", "Herman Miller Aeron kreslo", 16_000_000, "UZS", "medium", 13, "",
-     "Kuniga 8+ soat o'tiraman — bel sog'lig'i hamma narsadan muhim.",
-     [(0, 1_000_000, "")]),
+     "Kuniga 8+ soat o'tiraman — bel sog'lig'i hamma narsadan muhim."),
     ("headphones", "Shovqinni yutuvchi quloqchin (Sony)", 4_200_000, "UZS", "medium", None, "",
-     "Diqqat bilan ishlash uchun — atrofdagi shovqin xalaqit bermasin.",
-     [(3, 2_000_000, ""), (2, 2_200_000, "")]),
+     "Diqqat bilan ishlash uchun — atrofdagi shovqin xalaqit bermasin."),
     ("istanbul", "Istanbulga sayohat", 1_500, "USD", "high", 7, "",
-     "Dam olish, yangi joylar va taassurotlar — baxtli bo'lish uchun.",
-     [(1, 200, ""), (0, 150, "")]),
+     "Dam olish, yangi joylar va taassurotlar — baxtli bo'lish uchun."),
     ("kindle", "Kindle Paperwhite", 2_300_000, "UZS", "low", None, "",
-     "Har kuni kitob o'qish odati uchun — ko'z charchamaydi.",
-     [(0, 800_000, "")]),
+     "Har kuni kitob o'qish odati uchun — ko'z charchamaydi."),
     ("bicycle", "Sport velosiped", 7_000_000, "UZS", "medium", 5, "",
-     "Sog'lik va yaxshi kayfiyat: ertalabki sayr, hafta oxiri safarlar.",
-     [(0, 1_500_000, "")]),
+     "Sog'lik va yaxshi kayfiyat: ertalabki sayr, hafta oxiri safarlar."),
     # Kerakli narsalar: xavfsizlik, ish, sog'lik, o'qish
     ("savings", "Favqulodda jamg'arma (3 oylik xarajat)", 15_000_000, "UZS", "high", 6, "",
-     "Kasal bo'lsam yoki ish to'xtab qolsa ham xotirjam bo'lishim uchun — eng muhimi shu.",
-     [(2, 1_500_000, "Daromadning 10%"), (1, 1_500_000, "Daromadning 10%"), (0, 1_500_000, "Daromadning 10%")]),
+     "Kasal bo'lsam yoki ish to'xtab qolsa ham xotirjam bo'lishim uchun — eng muhimi shu."),
     ("power", "Zaryad stansiyasi (svet o'chganda)", 9_000_000, "UZS", "high", 2, "",
-     "Qishda svet o'chsa ham noutbuk va router ishlab tursin — deadline'lar kutib turmaydi.",
-     [(1, 3_000_000, ""), (0, 2_500_000, "")]),
+     "Qishda svet o'chsa ham noutbuk va router ishlab tursin — deadline'lar kutib turmaydi."),
     ("english", "Ingliz tili: IELTS 7.0", 5_000_000, "UZS", "high", 8, "",
-     "Xorijiy mijozlar va yaxshi maoshli remote ish uchun kalit.",
-     [(1, 1_000_000, ""), (0, 500_000, "")]),
+     "Xorijiy mijozlar va yaxshi maoshli remote ish uchun kalit."),
     ("gym", "Sport zal abonementi (1 yil)", 4_800_000, "UZS", "high", 1, "",
-     "Sog'lom tana — sog'lom kod. Haftasiga 3 marta!",
-     [(1, 2_000_000, ""), (0, 1_800_000, "")]),
+     "Sog'lom tana — sog'lom kod. Haftasiga 3 marta!"),
     ("driving", "Haydovchilik guvohnomasi (prava)", 3_500_000, "UZS", "high", 4, "",
-     "BMW'dan oldin — avval prava 😄",
-     [(1, 1_000_000, ""), (0, 1_000_000, "")]),
+     "BMW'dan oldin — avval prava 😄"),
     ("mouse", "Logitech MX Master 3S sichqoncha", 1_400_000, "UZS", "medium", None, "",
-     "Qo'l charchamaydi, ish tezlashadi.",
-     [(0, 600_000, "")]),
+     "Qo'l charchamaydi, ish tezlashadi."),
     ("mic", "Shure SM7B mikrofon", 5_000_000, "UZS", "medium", 6, "",
-     "Mijozlar bilan call'lar va video darslarda toza ovoz.",
-     [(0, 1_000_000, "")]),
+     "Mijozlar bilan call'lar va video darslarda toza ovoz."),
     ("camera", "Sony A7 IV kamera", 30_000_000, "UZS", "low", None, "",
-     "YouTube kanal va portfolio uchun sifatli kontent.",
-     [(1, 1_000_000, "")]),
+     "YouTube kanal va portfolio uchun sifatli kontent."),
     ("airpods", "AirPods Pro 2", 3_200_000, "UZS", "low", None, "",
-     "Qo'ng'iroqlar va yo'lda podkast tinglash uchun.",
-     [(0, 500_000, "")]),
+     "Qo'ng'iroqlar va yo'lda podkast tinglash uchun."),
     ("ps5", "PlayStation 5", 7_500_000, "UZS", "low", None, "",
-     "Hafta oxiri do'stlar bilan dam olish — ham kerak!",
-     [(0, 700_000, "")]),
+     "Hafta oxiri do'stlar bilan dam olish — ham kerak!"),
     ("coffee", "Kofe mashinasi", 4_000_000, "UZS", "low", None, "",
-     "Ertalabki ilhom — uyda zo'r espresso ☕",
-     [(0, 400_000, "")]),
+     "Ertalabki ilhom — uyda zo'r espresso ☕"),
 ]  # fmt: skip
-BOUGHT = {"headphones"}
 
 
 class Command(BaseCommand):
@@ -89,7 +67,7 @@ class Command(BaseCommand):
     def handle(self, reset=False, **options):
         today = timezone.localdate()
         created = 0
-        for slug, title, price, currency, priority, months, link, why, deposits in WISHES:
+        for slug, title, price, currency, priority, months, link, why in WISHES:
             existing = Wish.objects.filter(title=title)
             if existing.exists():
                 if not reset:
@@ -110,9 +88,5 @@ class Command(BaseCommand):
             )
             with open(DEMO_DIR / f"{slug}.jpg", "rb") as fh:
                 wish.image.save(f"{slug}.jpg", File(fh))
-            for ago, amount, note in deposits:
-                wish.deposits.create(date=add_months(today, -ago), amount=Decimal(amount), note=note)
-            if slug in BOUGHT:
-                wish.buy(today - timedelta(days=7))
             created += 1
         self.stdout.write(self.style.SUCCESS(f"{created} ta demo orzu qo'shildi ✨"))

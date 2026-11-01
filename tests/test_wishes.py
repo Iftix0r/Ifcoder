@@ -77,5 +77,5 @@ def test_demo_wishes_command(db, settings, tmp_path):
     call_command("demo_wishes")
     call_command("demo_wishes")  # ikkinchi marta dublikat qilmaydi
     assert Wish.objects.count() == len(WISHES) and all(w.image for w in Wish.objects.all())
-    assert Wish.objects.get(title__startswith="Shovqinni").is_bought
-    assert Transaction.objects.filter(category__name="Orzu-istaklar").count() == 1
+    assert not any(w.saved or w.is_bought for w in Wish.objects.all())
+    assert not Transaction.objects.exists()
