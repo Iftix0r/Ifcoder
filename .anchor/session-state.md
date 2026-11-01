@@ -1,34 +1,36 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-11-01 22:15:49_  ·  branch: `main`
+_Updated: 2026-11-01 22:26:40_  ·  branch: `main`
 
 ## Uncommitted changes
 ```
  M .anchor/session-state.md
  M apps/finance/demo/CREDITS.md
  M apps/finance/management/commands/demo_wishes.py
-?? apps/finance/demo/aircon.jpg
-?? apps/finance/demo/books.jpg
-?? apps/finance/demo/car.jpg
-?? apps/finance/demo/checkup.jpg
-?? apps/finance/demo/gift.jpg
-?? apps/finance/demo/gold.jpg
-?? apps/finance/demo/home.jpg
-?? apps/finance/demo/robovac.jpg
-?? apps/finance/demo/samarkand.jpg
-?? apps/finance/demo/shoes.jpg
+?? apps/finance/demo/appliances.jpg
+?? apps/finance/demo/baby.jpg
+?? apps/finance/demo/company.jpg
+?? apps/finance/demo/fotiha.jpg
+?? apps/finance/demo/furniture.jpg
+?? apps/finance/demo/honeymoon.jpg
+?? apps/finance/demo/pullup.jpg
+?? apps/finance/demo/rings.jpg
+?? apps/finance/demo/sarpo.jpg
+?? apps/finance/demo/summit.jpg
+?? apps/finance/demo/wedding.jpg
 ```
 
 Diff stat:
 ```
- .anchor/session-state.md                        | 37 +++++++++----------------
- apps/finance/demo/CREDITS.md                    | 10 +++++++
- apps/finance/management/commands/demo_wishes.py | 21 ++++++++++++++
- 3 files changed, 44 insertions(+), 24 deletions(-)
+ .anchor/session-state.md                        | 44 +++++++------------------
+ apps/finance/demo/CREDITS.md                    | 11 +++++++
+ apps/finance/management/commands/demo_wishes.py | 24 ++++++++++++++
+ 3 files changed, 47 insertions(+), 32 deletions(-)
 ```
 
 ## Recent commits
 ```
+f2b350a Yana 10 ta demo orzu
 2568941 Media fayllar productionda ham ochiladi
 efe7c53 dwq
 8ebf8d1 dwef
@@ -36,7 +38,6 @@ efe7c53 dwq
 f476fb8 af
 cfb15ae qwaf
 2e769a5 egy
-fd730fb 133ss
 ```
 
 ## Resume

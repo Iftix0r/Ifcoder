@@ -35,3 +35,14 @@ Barcha rasmlar Wikimedia Commons'dan olingan (800px gacha kichraytirilgan).
 | aircon.jpg | File:Panasonic AIR CONDITIONER INDOOR UNIT CS-C10KJ2 (2).jpg | Dinkun Chen | CC BY-SA 4.0 |
 | shoes.jpg | File:Asics Gel-Cumulus 22.jpg | Petar Milošević | CC BY-SA 4.0 |
 | robovac.jpg | File:Robot Vacuum - Charging (50841204983).jpg | ajay_suresh | CC BY 2.0 |
+| wedding.jpg | File:Uzbek wedding, Shakrishabs sept 2002 - Flickr - sludgegulper.jpg | Felix O | CC BY-SA 2.0 |
+| fotiha.jpg | File:Uzbek bread, obi non, lepyoshka.jpg | Benjamin Goetzinger | CC BY-SA 4.0 |
+| rings.jpg | File:Placing a wedding ring.jpg | Petar Milošević | CC BY-SA 4.0 |
+| sarpo.jpg | File:Woman buying jewelry at the Gold Souq in Doha.jpg | Alex Sergeev | CC BY-SA 3.0 |
+| honeymoon.jpg | File:Konyaaltı Beach, Antalya, Turkey, March 2022 - Welcome.jpg | Sharon Hahn Darlin | CC BY 2.0 |
+| furniture.jpg | File:Stylish living room features a comfortable gray sofa and wooden paneling under a high ceiling.jpg | Shixart1985 | CC BY 2.0 |
+| appliances.jpg | File:Drum of a washing machine (Bosch Maxx WFO 2440).jpg | Petar Milošević | CC BY-SA 4.0 |
+| baby.jpg | File:Classic baby shoes.jpg | JD Hancock (Daniel Case tahriri) | CC BY 2.0 |
+| company.jpg | File:Cowork Videmonte.jpg | Hipersyl | CC BY-SA 4.0 |
+| summit.jpg | File:Partners Lisbon Web Summit 2017 (24379233448).jpg | Web Summit | CC BY 2.0 |
+| pullup.jpg | File:Pull-up bar.JPG | Santeri Viinamäki | CC BY 4.0 |

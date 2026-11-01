@@ -76,6 +76,30 @@ WISHES = [
      "Ertalabki yugurish — boshni tozalash uchun eng arzon usul."),
     ("robovac", "Robot changyutgich", 4_500_000, "UZS", "low", None, "",
      "Uy ishlariga ketadigan vaqtni o'zim va oilam uchun tejash."),
+    # Uylanish va oila
+    ("fotiha", "Fotiha to'yi (non sindirish)", 30_000_000, "UZS", "high", None, "",
+     "Ikki oila birlashadigan birinchi qadam."),
+    ("rings", "Nikoh uzuklari", 15_000_000, "UZS", "high", None, "",
+     "Bir umrlik va'da ramzi."),
+    ("sarpo", "Kelinga sarpo va zargarlik buyumlari", 40_000_000, "UZS", "high", None, "",
+     "Bo'lajak turmush o'rtog'imni xursand qilish uchun."),
+    ("wedding", "To'y (nikoh to'yi)", 200_000_000, "UZS", "high", None, "",
+     "Hayotimdagi eng katta kun — qarzsiz, o'z pulimga."),
+    ("honeymoon", "Asal oyi: Antalya", 2_000, "USD", "medium", None, "",
+     "Ikkalamizning birinchi birga sayohatimiz."),
+    ("furniture", "Uy jihozlari (mebel)", 60_000_000, "UZS", "medium", None, "",
+     "Yangi oilamiz uchun shinam uy."),
+    ("appliances", "Maishiy texnika (muzlatgich, kir mashina, plita)", 30_000_000, "UZS", "medium", None, "",
+     "Uy ishlari oson bo'lsin — oilaga ko'proq vaqt qolsin."),
+    ("baby", "Farzandim uchun jamg'arma", 30_000_000, "UZS", "medium", None, "",
+     "Bolamga yaxshi kelajak — ta'lim va sog'lik uchun."),
+    # Biznes, IT va sport
+    ("company", "O'z IT kompaniyam (MChJ + ofis)", 80_000_000, "UZS", "high", None, "",
+     "Freelance'dan jamoaga: o'z mahsulotim va doimiy mijozlarim."),
+    ("summit", "Web Summit (Lissabon) konferensiyasi", 3_000, "USD", "medium", None, "",
+     "Dunyo IT bozorini ko'rish, investor va hamkorlar bilan tanishish."),
+    ("pullup", "Uy sport burchagi (turnik, gantellar)", 2_500_000, "UZS", "medium", None, "",
+     "Har kuni 20 daqiqa — vaqt bo'lmasa ham sport to'xtamasin."),
 ]  # fmt: skip
 
 
