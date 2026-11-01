@@ -66,3 +66,16 @@ def test_undeposit_and_validation(client_in):
     assert Wish.objects.get(pk=wish.pk).saved == 0
     resp = client_in.post(reverse("wish_deposit", args=[wish.pk]), {"amount": "0", "date": "2026-11-01"}, **HX)
     assert resp.status_code == 200 and not wish.deposits.exists()
+
+
+def test_demo_wishes_command(db, settings, tmp_path):
+    from django.core.management import call_command
+
+    from apps.finance.management.commands.demo_wishes import WISHES
+
+    settings.MEDIA_ROOT = tmp_path
+    call_command("demo_wishes")
+    call_command("demo_wishes")  # ikkinchi marta dublikat qilmaydi
+    assert Wish.objects.count() == len(WISHES) and all(w.image for w in Wish.objects.all())
+    assert Wish.objects.get(title__startswith="Shovqinni").is_bought
+    assert Transaction.objects.filter(category__name="Orzu-istaklar").count() == 1

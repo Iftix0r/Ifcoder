@@ -117,11 +117,11 @@ class CreditForm(StyledModelForm):
 
 
 class WishForm(StyledModelForm):
-    wide_fields = ("title", "link")
+    wide_fields = ("title", "link", "image")
 
     class Meta:
         model = Wish
-        fields = ["title", "price", "currency", "priority", "target_date", "link", "why"]
+        fields = ["title", "price", "currency", "priority", "target_date", "link", "image", "why"]
         widgets = {"target_date": DateInput(), "price": MoneyInput()}
 
     def clean_price(self):

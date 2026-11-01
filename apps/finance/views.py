@@ -588,28 +588,12 @@ def wish_undeposit(request, pk):
     return done("Oxirgi qo'shilgan pul bekor qilindi.", close=False)
 
 
-def _wish_category():
-    category, _ = Category.objects.get_or_create(name="Orzu-istaklar", kind=Kind.EXPENSE, defaults={"tone": "violet"})
-    return category
-
-
 @require_POST
 def wish_buy(request, pk):
     """«Sotib oldim» — chiqimga yoziladi; qayta bosilsa bekor qilinadi."""
     wish = get_object_or_404(Wish, pk=pk)
     if wish.is_bought:
-        if wish.purchase:
-            wish.purchase.delete()
-        wish.bought_at = wish.purchase = None
-        wish.save()
+        wish.unbuy()
         return done("Yana orzular ro'yxatida.", close=False)
-    wish.bought_at = timezone.localdate()
-    wish.purchase = Transaction.objects.create(
-        kind=Kind.EXPENSE,
-        amount=wish.price,
-        currency=wish.currency,
-        category=_wish_category(),
-        description=f"Orzu ro'yobga chiqdi: {wish.title}",
-    )
-    wish.save()
+    wish.buy()
     return done(f"🎉 Tabriklaymiz! «{wish.title}» endi sizniki!", close=False)

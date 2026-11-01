@@ -360,6 +360,7 @@ class Wish(TimeStamped):
         "Qachongacha olish", null=True, blank=True, help_text="Berilsa, oyiga qancha yig'ish kerakligi hisoblanadi"
     )
     link = models.URLField("Havola", blank=True, help_text="Do'kon yoki e'lon sahifasi")
+    image = models.ImageField("Rasm", upload_to="wishes/", blank=True)
     why = models.TextField("Nega kerak?", blank=True, help_text="O'zingizni ilhomlantirish uchun")
     bought_at = models.DateField("Sotib olingan sana", null=True, blank=True)
     purchase = models.ForeignKey(Transaction, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
@@ -387,6 +388,28 @@ class Wish(TimeStamped):
     @property
     def is_bought(self):
         return self.bought_at is not None
+
+    def buy(self, day=None):
+        """Sotib olindi: narxi «Orzu-istaklar» toifasida chiqimga yoziladi."""
+        category, _ = Category.objects.get_or_create(
+            name="Orzu-istaklar", kind=Kind.EXPENSE, defaults={"tone": "violet"}
+        )
+        self.bought_at = day or timezone.localdate()
+        self.purchase = Transaction.objects.create(
+            kind=Kind.EXPENSE,
+            amount=self.price,
+            currency=self.currency,
+            category=category,
+            date=self.bought_at,
+            description=f"Orzu ro'yobga chiqdi: {self.title}",
+        )
+        self.save()
+
+    def unbuy(self):
+        if self.purchase:
+            self.purchase.delete()
+        self.bought_at = self.purchase = None
+        self.save()
 
     def _deposits(self):
         if not hasattr(self, "_cache"):
