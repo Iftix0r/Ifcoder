@@ -1,3 +1,4 @@
+import math
 from decimal import Decimal
 
 from django.db import models
@@ -335,3 +336,117 @@ class CreditPayment(models.Model):
 
     def __str__(self):
         return f"{self.credit}: {self.period + 1}-to'lov"
+
+
+class Wish(TimeStamped):
+    """Sotib olmoqchi bo'lgan narsa (orzu): narxi, unga yig'ilgan pul va qachongacha olish rejasi."""
+
+    class Priority(models.TextChoices):
+        HIGH = "high", "Juda xohlayman"
+        MEDIUM = "medium", "Kerak bo'ladi"
+        LOW = "low", "Shunchaki orzu"
+
+    PRIORITY_STYLE = {
+        "high": ("flame", "tone-rose", "badge-danger"),
+        "medium": ("star", "tone-amber", "badge-warning"),
+        "low": ("sparkles", "tone-violet", "badge-neutral"),
+    }
+
+    title = models.CharField("Nima olmoqchisiz", max_length=200, help_text="Masalan: iPhone 16, MacBook Air, mashina")
+    price = models.DecimalField("Narxi", max_digits=14, decimal_places=2)
+    currency = models.CharField("Valyuta", max_length=3, choices=Currency.choices, default=Currency.UZS)
+    priority = models.CharField("Qanchalik xohlaysiz", max_length=6, choices=Priority.choices, default=Priority.MEDIUM)
+    target_date = models.DateField(
+        "Qachongacha olish", null=True, blank=True, help_text="Berilsa, oyiga qancha yig'ish kerakligi hisoblanadi"
+    )
+    link = models.URLField("Havola", blank=True, help_text="Do'kon yoki e'lon sahifasi")
+    why = models.TextField("Nega kerak?", blank=True, help_text="O'zingizni ilhomlantirish uchun")
+    bought_at = models.DateField("Sotib olingan sana", null=True, blank=True)
+    purchase = models.ForeignKey(Transaction, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+
+    class Meta:
+        ordering = ["bought_at", "target_date", "-created_at"]
+        verbose_name = "Orzu"
+        verbose_name_plural = "Orzular"
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def icon(self):
+        return self.PRIORITY_STYLE[self.priority][0]
+
+    @property
+    def tone(self):
+        return self.PRIORITY_STYLE[self.priority][1]
+
+    @property
+    def priority_badge(self):
+        return self.PRIORITY_STYLE[self.priority][2]
+
+    @property
+    def is_bought(self):
+        return self.bought_at is not None
+
+    def _deposits(self):
+        if not hasattr(self, "_cache"):
+            self._cache = list(self.deposits.all())
+        return self._cache
+
+    @property
+    def saved(self):
+        return sum((d.amount for d in self._deposits()), Decimal(0))
+
+    @property
+    def remaining(self):
+        return max(Decimal(0), self.price - self.saved)
+
+    @property
+    def progress(self):
+        return min(100, round(self.saved * 100 / self.price)) if self.price else 100
+
+    @property
+    def is_ready(self):
+        """Pul yig'ildi — endi sotib olsa bo'ladi."""
+        return not self.is_bought and self.remaining == 0
+
+    @property
+    def months_left(self):
+        if not self.target_date:
+            return None
+        today = timezone.localdate()
+        months = (self.target_date.year - today.year) * 12 + self.target_date.month - today.month
+        return max(1, months + (1 if self.target_date.day >= today.day else 0))
+
+    @property
+    def monthly_needed(self):
+        """Muddatgacha ulgurish uchun oyiga qancha yig'ish kerak."""
+        if self.is_bought or not self.remaining or not self.months_left:
+            return None
+        return (self.remaining / self.months_left).quantize(Decimal(1))
+
+    @property
+    def eta(self):
+        """Hozirgi tezlikda (oyiga o'rtacha) qachon yig'iladi."""
+        deposits = self._deposits()
+        if self.is_bought or not self.remaining or not deposits:
+            return None
+        first = min(d.date for d in deposits)
+        months = max(1, (timezone.localdate() - first).days / 30)
+        per_month = self.saved / Decimal(months)
+        if per_month <= 0:
+            return None
+        return add_months(timezone.localdate(), math.ceil(self.remaining / per_month))
+
+
+class WishDeposit(models.Model):
+    wish = models.ForeignKey(Wish, on_delete=models.CASCADE, related_name="deposits")
+    amount = models.DecimalField("Summa", max_digits=14, decimal_places=2)
+    date = models.DateField("Sana", default=timezone.localdate)
+    note = models.CharField("Izoh", max_length=200, blank=True)
+
+    class Meta:
+        ordering = ["-date", "-pk"]
+
+    def __str__(self):
+        return f"{self.wish}: +{self.amount}"

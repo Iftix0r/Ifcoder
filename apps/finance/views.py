@@ -10,8 +10,28 @@ from django.views.decorators.http import require_POST
 
 from apps.core.crud import delete_done, done, form_modal
 
-from .forms import CategoryForm, CreditForm, DebtForm, InvoiceForm, InvoiceLineForm, TransactionForm
-from .models import Category, Credit, CreditPayment, Debt, Invoice, InvoiceLine, Kind, Transaction, totals_by_currency
+from .forms import (
+    CategoryForm,
+    CreditForm,
+    DebtForm,
+    InvoiceForm,
+    InvoiceLineForm,
+    TransactionForm,
+    WishDepositForm,
+    WishForm,
+)
+from .models import (
+    Category,
+    Credit,
+    CreditPayment,
+    Debt,
+    Invoice,
+    InvoiceLine,
+    Kind,
+    Transaction,
+    Wish,
+    totals_by_currency,
+)
 
 MONTHS = [
     "",
@@ -473,3 +493,123 @@ def credit_unpay(request, pk):
             credit.is_closed = False
             credit.save(update_fields=["is_closed", "updated_at"])
     return done("Oxirgi to'lov bekor qilindi.", close=False)
+
+
+# --- Orzular: sotib olmoqchi bo'lgan narsalar va ularga pul yig'ish ------------------------
+
+
+def wish_list(request):
+    show_bought = request.GET.get("bought") == "1"
+    wishes = list(Wish.objects.prefetch_related("deposits"))
+    active = [w for w in wishes if not w.is_bought]
+    saved, needed = {}, {}
+    for w in active:
+        saved[w.currency] = saved.get(w.currency, 0) + w.saved
+        needed[w.currency] = needed.get(w.currency, 0) + w.remaining
+    order = {p: i for i, p in enumerate(Wish.Priority.values)}
+    active.sort(key=lambda w: (not w.is_ready, order[w.priority], w.target_date or date.max))
+    bought = [w for w in wishes if w.is_bought]
+    return render(
+        request,
+        "finance/wish_list.html",
+        {
+            "nav_active": "wishes",
+            "wishes": active + (bought if show_bought else []),
+            "saved": saved,
+            "needed": needed,
+            "bought_count": len(bought),
+            "ready_count": sum(1 for w in active if w.is_ready),
+            "show_bought": show_bought,
+        },
+    )
+
+
+def wish_create(request):
+    return form_modal(
+        request,
+        WishForm,
+        title="Yangi orzu",
+        icon="sparkles",
+        tone="tone-violet",
+        size="xl",
+        subtitle="Narxini yozing — har gal pul qo'shganingizda qancha qolganini ko'rasiz",
+        success="Orzu qo'shildi ✨",
+    )
+
+
+def wish_edit(request, pk):
+    wish = get_object_or_404(Wish, pk=pk)
+    return form_modal(
+        request,
+        WishForm,
+        instance=wish,
+        title=wish.title,
+        icon=wish.icon,
+        tone=wish.tone,
+        size="xl",
+        delete_url=reverse("wish_delete", args=[pk]),
+    )
+
+
+@require_POST
+def wish_delete(request, pk):
+    return delete_done(get_object_or_404(Wish, pk=pk), "Orzu o'chirildi.")
+
+
+def wish_deposit(request, pk):
+    wish = get_object_or_404(Wish.objects.prefetch_related("deposits"), pk=pk)
+
+    def save(form):
+        deposit = form.save(commit=False)
+        deposit.wish = wish
+        deposit.save()
+        return deposit
+
+    return form_modal(
+        request,
+        WishDepositForm,
+        title=f"{wish.title} uchun pul",
+        icon="piggy-bank",
+        tone="tone-emerald",
+        subtitle=f"Hozircha {wish.progress}% yig'ildi",
+        initial={"amount": wish.monthly_needed or wish.remaining},
+        save=save,
+        success="Pul qo'shildi 💰",
+    )
+
+
+@require_POST
+def wish_undeposit(request, pk):
+    """Oxirgi qo'shilgan pulni bekor qiladi (xato kiritilgan bo'lsa)."""
+    wish = get_object_or_404(Wish, pk=pk)
+    last = wish.deposits.order_by("-pk").first()
+    if last:
+        last.delete()
+    return done("Oxirgi qo'shilgan pul bekor qilindi.", close=False)
+
+
+def _wish_category():
+    category, _ = Category.objects.get_or_create(name="Orzu-istaklar", kind=Kind.EXPENSE, defaults={"tone": "violet"})
+    return category
+
+
+@require_POST
+def wish_buy(request, pk):
+    """«Sotib oldim» — chiqimga yoziladi; qayta bosilsa bekor qilinadi."""
+    wish = get_object_or_404(Wish, pk=pk)
+    if wish.is_bought:
+        if wish.purchase:
+            wish.purchase.delete()
+        wish.bought_at = wish.purchase = None
+        wish.save()
+        return done("Yana orzular ro'yxatida.", close=False)
+    wish.bought_at = timezone.localdate()
+    wish.purchase = Transaction.objects.create(
+        kind=Kind.EXPENSE,
+        amount=wish.price,
+        currency=wish.currency,
+        category=_wish_category(),
+        description=f"Orzu ro'yobga chiqdi: {wish.title}",
+    )
+    wish.save()
+    return done(f"🎉 Tabriklaymiz! «{wish.title}» endi sizniki!", close=False)

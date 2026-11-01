@@ -2,7 +2,7 @@ from django import forms
 
 from apps.core.forms import DateInput, MoneyInput, StyledModelForm
 
-from .models import Category, Credit, Debt, Invoice, InvoiceLine, Transaction
+from .models import Category, Credit, Debt, Invoice, InvoiceLine, Transaction, Wish, WishDeposit
 
 
 class TransactionForm(StyledModelForm):
@@ -114,3 +114,37 @@ class CreditForm(StyledModelForm):
         if total is not None and months and not data.get("monthly_payment"):
             data["monthly_payment"] = round((total - down) / months, 0)
         return data
+
+
+class WishForm(StyledModelForm):
+    wide_fields = ("title", "link")
+
+    class Meta:
+        model = Wish
+        fields = ["title", "price", "currency", "priority", "target_date", "link", "why"]
+        widgets = {"target_date": DateInput(), "price": MoneyInput()}
+
+    def clean_price(self):
+        price = self.cleaned_data["price"]
+        if price <= 0:
+            raise forms.ValidationError("Narx 0 dan katta bo'lsin.")
+        return price
+
+
+class WishDepositForm(StyledModelForm):
+    wide_fields = ("note",)
+
+    class Meta:
+        model = WishDeposit
+        fields = ["amount", "date", "note"]
+        widgets = {
+            "date": DateInput(),
+            "amount": MoneyInput(attrs={"autofocus": True}),
+            "note": forms.TextInput(attrs={"placeholder": "Masalan: maoshdan, bonusdan"}),
+        }
+
+    def clean_amount(self):
+        amount = self.cleaned_data["amount"]
+        if amount <= 0:
+            raise forms.ValidationError("Summa 0 dan katta bo'lsin.")
+        return amount

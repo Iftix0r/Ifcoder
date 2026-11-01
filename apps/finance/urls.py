@@ -28,4 +28,11 @@ urlpatterns = [
     path("credits/<int:pk>/delete/", views.credit_delete, name="credit_delete"),
     path("credits/<int:pk>/pay/", views.credit_pay, name="credit_pay"),
     path("credits/<int:pk>/unpay/", views.credit_unpay, name="credit_unpay"),
+    path("wishes/", views.wish_list, name="wish_list"),
+    path("wishes/new/", views.wish_create, name="wish_create"),
+    path("wishes/<int:pk>/", views.wish_edit, name="wish_edit"),
+    path("wishes/<int:pk>/delete/", views.wish_delete, name="wish_delete"),
+    path("wishes/<int:pk>/deposit/", views.wish_deposit, name="wish_deposit"),
+    path("wishes/<int:pk>/undeposit/", views.wish_undeposit, name="wish_undeposit"),
+    path("wishes/<int:pk>/buy/", views.wish_buy, name="wish_buy"),
 ]

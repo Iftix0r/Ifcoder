@@ -1,0 +1,75 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Orzular{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Orzular</h1>
+    <p class="mt-1 text-sm text-ink-2">Sotib olmoqchi bo'lgan narsalaringiz — har biriga qancha yig'ilgani va qancha qolgani.{% if ready_count %} <span class="badge badge-success">{{ ready_count }} tasiga pul yetarli 🎉</span>{% endif %}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    {% if bought_count %}<a href="?{% if not show_bought %}bought=1{% endif %}" class="btn btn-ghost">{% if show_bought %}{% icon "eye-off" "size-4" %}Olinganlarni yashirish{% else %}{% icon "eye" "size-4" %}Olinganlar ({{ bought_count }}){% endif %}</a>{% endif %}
+    <button type="button" class="btn btn-primary" hx-get="{% url 'wish_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Orzu</button>
+  </div>
+</div>
+
+<div id="wishes-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#wishes-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="mb-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+  <div class="card stat animate-fade-up"><span class="stat-glow tone-emerald"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Yig'ilgan</p><span class="icon-chip tone-emerald size-9 shrink-0">{% icon "piggy-bank" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">{{ saved|totals }}</p></div>
+  <div class="card stat animate-fade-up" style="animation-delay: 40ms"><span class="stat-glow tone-amber"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Yana kerak</p><span class="icon-chip tone-amber size-9 shrink-0">{% icon "target" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">{{ needed|totals }}</p></div>
+  <div class="card stat col-span-2 lg:col-span-1 animate-fade-up" style="animation-delay: 80ms"><span class="stat-glow tone-violet"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Ro'yobga chiqqan</p><span class="icon-chip tone-violet size-9 shrink-0">{% icon "party-popper" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">{{ bought_count }} ta orzu</p></div>
+</div>
+
+{% if wishes %}
+  <div class="grid items-start gap-4 lg:grid-cols-2">
+    {% for w in wishes %}
+      <div class="card overflow-hidden animate-fade-up {% if w.is_bought %}opacity-60{% endif %}" x-data="{ open: false }">
+        <div class="flex items-start gap-3 p-5 pb-4">
+          <span class="icon-chip {{ w.tone }} shrink-0">{% icon w.icon "size-5" %}</span>
+          <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'wish_edit' w.pk %}" hx-target="#modal-content">
+            <p class="truncate text-[15px] font-semibold">{{ w.title }}</p>
+            <p class="truncate text-xs text-ink-3">{{ w.price|money:w.currency }}{% if w.target_date %} · {{ w.target_date|date:"j E Y" }} gacha{% endif %}</p>
+          </div>
+          {% if w.is_bought %}<span class="badge badge-success">{% icon "check" "size-3" "3" %}Olindi</span>{% elif w.is_ready %}<span class="badge badge-success">Pul yetarli</span>{% else %}<span class="badge {{ w.priority_badge }}">{{ w.get_priority_display }}</span>{% endif %}
+        </div>
+        {% if w.why %}<p class="-mt-1 mb-3 line-clamp-2 px-5 text-sm italic text-ink-2">«{{ w.why }}»</p>{% endif %}
+        <div class="grid grid-cols-3 gap-3 px-5 text-sm">
+          <div><p class="text-xs text-ink-3">Yig'ildi</p><p class="font-bold whitespace-nowrap text-emerald-600 dark:text-emerald-400">{{ w.saved|money:w.currency }}</p></div>
+          <div><p class="text-xs text-ink-3">Qoldi</p><p class="font-bold whitespace-nowrap">{{ w.remaining|money:w.currency }}</p></div>
+          <div><p class="text-xs text-ink-3">{% if w.monthly_needed %}Oyiga kerak{% else %}Taxminan{% endif %}</p><p class="font-bold whitespace-nowrap">{% if w.monthly_needed %}{{ w.monthly_needed|money:w.currency }}{% elif w.eta %}{{ w.eta|date:"M Y" }}{% else %}—{% endif %}</p></div>
+        </div>
+        <div class="px-5 pt-4">
+          <div class="mb-1.5 flex items-center justify-between text-xs text-ink-3"><span>{{ w.progress }}% yig'ildi</span>{% if w.is_bought %}<span>olingan: {{ w.bought_at|date:"j E Y" }}</span>{% elif w.target_date %}<span class="badge {{ w.target_date|due_badge }}">{{ w.target_date|due_label }}</span>{% elif w.eta %}<span>shu tezlikda: {{ w.eta|date:"M Y" }}</span>{% endif %}</div>
+          <div class="progress h-2"><span style="width: {{ w.progress }}%"></span></div>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-line px-5 py-3">
+          {% if w.is_bought %}
+            <button type="button" hx-post="{% url 'wish_buy' w.pk %}" hx-confirm="«Sotib olindi» bekor qilinsinmi? Chiqimdan ham o'chiriladi." class="btn btn-ghost btn-sm text-ink-3">{% icon "undo-2" "size-3.5" %}Bekor qilish</button>
+          {% else %}
+            {% if not w.is_ready %}<button type="button" hx-get="{% url 'wish_deposit' w.pk %}" hx-target="#modal-content" class="btn btn-primary btn-sm">{% icon "plus" "size-3.5" %}Pul qo'shdim</button>{% endif %}
+            <button type="button" hx-post="{% url 'wish_buy' w.pk %}" hx-confirm="«{{ w.title }}» sotib olindimi? {{ w.price|money:w.currency }} chiqimga yoziladi." class="btn {% if w.is_ready %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">{% icon "shopping-bag" "size-3.5" %}Sotib oldim</button>
+          {% endif %}
+          {% if w.link %}<a href="{{ w.link }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" title="Havola">{% icon "external-link" "size-3.5" %}</a>{% endif %}
+          {% if w.deposits.all %}<button type="button" @click="open = !open" class="btn btn-ghost btn-sm ml-auto">{% icon "coins" "size-3.5" %}Tarix <span class="transition" :class="open && 'rotate-180'">{% icon "chevron-down" "size-3.5" %}</span></button>{% endif %}
+        </div>
+        {% if w.deposits.all %}
+        <div x-cloak x-show="open" x-collapse>
+          <ul class="max-h-80 divide-y divide-line overflow-y-auto border-t border-line bg-surface-2/30">
+            {% for d in w.deposits.all %}
+              <li class="flex items-center gap-3 px-5 py-2.5 text-sm">
+                <span class="w-24 shrink-0 text-xs text-ink-3">{{ d.date|date:"j E Y" }}</span>
+                <span class="min-w-0 flex-1 truncate text-ink-2">{{ d.note }}</span>
+                <span class="font-semibold whitespace-nowrap text-emerald-600 dark:text-emerald-400">+{{ d.amount|money:w.currency }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+          {% if not w.is_bought %}<div class="border-t border-line px-5 py-2"><button type="button" hx-post="{% url 'wish_undeposit' w.pk %}" hx-confirm="Oxirgi qo'shilgan pul bekor qilinsinmi?" class="btn btn-ghost btn-sm text-ink-3">{% icon "undo-2" "size-3.5" %}Oxirgisini bekor qilish</button></div>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="sparkles" title="Hali orzu yo'q" text="iPhone, MacBook, mashina — nimani olmoqchi bo'lsangiz, narxi bilan qo'shing va pul yig'ishni boshlang." %}</div>
+{% endif %}
+</div>
+{% endblock %}
