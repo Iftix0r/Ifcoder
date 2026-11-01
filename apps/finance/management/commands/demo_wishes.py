@@ -55,6 +55,27 @@ WISHES = [
      "Hafta oxiri do'stlar bilan dam olish — ham kerak!"),
     ("coffee", "Kofe mashinasi", 4_000_000, "UZS", "low", None, "",
      "Ertalabki ilhom — uyda zo'r espresso ☕"),
+    # Hayot, oila va kelajak uchun
+    ("home", "O'z uyim: ipoteka boshlang'ich to'lovi", 200_000_000, "UZS", "high", None, "",
+     "Ijarasiz, o'zimning uyim — oilam uchun mustahkam poydevor."),
+    ("car", "Birinchi mashina: Chevrolet Tracker", 260_000_000, "UZS", "medium", None, "",
+     "Ish, oila va safarlar uchun qulay — BMW'gacha yaxshi qadam."),
+    ("gift", "Ota-onamga sovg'a", 5_000_000, "UZS", "high", None, "",
+     "Ular uchun qilgan har bir narsam — eng katta baxt."),
+    ("checkup", "To'liq tibbiy ko'rik (check-up)", 2_000_000, "UZS", "high", None, "",
+     "Yiliga bir marta — sog'lik hamma narsadan qimmat."),
+    ("gold", "Oltin — sarmoya", 10_000_000, "UZS", "medium", None, "",
+     "Pul faqat yig'ilmasin, ishlasin ham — inflyatsiyadan himoya."),
+    ("books", "Dasturlash kitoblari to'plami", 1_000_000, "UZS", "medium", None, "",
+     "Clean Code, DDIA, Pragmatic Programmer — har oyda bittadan."),
+    ("samarkand", "Samarqand va Buxoroga sayohat", 3_000_000, "UZS", "medium", None, "",
+     "O'z yurtimni ko'rish, dam olish va yangi ilhom olish."),
+    ("aircon", "Konditsioner", 6_000_000, "UZS", "medium", None, "",
+     "Yozgi issiqda ham xonada salqin — ish unumi tushmasin."),
+    ("shoes", "Yugurish krossovkasi", 1_500_000, "UZS", "medium", None, "",
+     "Ertalabki yugurish — boshni tozalash uchun eng arzon usul."),
+    ("robovac", "Robot changyutgich", 4_500_000, "UZS", "low", None, "",
+     "Uy ishlariga ketadigan vaqtni o'zim va oilam uchun tejash."),
 ]  # fmt: skip
 
 

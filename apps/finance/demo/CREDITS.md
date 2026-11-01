@@ -25,3 +25,13 @@ Barcha rasmlar Wikimedia Commons'dan olingan (800px gacha kichraytirilgan).
 | airpods.jpg | File:AirPods Pro (2nd generation).jpg | Hajoon0102 | CC BY-SA 4.0 |
 | ps5.jpg | File:PlayStation 5 and DualSense with transparent background.png (16:9 fonga joylangan) | Soberian, Osh33m | CC BY-SA 4.0 |
 | coffee.jpg | File:Espresso machine 1.jpg | Herr Andrax | CC BY-SA 3.0 |
+| home.jpg | File:Curved modern apartment building with glass stairwell tower.jpg | Wiki.cullin | CC0 |
+| car.jpg | File:Chevrolet Tracker 1.2 Turbo 2023.jpg | Just a Man | CC BY 4.0 |
+| gift.jpg | File:Brown gift box with red ribbon and bow.jpg | Shixart1985 | CC BY 2.0 |
+| checkup.jpg | File:2023 Stetoskop.jpg | Jacek Halicki | CC BY-SA 4.0 |
+| gold.jpg | File:Gold Ingots on white background.jpg | Szaaman | Public domain |
+| books.jpg | File:Geek Books - Flickr - acaben.jpg | Ben Stanfield | CC BY-SA 2.0 |
+| samarkand.jpg | File:Registan 01.jpg | Bernard Gagnon | CC0 |
+| aircon.jpg | File:Panasonic AIR CONDITIONER INDOOR UNIT CS-C10KJ2 (2).jpg | Dinkun Chen | CC BY-SA 4.0 |
+| shoes.jpg | File:Asics Gel-Cumulus 22.jpg | Petar Milošević | CC BY-SA 4.0 |
+| robovac.jpg | File:Robot Vacuum - Charging (50841204983).jpg | ajay_suresh | CC BY 2.0 |
