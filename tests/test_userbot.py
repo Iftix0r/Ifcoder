@@ -10,7 +10,9 @@ from unittest import mock
 
 import pytest
 from asgiref.sync import async_to_sync
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.urls import reverse
 from django.utils import timezone
 from telethon import errors
@@ -1516,3 +1518,61 @@ def test_activity_model_untouched_by_outgoing(db):
     Contact.objects.create(name="Ali", telegram="@ali")
     services.record(Peer(10, 5, "Ali", username="ali"), [item(1, outgoing=True)])
     assert not Activity.objects.exists()
+
+
+ROTATED_KEY = "bmV3LWZlcm5ldC1rZXktZm9yLXJvdGF0aW9uLXRlc3Q="
+
+
+def rotation_data():
+    from apps.vault.crypto import encrypt
+    from apps.vault.models import Secret, TOTPDevice
+
+    secret = Secret(name="Kalit")
+    secret.value = "maxfiy"
+    secret.save()
+    device = TOTPDevice.objects.create(user=get_user_model().objects.create_user("a"), encrypted_secret=encrypt("otp"))
+    return secret, device, connected()
+
+
+def test_rotate_fernet_dry_run_changes_nothing(db, monkeypatch):
+    secret, _, _ = rotation_data()
+    monkeypatch.setenv("NEW_FERNET_KEY", ROTATED_KEY)
+    before = secret.encrypted_value
+    call_command("rotate_fernet")
+    secret.refresh_from_db()
+    assert secret.encrypted_value == before
+
+
+def test_rotate_fernet_moves_every_secret_to_new_key(db, monkeypatch, settings):
+    secret, device, _ = rotation_data()
+    monkeypatch.setenv("NEW_FERNET_KEY", ROTATED_KEY)
+    call_command("rotate_fernet", "--apply")
+    settings.VAULT_FERNET_KEY = ROTATED_KEY
+    secret.refresh_from_db()
+    device.refresh_from_db()
+    account = Account.load()
+    assert (secret.value, device.secret) == ("maxfiy", "otp")
+    assert (account.api_hash, account.session) == ("a" * 32, "sess")
+
+
+def test_rotate_fernet_writes_nothing_if_any_row_is_unreadable(db, monkeypatch):
+    from apps.vault.models import Secret
+
+    good, _, _ = rotation_data()
+    bad = Secret(name="Buzilgan", encrypted_value="yaroqsiz")
+    bad.save()
+    monkeypatch.setenv("NEW_FERNET_KEY", ROTATED_KEY)
+    before = good.encrypted_value
+    with pytest.raises(CommandError, match="hech narsa"):
+        call_command("rotate_fernet", "--apply")
+    good.refresh_from_db()
+    assert good.encrypted_value == before
+
+
+def test_rotate_fernet_refuses_same_or_missing_key(db, monkeypatch, settings):
+    monkeypatch.delenv("NEW_FERNET_KEY", raising=False)
+    with pytest.raises(CommandError):
+        call_command("rotate_fernet")
+    monkeypatch.setenv("NEW_FERNET_KEY", settings.VAULT_FERNET_KEY)
+    with pytest.raises(CommandError):
+        call_command("rotate_fernet")
