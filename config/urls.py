@@ -26,6 +26,7 @@ urlpatterns = [
     path("", include("apps.notes.urls")),
     path("", include("apps.resources.urls")),
     path("", include("apps.vault.urls")),
+    path("", include("apps.userbot.urls")),
     path("", include("apps.landing.urls")),
     # Yuklangan rasmlar (orzular): cPanel'da public/media veb-serverga ochiq emas, shuning uchun productionda ham
     # Django beradi — LoginRequiredMiddleware tufayli faqat tizimga kirgan foydalanuvchiga

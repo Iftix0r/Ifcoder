@@ -72,6 +72,7 @@ def contact_detail(request, pk):
             "invoices": contact.invoices.prefetch_related("lines"),
             "earned": totals_by_currency(income),
             "stage_style": STAGE_STYLE,
+            "telegram_dialog": contact.telegram_dialogs.first(),
         },
     )
 

@@ -1,0 +1,54 @@
+<div id="telegram-region" hx-get="{% url 'telegram_home' %}" hx-trigger="changed from:body, every 10s" hx-select="#telegram-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if not account.runner_alive %}
+<div class="mb-4 flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] p-4">
+  <span class="icon-chip tone-amber shrink-0">{% icon "terminal" "size-5" %}</span>
+  <div class="min-w-0"><p class="text-sm font-semibold">Userbot jarayoni ishlamayapti</p><p class="text-xs text-ink-2">Yangi xabarlar kelmaydi, yuborilganlar navbatda turadi. Serverda ishga tushiring: <code class="font-mono">python manage.py userbot</code>{% if account.last_error %}<br>Oxirgi xato: {{ account.last_error }}{% endif %}</p></div>
+</div>
+{% endif %}
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="card overflow-hidden animate-fade-up lg:col-span-2">
+    <div class="card-header"><p class="card-title">Suhbatlar</p>{% if account.runner_alive %}<span class="badge badge-success">Ishlayapti</span>{% else %}<span class="badge badge-warning">To'xtagan</span>{% endif %}</div>
+    {% if dialogs %}
+      <ul class="divide-y divide-line">
+        {% for d in dialogs %}
+          <li><a href="{% url 'telegram_chat' d.pk %}" class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-surface-2">
+            <span class="avatar size-9 shrink-0 rounded-lg text-xs">{{ d.title|initials }}</span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold">{{ d.title }}{% if d.contact %} <span class="badge badge-brand">Mijoz</span>{% endif %}</p>
+              <p class="truncate text-xs text-ink-3">{{ d.last_text }}</p>
+            </div>
+            <div class="shrink-0 text-right">
+              <p class="text-xs text-ink-3">{{ d.last_message_at|date:"j M, H:i" }}</p>
+              {% if d.unread %}<span class="badge badge-brand mt-1">{{ d.unread }}</span>{% endif %}
+            </div>
+          </a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% include "components/empty_state.html" with icon="messages-square" title="Suhbatlar hali yo'q" text="Userbot ishga tushgach, shaxsiy suhbatlar shu yerda ko'rinadi." %}
+    {% endif %}
+  </div>
+  <div class="space-y-4">
+    <div class="card animate-fade-up">
+      <div class="card-header"><p class="card-title">Sozlamalar</p></div>
+      <form method="post" action="{% url 'telegram_options' %}" hx-post="{% url 'telegram_options' %}" hx-trigger="change" hx-swap="none" class="card-body space-y-3">
+        {% csrf_token %}
+        <label class="flex items-center gap-2.5 text-sm">{{ options_form.commands_enabled }}{{ options_form.commands_enabled.label }}</label>
+        <label class="flex items-center gap-2.5 text-sm">{{ options_form.log_to_crm }}{{ options_form.log_to_crm.label }}</label>
+      </form>
+    </div>
+    <div class="card animate-fade-up">
+      <div class="card-header"><p class="card-title">Buyruqlar</p></div>
+      <div class="card-body space-y-1.5 text-xs text-ink-2">
+        <p class="mb-2">Telegram'da «Saqlangan xabarlar» ga yozing:</p>
+        <p><code class="font-mono">.vazifa Saytni deploy qilish</code></p>
+        <p><code class="font-mono">.eslatma Matn</code></p>
+        <p><code class="font-mono">.kirim 1 500 000 To'lov</code></p>
+        <p><code class="font-mono">.chiqim 50k Tushlik</code></p>
+        <p><code class="font-mono">.mijoz Ali Valiyev @ali</code></p>
+        <p><code class="font-mono">.bugun</code> · <code class="font-mono">.help</code></p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.notes",
     "apps.resources",
     "apps.vault",
+    "apps.userbot",
     "apps.dashboard",
     "apps.landing",
 ]

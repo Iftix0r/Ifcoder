@@ -16,6 +16,7 @@ Dizayn tizimi AIMarkaz bilan bir xil (indigo → violet, yorug'/qorong'i rejim, 
 | Vaqt hisobi | `/time/` | Taymer yozuvlari, 14 kunlik grafik, loyihalar bo'yicha vaqt |
 | Mijozlar | `/contacts/` | Mijoz kartasi, aloqalar tarixi (qo'ng'iroq/uchrashuv/xabar), keyingi aloqa eslatmasi |
 | Bitimlar | `/deals/` | Voronka kanbani: Yangi → Aloqa → Taklif → Muzokara → Yutildi/Yo'qotildi |
+| Telegram | `/telegram/` | Akkauntni API ID/Hash bilan ulash, shaxsiy suhbatlar, paneldan javob, CRM bilan bog'lash, buyruqlar |
 | Kirim-chiqim | `/finance/` | Oylik hisob, 6 oylik grafik, xarajatlar tarkibi, toifalar (so'm va $) |
 | Hisob-fakturalar | `/invoices/` | Xizmat qatorlari, holatlar, chop etish/PDF; «To'landi» → kirim avtomatik yoziladi |
 | Qarzlar | `/debts/` | Menga qarzdor / men qarzdorman, qisman qaytarish, muddatlar |
@@ -74,6 +75,7 @@ apps/growth/       maqsadlar, odatlar, o'rganish, kundalik
 apps/notes/        eslatmalar va kod parchalari
 apps/resources/    domen, server, obunalar
 apps/vault/        shifrlangan kalitlar, 2FA, backup
+apps/userbot/      Telegram akkaunt (Telethon): ulanish, suhbatlar, navbat, buyruqlar
 apps/dashboard/    «Bugun» sahifasi
 apps/landing/      ochiq sahifa va ariza formasi
 templates/         layouts, partials (sidebar, topbar, ⌘K, modal, toast), components
@@ -152,6 +154,28 @@ Yuboriladi: saytdan yangi ariza (darhol), ertalabki xulosa va kunlik backup fayl
 
 `daily_digest --print` — yubormasdan matnni ko'rish.
 
+### Telegram userbot
+
+Bu bildirishnoma botidan alohida: sizning shaxsiy akkauntingiz ulanadi.
+
+1. [my.telegram.org](https://my.telegram.org) → *API development tools* → `api_id` va `api_hash` oling.
+2. Panel → **Telegram** → API ID, API Hash, telefon → kod → (bo'lsa) 2FA parol.
+3. Cron qo'shing — jarayon to'xtab qolsa qayta ishga tushiradi, ishlab turgan bo'lsa darhol chiqadi:
+
+```
+*/5 * * * * cd ~/iftix0r.uz && ~/virtualenv/iftix0r.uz/3.11/bin/python manage.py userbot >> logs/userbot.log 2>&1
+```
+
+Hosting uzoq ishlaydigan jarayonlarni o'ldirsa, o'rniga har daqiqada `manage.py userbot --once` qo'ying.
+
+Ulanishni faqat shu jarayon ushlaydi; panel u bilan baza orqali gaplashadi (`Message`, `Outbox`). Sessiya va API Hash
+`IFCODER_FERNET_KEY` bilan shifrlanadi, kirish kodi va 2FA parol saqlanmaydi. Faqat shaxsiy suhbatlar nusxalanadi:
+guruh, kanal, bot, «Saqlangan xabarlar» va Telegram xizmat chati (kirish kodlari) bazaga tushmaydi.
+
+«Saqlangan xabarlar» ga yoziladigan buyruqlar: `.vazifa`, `.eslatma`, `.kirim`, `.chiqim`, `.mijoz`, `.bugun`, `.help`.
+
+Ommaviy xabar yuborish yo'q va qo'shmang: Telegram akkauntni spam uchun bloklaydi.
+
 ### 2FA'ga kirish yo'qolsa
 
 2FA `/admin/` ni ham qamrab oladi. Authenticator yo'qolsa va zaxira kodlar ham bo'lmasa, serverda:
@@ -162,5 +186,5 @@ python manage.py disable_2fa <username>
 
 ## Eski versiya
 
-Oldingi kod (Telegram userbot, mijoz portali, tiketlar, operator joylashuvi API) `legacy-v1` git tegida saqlangan:
+Oldingi kod (eski Telegram userbot, mijoz portali, tiketlar, operator joylashuvi API) `legacy-v1` git tegida saqlangan:
 `git checkout legacy-v1`.

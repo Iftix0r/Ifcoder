@@ -17,6 +17,7 @@
       <div class="mt-3 flex flex-wrap gap-2">
         {% if contact.phone %}<a href="tel:{{ contact.phone }}" class="btn btn-secondary btn-sm">{% icon "phone" "size-3.5" %}{{ contact.phone }}</a>{% endif %}
         {% if contact.telegram_url %}<a href="{{ contact.telegram_url }}" target="_blank" rel="noopener" hx-boost="false" class="btn btn-secondary btn-sm">{% icon "send" "size-3.5" %}{{ contact.telegram }}</a>{% endif %}
+        {% if telegram_dialog %}<a href="{% url 'telegram_chat' telegram_dialog.pk %}" class="btn btn-secondary btn-sm">{% icon "messages-square" "size-3.5" %}Suhbat{% if telegram_dialog.unread %} <span class="badge badge-brand">{{ telegram_dialog.unread }}</span>{% endif %}</a>{% endif %}
         {% if contact.email %}<a href="mailto:{{ contact.email }}" class="btn btn-secondary btn-sm">{% icon "mail" "size-3.5" %}{{ contact.email }}</a>{% endif %}
         {% if contact.website %}<a href="{{ contact.website }}" target="_blank" rel="noopener" hx-boost="false" class="btn btn-secondary btn-sm">{% icon "globe" "size-3.5" %}Sayt</a>{% endif %}
       </div>

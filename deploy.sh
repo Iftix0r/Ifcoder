@@ -60,4 +60,7 @@ if command -v cloudlinux-selector >/dev/null 2>&1; then
   cloudlinux-selector restart --json --interpreter python --app-root "$APP_DIR" >/dev/null 2>&1 || true
 fi
 
+# Userbot eski kodda qolmasin: to'xtatamiz, cron bir necha daqiqada yangi kod bilan qayta ishga tushiradi
+pkill -f "manage.py userbot" || true
+
 echo "✓ Tayyor — $(git log -1 --format='%h %s')"

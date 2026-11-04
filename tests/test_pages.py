@@ -33,6 +33,7 @@ PAGES = [
     "note_list",
     "resource_list",
     "vault_list",
+    "telegram_home",
     "settings",
     "2fa_setup",
 ]

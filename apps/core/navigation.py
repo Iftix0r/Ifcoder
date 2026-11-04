@@ -34,6 +34,7 @@ NAV_SECTIONS: list[tuple[str, list[NavItem]]] = [
         [
             NavItem("contacts", "Mijozlar", "users", "contact_list"),
             NavItem("deals", "Bitimlar", "target", "deal_board", mobile=True, short="Bitimlar"),
+            NavItem("telegram", "Telegram", "send", "telegram_home"),
         ],
     ),
     (
