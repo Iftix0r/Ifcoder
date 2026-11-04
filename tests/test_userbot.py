@@ -1351,6 +1351,14 @@ def test_badge_stops_quietly_when_session_ends(client, db):
     assert "password" not in resp.content.decode()
 
 
+def test_heartbeat_is_sent_during_long_first_sync(db):
+    connected()
+    dialogs = [tg_dialog(user(10)), tg_dialog(user(11)), tg_dialog(user(12))]
+    with mock.patch("apps.userbot.services.tick", wraps=services.tick) as tick:
+        async_to_sync(runner_with(FakeClient(dialogs)).sync)()
+    assert tick.call_count >= 3 and Account.load().runner_alive
+
+
 def test_activity_model_untouched_by_outgoing(db):
     connected()
     Contact.objects.create(name="Ali", telegram="@ali")

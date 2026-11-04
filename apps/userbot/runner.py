@@ -193,6 +193,7 @@ class Runner:
             client.add_event_handler(self.on_read, events.MessageRead())
             client.add_event_handler(self.on_read, events.MessageRead(inbox=True))
             client.add_event_handler(self.on_user, events.UserUpdate())
+            await db(services.tick)()
             await self.sync()
             next_sync = time.monotonic() + RESYNC_EVERY
             while True:
@@ -265,6 +266,8 @@ class Runner:
         """Ulanish uzilgan vaqtda kelgan xabarlar va buyruqlarni yetkazib oladi."""
         known = await db(services.known_dialogs)()
         async for dialog in self.client.iter_dialogs(limit=DIALOG_LIMIT):
+            # Birinchi sinxronlash daqiqalab cho'zilishi mumkin: panel «ishlamayapti» demasligi uchun signal beriladi
+            await db(services.tick)()
             if not dialog.is_user or not is_private_person(dialog.entity):
                 continue
             entity = dialog.entity
@@ -288,6 +291,7 @@ class Runner:
     async def reconcile(self) -> None:
         """Userbot to'xtagan paytda o'chirilgan/tahrirlangan xabarlarni topadi (hodisa kelmagan bo'ladi)."""
         for target in await db(services.reconcile_targets)():
+            await db(services.tick)()
             peer = InputPeerUser(target.peer_id, target.access_hash)
             ids = list(target.messages)
             # Telegram o'chganlarini umuman qaytarmasligi mumkin: tartibga emas, id ga qaraladi
