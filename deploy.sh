@@ -73,7 +73,7 @@ fi
 # Userbot eski kodda qolmasin: to'xtatamiz, cron bir necha daqiqada yangi kod bilan qayta ishga tushiradi
 pkill -f "manage.py userbot" || true
 
-SITE_URL="${SITE_URL:-$(grep -s '^SITE_URL=' .env | cut -d= -f2-)}"
+SITE_URL="${SITE_URL:-$(grep -s '^SITE_URL=' .env | cut -d= -f2- || true)}"
 SITE_URL="${SITE_URL:-https://iftix0r.uz}"
 for path in db.sqlite3 .git/config; do
   status="$(curl -s -o /dev/null -I -m 15 -w '%{http_code}' "$SITE_URL/$path" || true)"
