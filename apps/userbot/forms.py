@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from apps.core.forms import StyledFormMixin
 
 from .models import Account
+from .voice import MAX_TEXT, VOICES
 
 MAX_UPLOAD = 20 * 1024 * 1024
 CAPTION_LIMIT = 1024
@@ -45,7 +46,7 @@ class PasswordForm(StyledFormMixin, forms.Form):
 class OptionsForm(forms.ModelForm):
     class Meta:
         model = Account
-        fields = ["commands_enabled", "log_to_crm"]
+        fields = ["commands_enabled", "log_to_crm", "voice"]
 
 
 class SendForm(forms.Form):
@@ -55,6 +56,7 @@ class SendForm(forms.Form):
     file = forms.FileField(required=False)
     reply_to = forms.IntegerField(required=False)
     edit_id = forms.IntegerField(required=False)
+    as_voice = forms.BooleanField(required=False)
 
     def clean_file(self):
         file = self.cleaned_data["file"]
@@ -70,8 +72,21 @@ class SendForm(forms.Form):
             raise forms.ValidationError("Xabar bo'sh.")
         if file and len(text) > CAPTION_LIMIT:
             raise forms.ValidationError("Fayl izohi 1024 belgigacha bo'ladi.")
+        if data.get("as_voice") and (file or len(text) > MAX_TEXT or not text):
+            raise forms.ValidationError("Ovozli xabar uchun 1000 belgigacha matn yozing (faylsiz).")
         data["text"] = text
         return data
+
+
+class VoiceForm(StyledFormMixin, forms.Form):
+    """form_modal ModelForm kutadi, shuning uchun instance qabul qilinadi."""
+
+    wide_fields = ("voice",)
+    text = forms.CharField(label="Aytiladigan matn", max_length=MAX_TEXT, widget=forms.Textarea(attrs={"rows": 6}))
+    voice = forms.ChoiceField(label="Ovoz", choices=VOICES)
+
+    def __init__(self, *args, instance=None, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class OpenForm(forms.Form):

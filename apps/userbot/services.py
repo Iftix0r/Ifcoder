@@ -66,6 +66,7 @@ class Job:
     reply_to_id: int | None
     file_name: str
     has_file: bool
+    voice: str = ""
 
 
 @dataclass
@@ -330,6 +331,17 @@ def enqueue(dialog: Dialog | None, text: str = "", **fields) -> Outbox:
     return Outbox.objects.create(dialog=dialog, text=text, **fields)
 
 
+def voice_dialog(debt) -> Dialog | None:
+    return debt.contact.telegram_dialogs.first() if debt.contact else None
+
+
+def reminded_today(debt) -> bool:
+    """Bir qarz bo'yicha kuniga bittadan ortiq eslatma yo'q: bezovta qilish va spam bloklanishi xavfi."""
+    return (
+        debt.voice_reminders.filter(created_at__date=timezone.localdate()).exclude(status=Outbox.Status.FAILED).exists()
+    )
+
+
 def fail_stale_sends() -> None:
     """Jarayon yuborish paytida o'lgan bo'lsa, xabar ketgan-ketmagani noma'lum — takror yubormaymiz."""
     Outbox.objects.filter(status=Outbox.Status.SENDING).update(
@@ -354,6 +366,7 @@ def claim_pending() -> list[Job]:
                     row.reply_to_id,
                     row.file_name,
                     bool(row.file),
+                    row.voice,
                 )
             )
     return claimed

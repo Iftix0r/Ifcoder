@@ -46,7 +46,7 @@
         <div class="tg-bubble {% if q.status == 'failed' %}is-failed{% endif %}">
           {% if q.file_name %}<p class="tg-file">{% icon "file" "size-4 shrink-0" %}<span>{{ q.file_name }}</span></p>{% endif %}
           {% if q.text %}<p class="tg-text">{{ q.text }}</p>{% endif %}
-          <span class="tg-meta">{% if q.kind == "edit" %}tahrir · {% endif %}{% if q.status == "failed" %}{{ q.error }}{% else %}{% icon "clock" "size-3.5" %}{% endif %}</span>
+          <span class="tg-meta">{% if q.kind == "edit" %}tahrir · {% elif q.kind == "voice" %}ovozli · {% endif %}{% if q.status == "failed" %}{{ q.error }}{% else %}{% icon "clock" "size-3.5" %}{% endif %}</span>
         </div>
         {% if q.status == "failed" %}<div class="tg-actions"><button type="button" title="Olib tashlash" aria-label="Olib tashlash" hx-post="{% url 'telegram_dismiss' q.pk %}" hx-swap="none">{% icon "x" "size-4" %}</button></div>{% endif %}
       </div>
@@ -66,9 +66,11 @@
     {% csrf_token %}
     <input type="hidden" name="reply_to" :value="reply ? reply.id : ''">
     <input type="hidden" name="edit_id" :value="edit ? edit.id : ''">
+    <input x-ref="asVoice" type="hidden" name="as_voice" value="">
     <input x-ref="file" type="file" name="file" class="hidden" @change="pick()" aria-label="Fayl tanlash">
     <button type="button" class="btn btn-ghost btn-icon shrink-0" :disabled="edit" @click="$refs.file.click()" aria-label="Fayl biriktirish">{% icon "paperclip" "size-5" %}</button>
     <textarea x-ref="box" x-model="text" name="text" rows="1" maxlength="4096" placeholder="Xabar yozing…" aria-label="Xabar" class="tg-input" @keydown.enter="enter($event)" @paste="paste($event)"></textarea>
+    <button type="button" class="btn btn-ghost btn-icon shrink-0" title="Matnni ovozli xabar qilib yuborish" aria-label="Ovozli xabar qilib yuborish" :disabled="edit || file || !text.trim()" @click="$refs.asVoice.value = 'on'; $refs.form.requestSubmit(); $nextTick(() => $refs.asVoice.value = '')">{% icon "mic" "size-5" %}</button>
     <button class="btn btn-primary btn-icon shrink-0" aria-label="Yuborish">{% icon "send" "size-4" %}</button>
   </form>
 </div>

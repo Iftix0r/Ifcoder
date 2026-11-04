@@ -1,3 +1,5 @@
+import asyncio
+import base64
 import os
 
 from django.contrib import messages
@@ -6,12 +8,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from apps.core.crud import done
+from apps.core.crud import done, form_modal
 from apps.core.htmx import add_triggers, trigger_toast
+from apps.finance.models import Debt
 from apps.vault.services import has_2fa
 
-from . import client, services
-from .forms import CodeForm, ConnectForm, OpenForm, OptionsForm, PasswordForm, SendForm
+from . import client, services, voice
+from .forms import CodeForm, ConnectForm, OpenForm, OptionsForm, PasswordForm, SendForm, VoiceForm
 from .models import Account, Dialog, Message, Outbox
 
 CHAT_LIMIT = 100
@@ -192,7 +195,7 @@ def chat(request, pk):
         dialog=dialog,
         chat_messages=rows[::-1],
         limit=limit,
-        queued=dialog.outbox.filter(kind__in=[Outbox.Kind.SEND, Outbox.Kind.EDIT])
+        queued=dialog.outbox.filter(kind__in=[Outbox.Kind.SEND, Outbox.Kind.EDIT, Outbox.Kind.VOICE])
         .exclude(status=Outbox.Status.SENT)
         .order_by("created_at")[:20],
     )
@@ -210,6 +213,9 @@ def send(request, pk):
             return _error("Xabar bo'sh.")
         get_object_or_404(dialog.messages, tg_id=data["edit_id"], outgoing=True)
         services.enqueue(dialog, data["text"], kind=Outbox.Kind.EDIT, target_id=data["edit_id"])
+        return _changed()
+    if data["as_voice"]:
+        services.enqueue(dialog, data["text"], kind=Outbox.Kind.VOICE, voice=Account.load().voice)
         return _changed()
     row = services.enqueue(dialog, data["text"], reply_to_id=data["reply_to"])
     if data["file"]:
@@ -247,6 +253,46 @@ def open_chat(request):
         return _error("Username noto'g'ri. Masalan: @durov")
     services.enqueue(None, form.cleaned_data["username"].lstrip("@"), kind=Outbox.Kind.OPEN)
     return done("Suhbat qidirilmoqda…", close=False)
+
+
+def debt_remind(request, pk):
+    """Egasi matnni ko'rib, tinglab, o'zi yuboradi: avtomatik ommaviy eslatma yo'q."""
+    debt = get_object_or_404(Debt.objects.select_related("contact"), pk=pk, direction=Debt.Direction.THEY_OWE)
+    account = Account.load()
+    dialog = services.voice_dialog(debt)
+    if debt.is_closed or not account.is_connected or dialog is None:
+        return _error("Bu qarz uchun ochiq Telegram suhbat yo'q.")
+    if services.reminded_today(debt):
+        return _error("Bu qarz bo'yicha bugun eslatma yuborilgan.")
+
+    def save(form):
+        data = form.cleaned_data
+        return services.enqueue(dialog, data["text"], kind=Outbox.Kind.VOICE, voice=data["voice"], debt=debt)
+
+    return form_modal(
+        request,
+        VoiceForm,
+        initial={"text": voice.reminder_text(debt, account.tg_name), "voice": account.voice},
+        title="Ovozli eslatma",
+        subtitle=f"{dialog.title} ga Telegram orqali",
+        icon="mic",
+        tone="tone-cyan",
+        save=save,
+        success="Ovozli eslatma navbatga qo'yildi.",
+        template="userbot/voice_modal.html",
+    )
+
+
+@require_POST
+def voice_preview(request):
+    form = VoiceForm(request.POST)
+    if not form.is_valid():
+        return render(request, "userbot/partials/voice_preview.html", {"error": "Matn bo'sh yoki juda uzun."})
+    try:
+        data = asyncio.run(voice.synthesize(form.cleaned_data["text"], form.cleaned_data["voice"]))
+    except voice.VoiceError as exc:
+        return render(request, "userbot/partials/voice_preview.html", {"error": str(exc)})
+    return render(request, "userbot/partials/voice_preview.html", {"audio": base64.b64encode(data).decode()})
 
 
 @require_POST

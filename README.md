@@ -178,6 +178,10 @@ rasm/video/audio ochiladi, qolgani (html, svg...) faqat yuklab olinadi. Bir mart
 
 «Saqlangan xabarlar» ga yoziladigan buyruqlar: `.vazifa`, `.eslatma`, `.kirim`, `.chiqim`, `.mijoz`, `.bugun`, `.help`.
 
+Ovozli xabar: chatdagi mikrofon tugmasi matnni ovozga aylantirib yuboradi; Qarzlar sahifasida «Ovozli eslatma» matnni
+tayyorlaydi, tinglab ko'rib yuborasiz (bir qarzga kuniga bitta). Ovoz `edge-tts` orqali yaratiladi: API kalit kerak emas,
+lekin bu Microsoft Edge'ning norasmiy xizmati, to'xtab qolishi mumkin. Xabar avtomatik ekani matnda aytiladi.
+
 Ommaviy xabar yuborish yo'q va qo'shmang: Telegram akkauntni spam uchun bloklaydi.
 
 ### 2FA'ga kirish yo'qolsa

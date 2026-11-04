@@ -328,7 +328,7 @@ def invoice_print(request, pk):
 
 def debt_list(request):
     show_closed = request.GET.get("closed") == "1"
-    qs = Debt.objects.select_related("contact")
+    qs = Debt.objects.select_related("contact").prefetch_related("contact__telegram_dialogs")
     if not show_closed:
         qs = qs.filter(is_closed=False)
     open_qs = Debt.objects.filter(is_closed=False)

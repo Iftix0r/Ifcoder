@@ -12,6 +12,8 @@ from django.utils import timezone
 from apps.core.models import TimeStamped
 from apps.vault.crypto import decrypt, encrypt
 
+from .voice import DEFAULT_VOICE, VOICES
+
 HEARTBEAT_ALIVE = timedelta(seconds=90)
 # Faqat shu turlar brauzerda ochiladi. Qolgani (html, svg, ...) panel domenida ishga tushmasligi uchun yuklab olinadi.
 INLINE_MIMES = {
@@ -48,6 +50,7 @@ class Account(TimeStamped):
 
     commands_enabled = models.BooleanField("Saqlangan xabarlardagi buyruqlar", default=True)
     log_to_crm = models.BooleanField("Mijoz yozganda aloqalar tarixiga qo'shish", default=True)
+    voice = models.CharField("Ovoz", max_length=30, choices=VOICES, default=DEFAULT_VOICE)
 
     heartbeat_at = models.DateTimeField(null=True, blank=True)
     synced_at = models.DateTimeField(null=True, blank=True)
@@ -206,6 +209,7 @@ class Outbox(TimeStamped):
         READ = "read", "O'qildi"
         HISTORY = "history", "Eski xabarlar"
         OPEN = "open", "Yangi suhbat"
+        VOICE = "voice", "Ovozli xabar"
 
     class Status(models.TextChoices):
         PENDING = "pending", "Navbatda"
@@ -219,6 +223,10 @@ class Outbox(TimeStamped):
     target_id = models.BigIntegerField(null=True, blank=True)
     reply_to_id = models.BigIntegerField(null=True, blank=True)
     file = models.FileField(upload_to="telegram/outbox", blank=True)
+    voice = models.CharField(max_length=30, blank=True)
+    debt = models.ForeignKey(
+        "finance.Debt", null=True, blank=True, on_delete=models.SET_NULL, related_name="voice_reminders"
+    )
     file_name = models.CharField(max_length=200, blank=True)
     status = models.CharField(max_length=8, choices=Status.choices, default=Status.PENDING)
     error = models.CharField(max_length=300, blank=True)

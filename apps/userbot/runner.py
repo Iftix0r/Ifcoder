@@ -13,6 +13,7 @@ from asgiref.sync import sync_to_async as db
 from django.utils import timezone
 from telethon import errors, events
 from telethon.tl.types import (
+    DocumentAttributeAudio,
     InputPeerUser,
     MessageMediaDocument,
     MessageMediaPhoto,
@@ -23,7 +24,7 @@ from telethon.tl.types import (
     UserStatusRecently,
 )
 
-from . import commands, services
+from . import commands, services, voice
 from .client import build_client
 from .models import INLINE_MIMES, Outbox
 from .services import Item, Peer
@@ -357,6 +358,9 @@ class Runner:
             text = next((v for k, v in PERMANENT_SEND_ERRORS.items() if isinstance(exc, k)), str(exc))
             await db(services.mark_failed)(row.id, text)
             return False
+        except voice.VoiceError as exc:
+            await db(services.mark_failed)(row.id, str(exc))
+            return False
         except ValueError as exc:  # get_entity: bunday username yo'q
             await db(services.mark_failed)(row.id, str(exc))
             await db(services.set_error)(f"Topilmadi: {row.text}")
@@ -370,6 +374,8 @@ class Runner:
         peer = InputPeerUser(row.peer_id, row.access_hash)
         if row.kind == Outbox.Kind.SEND:
             await self.perform_send(row, peer)
+        elif row.kind == Outbox.Kind.VOICE:
+            await self.perform_voice(row, peer)
         elif row.kind == Outbox.Kind.EDIT:
             await self.client.edit_message(peer, row.target_id, row.text, parse_mode=None)
             await db(services.apply_edit)(row.peer_id, row.target_id, row.text)
@@ -401,6 +407,15 @@ class Runner:
             )
         item = to_item(sent) or Item(sent.id, True, row.text, sent.date)
         item.reply_to_id = item.reply_to_id or row.reply_to_id  # qisqa javobda Telegram buni qaytarmasligi mumkin
+        await db(services.mark_sent)(row.id, item)
+
+    async def perform_voice(self, row, peer) -> None:
+        data = await voice.synthesize(row.text, row.voice or voice.DEFAULT_VOICE)
+        buffer = io.BytesIO(data)
+        buffer.name = "voice.mp3"
+        attribute = DocumentAttributeAudio(duration=voice.duration_seconds(data), voice=True)
+        sent = await self.client.send_file(peer, buffer, voice_note=True, attributes=[attribute])
+        item = to_item(sent) or Item(sent.id, True, "[Ovozli xabar]", sent.date)
         await db(services.mark_sent)(row.id, item)
 
     async def perform_open(self, row) -> None:

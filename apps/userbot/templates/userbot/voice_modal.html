@@ -1,0 +1,9 @@
+{% extends "components/form_modal.html" %}
+{% block submit_label %}Yuborish{% endblock %}
+{% block extra_body %}
+<div class="mt-4 space-y-2">
+  <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'telegram_voice_preview' %}" hx-include="closest form" hx-target="#voice-preview" hx-indicator="this">{% icon "play" "size-4" %}Eshitib ko'rish</button>
+  <div id="voice-preview"></div>
+  <p class="help-text">Xabar sizning akkauntingizdan ovozli xabar bo'lib ketadi. Avtomatik ekani matnda qolsin.</p>
+</div>
+{% endblock %}

@@ -17,6 +17,9 @@
             <p class="text-sm font-bold whitespace-nowrap">{{ d.remaining|money:d.currency }}</p>
             {% if d.due_date and not d.is_closed %}<span class="badge {{ d.due_date|due_badge }}">{{ d.due_date|due_label }}</span>{% elif d.paid_amount and not d.is_closed %}<p class="text-[11px] text-ink-3">{{ d.amount|money:d.currency }} dan</p>{% endif %}
           </div>
+          {% if direction == "they_owe" and not d.is_closed and d.contact.telegram_dialogs.all %}
+            <button type="button" hx-get="{% url 'telegram_debt_remind' d.pk %}" hx-target="#modal-content" class="btn btn-ghost btn-icon btn-sm" title="Telegram orqali ovozli eslatma" aria-label="Ovozli eslatma">{% icon "mic" "size-4" %}</button>
+          {% endif %}
           <button type="button" hx-post="{% url 'debt_close' d.pk %}" class="btn btn-ghost btn-icon btn-sm" title="{% if d.is_closed %}Qayta ochish{% else %}Yopish (to'liq qaytarildi){% endif %}">{% if d.is_closed %}{% icon "rotate-ccw" "size-4" %}{% else %}{% icon "check" "size-4" %}{% endif %}</button>
         </li>
       {% endfor %}

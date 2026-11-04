@@ -1,6 +1,6 @@
 """Telegram userbot: ulanish oqimi, suhbatlar, navbat va buyruqlar (Telegram'ga haqiqiy ulanishsiz)."""
 
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest import mock
@@ -22,11 +22,11 @@ from telethon.tl.types import (
 )
 
 from apps.crm.models import Activity, Contact
-from apps.finance.models import Transaction
+from apps.finance.models import Debt, Transaction
 from apps.notes.models import Note
 from apps.planner.models import Task
 from apps.userbot import client as tg
-from apps.userbot import commands, services
+from apps.userbot import commands, services, voice
 from apps.userbot.models import Account, Dialog, Message, Outbox
 from apps.userbot.runner import Runner, seen_fields, to_item
 from apps.userbot.services import Item, Peer
@@ -230,7 +230,7 @@ def test_options_do_not_overwrite_runner_state(client_in):
     stale = Account.load()
     Account.objects.update(last_command_id=9)
     with mock.patch("apps.userbot.views.Account.load", return_value=stale):
-        client_in.post(reverse("telegram_options"), {"log_to_crm": "on"}, **HX)
+        client_in.post(reverse("telegram_options"), {"log_to_crm": "on", "voice": "uz-UZ-SardorNeural"}, **HX)
     account = Account.objects.get()
     assert account.last_command_id == 9 and not account.commands_enabled and account.log_to_crm
 
@@ -935,6 +935,132 @@ def test_pinned_dialog_first(db):
     services.record(Peer(11, 5, "Yangi"), [item(1)])
     services.update_state(10, pinned=True)
     assert Dialog.objects.first().name == "Eski"
+
+
+@pytest.mark.parametrize(
+    ("number", "words"),
+    [
+        (0, "nol"),
+        (15, "o'n besh"),
+        (100, "yuz"),
+        (250, "ikki yuz ellik"),
+        (500_000, "besh yuz ming"),
+        (1_500_000, "bir million besh yuz ming"),
+        (2_030_007, "ikki million o'ttiz ming yetti"),
+    ],
+)
+def test_number_words(number, words):
+    assert voice.number_words(number) == words
+
+
+@pytest.mark.parametrize(
+    ("day", "text"),
+    [(1, "birinchi"), (10, "o'ninchi"), (15, "o'n beshinchi"), (20, "yigirmanchi"), (23, "yigirma uchinchi")],
+)
+def test_date_words(day, text):
+    assert voice.date_words(date(2026, 11, day)) == f"noyabr oyining {text} kuni"
+
+
+def owed(**extra):
+    contact = Contact.objects.create(name="Ali Valiyev", telegram="@ali")
+    connected(tg_name="Iftixor")
+    fields = {"person": "Ali", "contact": contact, "amount": 700000, "paid_amount": 200000, "reason": "sayt"}
+    debt = Debt.objects.create(**{**fields, **extra})
+    return debt, services.record(Peer(10, 5, "Ali", username="ali"), [item()])
+
+
+def test_reminder_text_is_polite_and_says_automatic(db):
+    debt, _ = owed(due_date=timezone.localdate() - timedelta(days=2))
+    text = voice.reminder_text(debt, "Iftixor")
+    assert "Ali Valiyev" in text and "avtomatik" in text and "besh yuz ming so'm" in text and "muddat o'tgan" in text
+
+
+def test_debt_reminder_flow_once_per_day(client_in):
+    debt, dialog = owed()
+    url = reverse("telegram_debt_remind", args=[debt.pk])
+    html = client_in.get(url, **HX).content.decode()
+    assert "avtomatik" in html and "Eshitib" in html
+    data = {"text": "Eslatma matni", "voice": "uz-UZ-SardorNeural"}
+    assert client_in.post(url, data, **HX).status_code == 204
+    row = Outbox.objects.get()
+    assert (row.kind, row.dialog, row.debt, row.voice) == ("voice", dialog, debt, "uz-UZ-SardorNeural")
+    assert client_in.get(url, **HX).status_code == 422
+    client_in.post(url, data, **HX)
+    assert Outbox.objects.count() == 1
+
+
+def test_failed_reminder_can_be_retried_same_day(client_in):
+    debt, _ = owed()
+    url = reverse("telegram_debt_remind", args=[debt.pk])
+    client_in.post(url, {"text": "x", "voice": "uz-UZ-MadinaNeural"}, **HX)
+    services.mark_failed(Outbox.objects.get().pk, "xato")
+    assert client_in.get(url, **HX).status_code == 200
+
+
+@pytest.mark.parametrize("extra", [{"is_closed": True}, {"contact": None}])
+def test_reminder_refused_without_open_chat(client_in, extra):
+    debt, _ = owed(**extra)
+    assert client_in.get(reverse("telegram_debt_remind", args=[debt.pk]), **HX).status_code == 422
+
+
+def test_reminder_never_for_my_own_debt(client_in):
+    debt, _ = owed(direction="i_owe")
+    assert client_in.get(reverse("telegram_debt_remind", args=[debt.pk]), **HX).status_code == 404
+
+
+def test_debt_page_shows_button_only_with_chat(client_in):
+    debt, _ = owed()
+    assert reverse("telegram_debt_remind", args=[debt.pk]) in client_in.get(reverse("debt_list")).content.decode()
+    Dialog.objects.all().delete()
+    assert reverse("telegram_debt_remind", args=[debt.pk]) not in client_in.get(reverse("debt_list")).content.decode()
+
+
+def test_chat_voice_button_enqueues_with_account_voice(client_in):
+    connected(voice="uz-UZ-SardorNeural")
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    url = reverse("telegram_send", args=[dialog.pk])
+    assert client_in.post(url, {"text": "x" * 1001, "as_voice": "on"}, **HX).status_code == 422
+    assert client_in.post(url, {"text": "Salom", "as_voice": "on"}, **HX).status_code == 204
+    row = Outbox.objects.get()
+    assert (row.kind, row.voice) == ("voice", "uz-UZ-SardorNeural")
+
+
+def test_voice_is_sent_as_voice_note(db):
+    connected()
+    row = services.enqueue(
+        services.record(Peer(10, 5, "Ali"), [item()]), "Salom", kind="voice", voice="uz-UZ-MadinaNeural"
+    )
+    fake, runner = job_runner()
+
+    async def speak(text, name):
+        return b"m" * 60_000
+
+    with mock.patch("apps.userbot.voice.synthesize", speak):
+        async_to_sync(runner.flush_outbox)()
+    buffer, kwargs = fake.sent[0][1], fake.sent[0][2]
+    assert buffer.name == "voice.mp3" and kwargs["voice_note"] and kwargs["attributes"][0].duration == 10
+    row.refresh_from_db()
+    assert row.status == "sent"
+
+
+def test_voice_service_failure_marks_message_failed(db):
+    connected()
+    row = services.enqueue(services.record(Peer(10, 5, "Ali"), [item()]), "Salom", kind="voice")
+    fake, runner = job_runner()
+    with mock.patch("apps.userbot.voice.synthesize", side_effect=voice.VoiceError("Ovoz yaratilmadi.")):
+        async_to_sync(runner.flush_outbox)()
+    row.refresh_from_db()
+    assert row.status == "failed" and "Ovoz" in row.error and not fake.sent
+
+
+def test_preview_returns_audio(client_in):
+    async def speak(text, name):
+        return b"mp3"
+
+    with mock.patch("apps.userbot.voice.synthesize", speak):
+        data = {"text": "Salom", "voice": "uz-UZ-MadinaNeural"}
+        html = client_in.post(reverse("telegram_voice_preview"), data, **HX).content.decode()
+    assert "data:audio/mpeg;base64,bXAz" in html
 
 
 def test_activity_model_untouched_by_outgoing(db):
