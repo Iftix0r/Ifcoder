@@ -181,6 +181,7 @@ rasm/video/audio ochiladi, qolgani (html, svg...) faqat yuklab olinadi. Bir mart
 Ovozli xabar: chatdagi mikrofon tugmasi matnni ovozga aylantirib yuboradi; Qarzlar sahifasida «Ovozli eslatma» matnni
 tayyorlaydi, tinglab ko'rib yuborasiz (bir qarzga kuniga bitta). Ovoz `edge-tts` orqali yaratiladi: API kalit kerak emas,
 lekin bu Microsoft Edge'ning norasmiy xizmati, to'xtab qolishi mumkin. Xabar avtomatik ekani matnda aytiladi.
+Tabiiyroq ovoz uchun `.env` ga `AISHA_API_KEY=` yozing (voicelab.uz): tanlovda Gulnoza paydo bo'ladi.
 
 Ommaviy xabar yuborish yo'q va qo'shmang: Telegram akkauntni spam uchun bloklaydi.
 

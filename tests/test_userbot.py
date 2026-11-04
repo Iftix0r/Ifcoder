@@ -1,5 +1,7 @@
 """Telegram userbot: ulanish oqimi, suhbatlar, navbat va buyruqlar (Telegram'ga haqiqiy ulanishsiz)."""
 
+import io
+import wave
 from datetime import date, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
@@ -230,7 +232,11 @@ def test_options_do_not_overwrite_runner_state(client_in):
     stale = Account.load()
     Account.objects.update(last_command_id=9)
     with mock.patch("apps.userbot.views.Account.load", return_value=stale):
-        client_in.post(reverse("telegram_options"), {"log_to_crm": "on", "voice": "uz-UZ-SardorNeural"}, **HX)
+        client_in.post(
+            reverse("telegram_options"),
+            {"log_to_crm": "on", "voice": "uz-UZ-SardorNeural", "voice_speed": "slow"},
+            **HX,
+        )
     account = Account.objects.get()
     assert account.last_command_id == 9 and not account.commands_enabled and account.log_to_crm
 
@@ -958,7 +964,7 @@ def test_number_words(number, words):
     [(1, "birinchi"), (10, "o'ninchi"), (15, "o'n beshinchi"), (20, "yigirmanchi"), (23, "yigirma uchinchi")],
 )
 def test_date_words(day, text):
-    assert voice.date_words(date(2026, 11, day)) == f"noyabr oyining {text} kuni"
+    assert voice.date_words(date(2026, 11, day)) == f"{text} noyabr"
 
 
 def owed(**extra):
@@ -972,7 +978,7 @@ def owed(**extra):
 def test_reminder_text_is_polite_and_says_automatic(db):
     debt, _ = owed(due_date=timezone.localdate() - timedelta(days=2))
     text = voice.reminder_text(debt, "Iftixor")
-    assert "Ali Valiyev" in text and "avtomatik" in text and "besh yuz ming so'm" in text and "muddat o'tgan" in text
+    assert "Ali Valiyev" in text and "avtomatik" in text and "besh yuz ming so'm" in text and " edi." in text
 
 
 def test_debt_reminder_flow_once_per_day(client_in):
@@ -980,10 +986,16 @@ def test_debt_reminder_flow_once_per_day(client_in):
     url = reverse("telegram_debt_remind", args=[debt.pk])
     html = client_in.get(url, **HX).content.decode()
     assert "avtomatik" in html and "Eshitib" in html
-    data = {"text": "Eslatma matni", "voice": "uz-UZ-SardorNeural"}
+    data = {"text": "Eslatma matni", "voice": "uz-UZ-SardorNeural", "speed": "slow"}
     assert client_in.post(url, data, **HX).status_code == 204
     row = Outbox.objects.get()
-    assert (row.kind, row.dialog, row.debt, row.voice) == ("voice", dialog, debt, "uz-UZ-SardorNeural")
+    assert (row.kind, row.dialog, row.debt, row.voice, row.speed) == (
+        "voice",
+        dialog,
+        debt,
+        "uz-UZ-SardorNeural",
+        "slow",
+    )
     assert client_in.get(url, **HX).status_code == 422
     client_in.post(url, data, **HX)
     assert Outbox.objects.count() == 1
@@ -992,7 +1004,7 @@ def test_debt_reminder_flow_once_per_day(client_in):
 def test_failed_reminder_can_be_retried_same_day(client_in):
     debt, _ = owed()
     url = reverse("telegram_debt_remind", args=[debt.pk])
-    client_in.post(url, {"text": "x", "voice": "uz-UZ-MadinaNeural"}, **HX)
+    client_in.post(url, {"text": "x", "voice": "uz-UZ-MadinaNeural", "speed": "normal"}, **HX)
     services.mark_failed(Outbox.objects.get().pk, "xato")
     assert client_in.get(url, **HX).status_code == 200
 
@@ -1032,8 +1044,8 @@ def test_voice_is_sent_as_voice_note(db):
     )
     fake, runner = job_runner()
 
-    async def speak(text, name):
-        return b"m" * 60_000
+    async def speak(text, name, speed):
+        return voice.Speech(b"m" * 60_000, 10)
 
     with mock.patch("apps.userbot.voice.synthesize", speak):
         async_to_sync(runner.flush_outbox)()
@@ -1054,13 +1066,92 @@ def test_voice_service_failure_marks_message_failed(db):
 
 
 def test_preview_returns_audio(client_in):
-    async def speak(text, name):
-        return b"mp3"
+    async def speak(text, name, speed):
+        return voice.Speech(b"mp3", 1)
 
     with mock.patch("apps.userbot.voice.synthesize", speak):
-        data = {"text": "Salom", "voice": "uz-UZ-MadinaNeural"}
+        data = {"text": "Salom", "voice": "uz-UZ-MadinaNeural", "speed": "normal"}
         html = client_in.post(reverse("telegram_voice_preview"), data, **HX).content.decode()
     assert "data:audio/mpeg;base64,bXAz" in html
+
+
+def test_sentences_get_silent_mp3_frames_between(settings):
+    frame = b"\xff\xf3\x64\xc4" + bytes(140)
+
+    class Fake:
+        def __init__(self, sentence, name, rate, boundary):
+            self.rate = rate
+
+        async def stream(self):
+            yield {"type": "audio", "data": frame * 10}
+
+    with mock.patch("edge_tts.Communicate", Fake):
+        speech = async_to_sync(voice.synthesize)(
+            "Birinchi gap. Ikkinchi gap! Uchinchi?", "uz-UZ-MadinaNeural", "normal"
+        )
+    assert (
+        len(speech.data) == 144 * (30 + 2 * voice.PAUSE_FRAMES)
+        and speech.data.count(frame) == 30 + 2 * voice.PAUSE_FRAMES
+    )
+
+
+def test_slow_speed_reaches_edge():
+    seen = []
+
+    class Fake:
+        def __init__(self, sentence, name, rate, boundary):
+            seen.append(rate)
+
+        async def stream(self):
+            yield {"type": "audio", "data": b"x"}
+
+    with mock.patch("edge_tts.Communicate", Fake):
+        async_to_sync(voice.synthesize)("Gap.", "uz-UZ-SardorNeural", "slow")
+    assert seen == ["-20%"]
+
+
+def test_trim_cuts_edge_silence_on_frame_boundaries():
+    data = bytes(range(100)) * 144  # 100 kadr
+    ticks = voice.FRAME_TICKS
+    kept = voice.trim(data, 20 * ticks, 50 * ticks)
+    assert kept == data[17 * 144 : 55 * 144] and len(kept) % 144 == 0
+    assert voice.trim(data, 0, 99 * ticks) == data
+
+
+def test_reminder_sentence_starts_with_capital(db):
+    debt, _ = owed(reason="sayt to'lovi")
+    assert "Sayt to'lovi bo'yicha" in voice.reminder_text(debt)
+
+
+def test_aisha_hidden_without_key(settings):
+    assert not any(v.startswith("aisha") for v, _ in voice.voice_choices())
+    settings.AISHA_API_KEY = "k"
+    assert any(v == "aisha:Gulnoza" for v, _ in voice.voice_choices())
+
+
+def test_aisha_voice_without_key_fails_clearly():
+    with pytest.raises(voice.VoiceError):
+        async_to_sync(voice.synthesize)("Salom", "aisha:Gulnoza", "normal")
+
+
+def wav_bytes(seconds=1, rate=22050):
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as out:
+        out.setnchannels(1)
+        out.setsampwidth(2)
+        out.setframerate(rate)
+        out.writeframes(bytes(2 * rate * seconds))
+    return buffer.getvalue()
+
+
+def test_wav_becomes_mp3():
+    speech = voice.wav_to_mp3(wav_bytes(3))
+    assert speech.seconds == 3 and speech.data[:2] in (b"\xff\xfb", b"\xff\xf3", b"ID")
+
+
+def test_bad_wav_is_clear_error():
+    with pytest.raises(voice.VoiceError):
+        voice.wav_to_mp3(b"not audio")
 
 
 def test_activity_model_untouched_by_outgoing(db):

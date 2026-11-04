@@ -124,5 +124,7 @@ FORMS_URLFIELD_ASSUME_HTTPS = True
 # Telegram bildirishnomalar (yangi ariza, ertalabki xulosa, backup). Bo'sh bo'lsa — o'chiq.
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", default="")
+# Tabiiyroq o'zbekcha ovoz (ixtiyoriy, voicelab.uz). Bo'sh bo'lsa — bepul edge-tts ishlaydi
+AISHA_API_KEY = env("AISHA_API_KEY", default="")
 # Xabarlardagi havolalar uchun
 SITE_URL = env("SITE_URL", default="https://iftix0r.uz").rstrip("/")

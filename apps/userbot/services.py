@@ -67,6 +67,7 @@ class Job:
     file_name: str
     has_file: bool
     voice: str = ""
+    speed: str = ""
 
 
 @dataclass
@@ -367,6 +368,7 @@ def claim_pending() -> list[Job]:
                     row.file_name,
                     bool(row.file),
                     row.voice,
+                    row.speed,
                 )
             )
     return claimed

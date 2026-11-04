@@ -4,7 +4,7 @@ from django.core.validators import RegexValidator
 from apps.core.forms import StyledFormMixin
 
 from .models import Account
-from .voice import MAX_TEXT, VOICES
+from .voice import MAX_TEXT, SPEEDS, voice_choices
 
 MAX_UPLOAD = 20 * 1024 * 1024
 CAPTION_LIMIT = 1024
@@ -46,7 +46,11 @@ class PasswordForm(StyledFormMixin, forms.Form):
 class OptionsForm(forms.ModelForm):
     class Meta:
         model = Account
-        fields = ["commands_enabled", "log_to_crm", "voice"]
+        fields = ["commands_enabled", "log_to_crm", "voice", "voice_speed"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["voice"].choices = voice_choices()
 
 
 class SendForm(forms.Form):
@@ -81,12 +85,13 @@ class SendForm(forms.Form):
 class VoiceForm(StyledFormMixin, forms.Form):
     """form_modal ModelForm kutadi, shuning uchun instance qabul qilinadi."""
 
-    wide_fields = ("voice",)
     text = forms.CharField(label="Aytiladigan matn", max_length=MAX_TEXT, widget=forms.Textarea(attrs={"rows": 6}))
-    voice = forms.ChoiceField(label="Ovoz", choices=VOICES)
+    voice = forms.ChoiceField(label="Ovoz")
+    speed = forms.ChoiceField(label="Tezlik", choices=SPEEDS)
 
     def __init__(self, *args, instance=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["voice"].choices = voice_choices()
 
 
 class OpenForm(forms.Form):

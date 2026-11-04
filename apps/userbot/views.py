@@ -215,7 +215,8 @@ def send(request, pk):
         services.enqueue(dialog, data["text"], kind=Outbox.Kind.EDIT, target_id=data["edit_id"])
         return _changed()
     if data["as_voice"]:
-        services.enqueue(dialog, data["text"], kind=Outbox.Kind.VOICE, voice=Account.load().voice)
+        account = Account.load()
+        services.enqueue(dialog, data["text"], kind=Outbox.Kind.VOICE, voice=account.voice, speed=account.voice_speed)
         return _changed()
     row = services.enqueue(dialog, data["text"], reply_to_id=data["reply_to"])
     if data["file"]:
@@ -267,12 +268,18 @@ def debt_remind(request, pk):
 
     def save(form):
         data = form.cleaned_data
-        return services.enqueue(dialog, data["text"], kind=Outbox.Kind.VOICE, voice=data["voice"], debt=debt)
+        return services.enqueue(
+            dialog, data["text"], kind=Outbox.Kind.VOICE, voice=data["voice"], speed=data["speed"], debt=debt
+        )
 
     return form_modal(
         request,
         VoiceForm,
-        initial={"text": voice.reminder_text(debt, account.tg_name), "voice": account.voice},
+        initial={
+            "text": voice.reminder_text(debt, account.tg_name),
+            "voice": account.voice,
+            "speed": account.voice_speed,
+        },
         title="Ovozli eslatma",
         subtitle=f"{dialog.title} ga Telegram orqali",
         icon="mic",
@@ -289,10 +296,11 @@ def voice_preview(request):
     if not form.is_valid():
         return render(request, "userbot/partials/voice_preview.html", {"error": "Matn bo'sh yoki juda uzun."})
     try:
-        data = asyncio.run(voice.synthesize(form.cleaned_data["text"], form.cleaned_data["voice"]))
+        data = form.cleaned_data
+        speech = asyncio.run(voice.synthesize(data["text"], data["voice"], data["speed"]))
     except voice.VoiceError as exc:
         return render(request, "userbot/partials/voice_preview.html", {"error": str(exc)})
-    return render(request, "userbot/partials/voice_preview.html", {"audio": base64.b64encode(data).decode()})
+    return render(request, "userbot/partials/voice_preview.html", {"audio": base64.b64encode(speech.data).decode()})
 
 
 @require_POST

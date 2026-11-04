@@ -410,10 +410,10 @@ class Runner:
         await db(services.mark_sent)(row.id, item)
 
     async def perform_voice(self, row, peer) -> None:
-        data = await voice.synthesize(row.text, row.voice or voice.DEFAULT_VOICE)
-        buffer = io.BytesIO(data)
+        speech = await voice.synthesize(row.text, row.voice or voice.DEFAULT_VOICE, row.speed or voice.DEFAULT_SPEED)
+        buffer = io.BytesIO(speech.data)
         buffer.name = "voice.mp3"
-        attribute = DocumentAttributeAudio(duration=voice.duration_seconds(data), voice=True)
+        attribute = DocumentAttributeAudio(duration=speech.seconds, voice=True)
         sent = await self.client.send_file(peer, buffer, voice_note=True, attributes=[attribute])
         item = to_item(sent) or Item(sent.id, True, "[Ovozli xabar]", sent.date)
         await db(services.mark_sent)(row.id, item)
