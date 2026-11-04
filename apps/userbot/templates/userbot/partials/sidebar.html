@@ -21,8 +21,9 @@
       {% endif %}
       {% if account.last_error %}<p class="tg-alert">{% icon "circle-alert" "size-4 shrink-0" %}<span>{{ account.last_error }}</span></p>{% endif %}
       {% for d in dialogs %}
-        <a href="{% url 'telegram_chat' d.pk %}" class="tg-dialog {% if dialog.pk == d.pk %}is-active{% endif %}" x-show="shows($el)"
-           data-search="{{ d.title|lower }} {{ d.username|lower }} {{ d.last_text|lower }}" data-unread="{{ d.unread }}" data-client="{% if d.contact_id %}1{% else %}0{% endif %}">
+        <div class="tg-dialog-row" x-show="shows($el)"
+             data-search="{{ d.title|lower }} {{ d.username|lower }} {{ d.last_text|lower }}" data-unread="{{ d.unread }}" data-client="{% if d.contact_id %}1{% else %}0{% endif %}">
+        <a href="{% url 'telegram_chat' d.pk %}" class="tg-dialog {% if dialog.pk == d.pk %}is-active{% endif %}">
           {% include "userbot/partials/avatar.html" with dialog=d %}
           <span class="tg-dialog-body">
             <span class="tg-dialog-top"><b>{{ d.title }}</b><time>{{ d.last_label }}</time></span>
@@ -33,6 +34,8 @@
             </span>
           </span>
         </a>
+        {% if d.unread %}<button type="button" class="tg-peek" hx-get="{% url 'telegram_peek' d.pk %}" hx-target="#modal-content" title="Tez ko'rish: chat ochilmaydi" aria-label="Tez ko'rish">{% icon "eye" "size-4" %}</button>{% endif %}
+        </div>
       {% empty %}
         <p class="tg-hint">Suhbatlar hali yo'q. Userbot ishga tushgach, shu yerda ko'rinadi.</p>
       {% endfor %}

@@ -1290,6 +1290,27 @@ def test_own_delete_and_disabled_option_do_not_notify(db):
     assert not send.called
 
 
+def test_peek_shows_unread_without_reading(client_in):
+    connected()
+    items = [item(1, "Eski"), item(2, "Javobim", outgoing=True), item(3, "Birinchi yangi"), item(4, "<b>Ikkinchi</b>")]
+    dialog = services.record(Peer(10, 5, "Ali"), items, unread=2)
+    html = client_in.get(reverse("telegram_peek", args=[dialog.pk]), **HX).content.decode()
+    assert "Birinchi yangi" in html and "&lt;b&gt;Ikkinchi" in html
+    assert "Eski" not in html and "Javobim" not in html
+    assert html.index("Birinchi yangi") < html.index("Ikkinchi")
+    dialog.refresh_from_db()
+    assert dialog.unread == 2 and not Outbox.objects.exists()
+
+
+def test_peek_button_only_for_unread(client_in):
+    connected()
+    unread = services.record(Peer(10, 5, "Ali"), [item(1)])
+    read = services.record(Peer(11, 5, "Vali"), [item(2)], unread=0)
+    html = client_in.get(reverse("telegram_home")).content.decode()
+    assert reverse("telegram_peek", args=[unread.pk]) in html
+    assert reverse("telegram_peek", args=[read.pk]) not in html
+
+
 def test_activity_model_untouched_by_outgoing(db):
     connected()
     Contact.objects.create(name="Ali", telegram="@ali")

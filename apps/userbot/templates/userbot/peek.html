@@ -1,0 +1,27 @@
+<div data-modal-size="md">
+  <div class="flex items-center justify-between gap-3 border-b border-line px-6 py-4">
+    <div class="flex min-w-0 items-center gap-3">
+      {% include "userbot/partials/avatar.html" with ava_class="tg-ava-sm" %}
+      <div class="min-w-0">
+        <h2 class="truncate text-[17px] font-bold">{{ dialog.title }}</h2>
+        <p class="truncate text-xs text-ink-3">Tez ko'rish: chat ochilmadi, o'qilgan bo'lmaydi</p>
+      </div>
+    </div>
+    <button type="button" class="btn btn-ghost btn-icon btn-sm shrink-0" @click="$store.modal.close()" aria-label="Yopish">{% icon "x" "size-4" %}</button>
+  </div>
+  <div class="tg-wall tg-peek-list">
+    {% for m in peek_messages %}
+      <div class="tg-bubble {% if m.deleted_at %}is-deleted{% endif %}">
+        {% include "userbot/partials/media.html" %}
+        {% if m.caption %}<p class="tg-text">{{ m.caption|urlize }}</p>{% endif %}
+        <span class="tg-meta">{% if m.deleted_at %}<span class="tg-mark">o'chirilgan</span> · {% endif %}{% if m.edited %}<span class="tg-mark-edit">tahrirlangan</span> · {% endif %}{{ m.date|date:"j E, H:i" }}</span>
+      </div>
+    {% empty %}
+      <p class="tg-hint">Xabar yo'q.</p>
+    {% endfor %}
+  </div>
+  <div class="flex items-center justify-end gap-2 border-t border-line bg-surface-2/80 px-6 py-4">
+    <button type="button" class="btn btn-secondary" @click="$store.modal.close()">Yopish</button>
+    <a href="{% url 'telegram_chat' dialog.pk %}" class="btn btn-primary" title="Chat ochilsa, xabarlar o'qilgan bo'ladi">Chatni ochish</a>
+  </div>
+</div>

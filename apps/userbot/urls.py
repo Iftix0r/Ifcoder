@@ -19,6 +19,7 @@ urlpatterns = [
     path("telegram/chats/<int:pk>/", views.chat, name="telegram_chat"),
     path("telegram/chats/<int:pk>/delete/", views.delete_message, name="telegram_delete"),
     path("telegram/chats/<int:pk>/older/", views.older, name="telegram_older"),
+    path("telegram/chats/<int:pk>/peek/", views.peek, name="telegram_peek"),
     path("telegram/chats/<int:pk>/send/", views.send, name="telegram_send"),
     path("telegram/chats/<int:pk>/contact/", views.make_contact, name="telegram_contact"),
 ]

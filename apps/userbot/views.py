@@ -19,6 +19,7 @@ from .models import Account, Dialog, Message, Outbox
 
 CHAT_LIMIT = 100
 CHAT_MAX = 1000
+PEEK_LIMIT = 20
 DIALOG_LIMIT = 200
 
 
@@ -199,6 +200,13 @@ def chat(request, pk):
         .exclude(status=Outbox.Status.SENT)
         .order_by("created_at")[:20],
     )
+
+
+def peek(request, pk):
+    """Telegram'dagi bosib ushlab ko'rish kabi: chat ochilmaydi, o'qilmagan soni va ✓✓ o'zgarmaydi."""
+    dialog = get_object_or_404(Dialog, pk=pk)
+    rows = dialog.messages.filter(outgoing=False)[: max(1, min(dialog.unread, PEEK_LIMIT))]
+    return render(request, "userbot/peek.html", {"dialog": dialog, "peek_messages": list(rows)[::-1]})
 
 
 @require_POST
