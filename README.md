@@ -96,6 +96,10 @@ Environment variable'lar (`.env` yoki *Setup Python App → Environment Variable
 | `DATABASE_URL` | ixtiyoriy, default `sqlite:///db.sqlite3` |
 | `SECURE_SSL_REDIRECT` | SSL hali ulanmagan bo'lsa `False` |
 
+**Xavfsizlik:** ilova papkasi saytning ochiq ildizi (`cgi-bin` shu yerda), shuning uchun `deploy.sh` `.htaccess` ga
+`scripts/htaccess-security.conf` qoidasini qo'yadi: diskdagi fayllar (baza, backup, log, `.git`, media) to'g'ridan-to'g'ri
+ochilmaydi. Deploy oxirida `/db.sqlite3` tekshiriladi, ochiq bo'lsa xato bilan to'xtaydi. Bu qoidani olib tashlamang.
+
 `passenger_wsgi.py` va `config/wsgi.py` `config.settings.prod` ni ishlatadi — kalitlar o'rnatilmasa ishga tushmaydi.
 
 ### Birinchi o'rnatish (Eskiz.uz, Setup Python App)

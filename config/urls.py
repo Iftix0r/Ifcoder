@@ -28,7 +28,8 @@ urlpatterns = [
     path("", include("apps.vault.urls")),
     path("", include("apps.userbot.urls")),
     path("", include("apps.landing.urls")),
-    # Yuklangan rasmlar (orzular): cPanel'da public/media veb-serverga ochiq emas, shuning uchun productionda ham
+    # Yuklangan rasmlar: public/media ni .htaccess yopadi (scripts/htaccess-security.conf), shuning uchun
+    # productionda ham
     # Django beradi — LoginRequiredMiddleware tufayli faqat tizimga kirgan foydalanuvchiga
     path("media/<path:path>", lambda request, path: serve(request, path, document_root=settings.MEDIA_ROOT)),
 ]

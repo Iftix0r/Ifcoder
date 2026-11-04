@@ -53,6 +53,16 @@ python manage.py collectstatic --noinput -v0
 echo "→ Tekshiruv"
 python manage.py check --deploy --fail-level ERROR
 
+# Ilova papkasi saytning ochiq ildizi: qoida bo'lmasa baza, backup va loglar internetdan yuklanadi
+if ! grep -qs "IFCODER-SECURITY" .htaccess; then
+  echo "→ .htaccess himoyasi o'rnatilmoqda"
+  touch .htaccess
+  cp -a .htaccess .htaccess.pre-security
+  cat scripts/htaccess-security.conf .htaccess.pre-security > .htaccess.new
+  cat .htaccess.new > .htaccess
+  rm -f .htaccess.new
+fi
+
 echo "→ Passenger qayta ishga tushirilmoqda"
 touch tmp/restart.txt
 # CloudLinux (cPanel «Setup Python App»): ilovani majburan qayta ishga tushirish
@@ -62,5 +72,15 @@ fi
 
 # Userbot eski kodda qolmasin: to'xtatamiz, cron bir necha daqiqada yangi kod bilan qayta ishga tushiradi
 pkill -f "manage.py userbot" || true
+
+SITE_URL="${SITE_URL:-$(grep -s '^SITE_URL=' .env | cut -d= -f2-)}"
+SITE_URL="${SITE_URL:-https://iftix0r.uz}"
+for path in db.sqlite3 .git/config; do
+  status="$(curl -s -o /dev/null -I -m 15 -w '%{http_code}' "$SITE_URL/$path" || true)"
+  if [[ "$status" == "200" ]]; then
+    echo "✗ XAVF: $SITE_URL/$path internetdan ochiq! .htaccess ni tekshiring." >&2
+    exit 1
+  fi
+done
 
 echo "✓ Tayyor — $(git log -1 --format='%h %s')"
