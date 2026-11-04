@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "apps.resources",
     "apps.vault",
     "apps.userbot",
+    "apps.security",
     "apps.dashboard",
     "apps.landing",
 ]
@@ -57,6 +58,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.security.middleware.SecurityMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "apps.vault.middleware.TwoFactorMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -126,5 +128,7 @@ TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", default="")
 # Tabiiyroq o'zbekcha ovoz (ixtiyoriy, voicelab.uz). Bo'sh bo'lsa — bepul edge-tts ishlaydi
 AISHA_API_KEY = env("AISHA_API_KEY", default="")
+# security_scan shu Apache loglarini o'qiydi (cPanel: ~/access-logs/<domen>*)
+SECURITY_ACCESS_LOG = env("SECURITY_ACCESS_LOG", default="~/access-logs/iftix0r.uz*")
 # Xabarlardagi havolalar uchun
 SITE_URL = env("SITE_URL", default="https://iftix0r.uz").rstrip("/")

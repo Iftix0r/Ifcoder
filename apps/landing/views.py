@@ -5,6 +5,7 @@ from django.shortcuts import render
 from apps.core import telegram
 from apps.crm.models import Activity, Contact, Deal
 from apps.dashboard.digest import lead_message
+from apps.security.services import client_ip
 
 from .forms import LeadForm
 
@@ -16,7 +17,7 @@ def landing(request):
     form = LeadForm(request.POST or None)
     sent = False
     if request.method == "POST" and form.is_valid():
-        ip = request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip() or request.META.get("REMOTE_ADDR", "")
+        ip = client_ip(request)
         key = f"lead:{ip}"
         if form.cleaned_data["website"] or cache.get(key, 0) >= LIMIT_PER_HOUR:
             sent = True  # botga xato ko'rsatmaymiz

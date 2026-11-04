@@ -27,6 +27,7 @@ Dizayn tizimi AIMarkaz bilan bir xil (indigo → violet, yorug'/qorong'i rejim, 
 | Eslatmalar | `/notes/` | Eslatma, kod parchasi, havola, g'oya; teglar, qadash, nusxa olish |
 | Resurslar | `/resources/` | Domen, server, obuna, SSL — tugash sanasi va oylik xarajat |
 | Maxfiy kalitlar | `/vault/` | Fernet bilan shifrlangan API kalit/parollar, 30 soniyada yashiriladi |
+| Xavfsizlik | `/security/` | Kirishlar, faol sessiyalar va yopish, ishonchli IP'lar, skaner va sizish hodisalari |
 | Sozlamalar | `/accounts/settings/` | Profil, parol, 2FA (TOTP + zaxira kodlar), backup |
 
 Tezkor tugmalar: `Ctrl+K` yoki `/` — qidiruv, `N` — yangi vazifa.
@@ -99,6 +100,9 @@ Environment variable'lar (`.env` yoki *Setup Python App → Environment Variable
 **Xavfsizlik:** ilova papkasi saytning ochiq ildizi (`cgi-bin` shu yerda), shuning uchun `deploy.sh` `.htaccess` ga
 `scripts/htaccess-security.conf` qoidasini qo'yadi: diskdagi fayllar (baza, backup, log, `.git`, media) to'g'ridan-to'g'ri
 ochilmaydi. Deploy oxirida `/db.sqlite3` tekshiriladi, ochiq bo'lsa xato bilan to'xtaydi. Bu qoidani olib tashlamang.
+
+Yangi IP'dan kirish, sessiyaning boshqa IP'dan ishlatilishi va ketma-ket xato parol botga darhol yuboriladi. Maxfiy fayl
+haqiqatan yuklansa `security_scan` xabar beradi (cron, har 5 daqiqa); skaner urinishlari ertalabki xulosaga qo'shiladi.
 
 `passenger_wsgi.py` va `config/wsgi.py` `config.settings.prod` ni ishlatadi — kalitlar o'rnatilmasa ishga tushmaydi.
 

@@ -62,6 +62,7 @@ NAV_SECTIONS: list[tuple[str, list[NavItem]]] = [
             NavItem("notes", "Eslatmalar", "sticky-note", "note_list"),
             NavItem("resources", "Resurslar", "server", "resource_list"),
             NavItem("vault", "Maxfiy kalitlar", "key-round", "vault_list"),
+            NavItem("security", "Xavfsizlik", "shield-check", "security_home"),
             NavItem("settings", "Sozlamalar", "settings", "settings"),
         ],
     ),

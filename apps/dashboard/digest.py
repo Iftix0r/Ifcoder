@@ -12,6 +12,7 @@ from apps.finance.models import Debt, Invoice, Kind, Transaction, totals_by_curr
 from apps.growth.models import Habit
 from apps.planner.models import Task
 from apps.resources.views import expiring
+from apps.security.services import digest_lines
 
 GREETINGS = ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba"]
 
@@ -92,6 +93,7 @@ def build_digest(today=None) -> str:
     expense = totals_by_currency(month.filter(kind=Kind.EXPENSE))
     lines += ["", f"💰 Bu oy: +{_money(income)} / −{_money(expense)}"]
 
+    lines += digest_lines()
     lines += ["", f'<a href="{site}/dashboard/">Panelni ochish →</a>']
     return "\n".join(lines)
 

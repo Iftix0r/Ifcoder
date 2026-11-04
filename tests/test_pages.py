@@ -34,6 +34,7 @@ PAGES = [
     "resource_list",
     "vault_list",
     "telegram_home",
+    "security_home",
     "settings",
     "2fa_setup",
 ]

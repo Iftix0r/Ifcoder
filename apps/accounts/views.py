@@ -8,16 +8,13 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 
 from apps.core import telegram
+from apps.security.services import client_ip
 from apps.vault import services as vault
 
 from .forms import LoginForm, ProfileForm, StyledPasswordChangeForm
 
 MAX_ATTEMPTS = 5
 LOCK_SECONDS = 15 * 60
-
-
-def _client_ip(request):
-    return request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip() or request.META.get("REMOTE_ADDR", "")
 
 
 @method_decorator(login_not_required, name="dispatch")
@@ -29,7 +26,7 @@ class LoginView(auth_views.LoginView):
     redirect_authenticated_user = True
 
     def _key(self):
-        return f"login-fail:{_client_ip(self.request)}"
+        return f"login-fail:{client_ip(self.request)}"
 
     def post(self, request, *args, **kwargs):
         if cache.get(self._key(), 0) >= MAX_ATTEMPTS:

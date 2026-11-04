@@ -27,6 +27,7 @@ urlpatterns = [
     path("", include("apps.resources.urls")),
     path("", include("apps.vault.urls")),
     path("", include("apps.userbot.urls")),
+    path("", include("apps.security.urls")),
     path("", include("apps.landing.urls")),
     # Yuklangan rasmlar: public/media ni .htaccess yopadi (scripts/htaccess-security.conf), shuning uchun
     # productionda ham

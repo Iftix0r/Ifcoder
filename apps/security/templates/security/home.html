@@ -1,0 +1,74 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Xavfsizlik{% endblock %}
+{% block content %}
+<div class="mb-5 animate-fade-up">
+  <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Xavfsizlik</h1>
+  <p class="mt-1 text-sm text-ink-2">Kim, qachon va qayerdan kirgani. Sizning IP'ingiz: <code class="font-mono">{{ my_ip }}</code></p>
+</div>
+
+<div class="mb-4 grid gap-3 sm:grid-cols-3 animate-fade-up">
+  <div class="card p-4"><p class="text-xs text-ink-3">2FA</p><p class="mt-1">{% if has_2fa %}<span class="badge badge-success">Yoqilgan</span>{% else %}<a href="{% url '2fa_setup' %}" class="badge badge-danger">Yoqilmagan: yoqish</a>{% endif %}</p></div>
+  <div class="card p-4"><p class="text-xs text-ink-3">Bot ogohlantirishi</p><p class="mt-1">{% if bot_ok %}<span class="badge badge-success">Ulangan</span>{% else %}<span class="badge badge-danger">Sozlanmagan</span>{% endif %}</p></div>
+  <div class="card p-4"><p class="text-xs text-ink-3">Log tekshiruvi</p><p class="mt-1 text-sm">{% if scanned_at %}{{ scanned_at|date:"j E, H:i" }}{% else %}<span class="badge badge-warning">Hali ishlamagan</span>{% endif %}</p></div>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="space-y-4 lg:col-span-2">
+    <div class="card overflow-hidden animate-fade-up">
+      <div class="card-header"><p class="card-title">Faol sessiyalar</p></div>
+      <ul class="divide-y divide-line">
+        {% for s in sessions %}
+          <li class="flex items-center gap-3 px-5 py-3">
+            <span class="icon-chip tone-cyan size-9 shrink-0 rounded-lg">{% icon "monitor-smartphone" "size-4" %}</span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold">{{ s.ip }}{% if s.key_hash == current_hash %} <span class="badge badge-success">Joriy</span>{% endif %}</p>
+              <p class="truncate text-xs text-ink-3">{{ s.user }} · {{ s.last_seen|date:"j E, H:i" }} · {{ s.user_agent|truncatechars:70 }}</p>
+            </div>
+            {% if s.key_hash != current_hash %}<form method="post" action="{% url 'security_kill' %}" hx-confirm="Bu sessiya yopilsinmi?">{% csrf_token %}<input type="hidden" name="key" value="{{ s.key_hash }}"><button class="btn btn-ghost btn-sm text-rose-500">Yopish</button></form>{% endif %}
+          </li>
+        {% empty %}
+          <li class="px-5 py-8 text-center text-sm text-ink-3">Sessiya yozuvi hali yo'q.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card overflow-hidden animate-fade-up">
+      <div class="card-header">
+        <p class="card-title">Hodisalar</p>
+        <form method="get"><select name="kind" class="input select h-9" aria-label="Tur" onchange="this.form.requestSubmit()"><option value="">Hammasi</option>{% for value, label in kinds %}<option value="{{ value }}" {% if value == kind %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></form>
+      </div>
+      <ul class="divide-y divide-line">
+        {% for e in events %}
+          <li class="flex items-center gap-3 px-5 py-3">
+            <div class="min-w-0 flex-1">
+              <p class="flex flex-wrap items-center gap-2 text-sm"><span class="badge {{ e.badge }}">{{ e.get_kind_display }}</span><code class="font-mono">{{ e.ip }}</code>{% if e.username %}<span class="text-ink-3">{{ e.username }}</span>{% endif %}</p>
+              <p class="mt-0.5 truncate text-xs text-ink-3">{{ e.created_at|date:"j E, H:i" }}{% if e.path %} · {{ e.path }}{% endif %}{% if e.user_agent %} · {{ e.user_agent|truncatechars:60 }}{% endif %}</p>
+            </div>
+            {% if e.ip and not e.trusted and e.kind != "trap" and e.kind != "leak" %}<form method="post" action="{% url 'security_trust' %}">{% csrf_token %}<input type="hidden" name="ip" value="{{ e.ip }}"><input type="hidden" name="note" value="Bu menman"><button class="btn btn-ghost btn-sm shrink-0">Bu menman</button></form>{% endif %}
+          </li>
+        {% empty %}
+          <li class="px-5 py-8 text-center text-sm text-ink-3">Hodisa yo'q.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="card h-fit animate-fade-up">
+    <div class="card-header"><p class="card-title">Ishonchli IP'lar</p></div>
+    <div class="card-body space-y-3">
+      <p class="help-text">Bu manzillardan kirishga ogohlantirish kelmaydi. Telefon interneti IP'si o'zgaradi, shuning uchun boshini yozsa bo'ladi, masalan <code class="font-mono">84.54.</code></p>
+      <form method="post" action="{% url 'security_trust' %}" class="space-y-3">{% csrf_token %}
+        {% include "components/field.html" with field=form.ip %}
+        {% include "components/field.html" with field=form.note %}
+        <button class="btn btn-secondary btn-sm">{% icon "plus" "size-4" %}Qo'shish</button>
+      </form>
+      <ul class="space-y-1">
+        {% for t in trusted_rows %}
+          <li class="flex items-center justify-between gap-2 text-sm"><span class="min-w-0 truncate"><code class="font-mono">{{ t.ip }}</code>{% if t.note %} <span class="text-ink-3">{{ t.note }}</span>{% endif %}</span>
+            <form method="post" action="{% url 'security_untrust' t.pk %}">{% csrf_token %}<button class="btn btn-ghost btn-icon btn-sm" aria-label="O'chirish">{% icon "x" "size-4" %}</button></form></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
