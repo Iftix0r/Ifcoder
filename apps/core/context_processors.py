@@ -17,6 +17,7 @@ def app_context(request):
     if not (user and user.is_authenticated) or request.path.startswith("/admin/"):
         return {}
     from apps.planner.services import running_entry
+    from apps.userbot.services import unread_total
 
     try:
         return {
@@ -24,6 +25,7 @@ def app_context(request):
             "nav_sections": NAV_SECTIONS,
             "mobile_nav": [i for _, items in NAV_SECTIONS for i in items if i.mobile][:4],
             "palette_items": _palette(NAV_SECTIONS),
+            "telegram_unread": unread_total(),
         }
     except NoReverseMatch:
         return {}

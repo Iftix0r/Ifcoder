@@ -3,6 +3,7 @@ import base64
 import os
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_not_required
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -200,6 +201,15 @@ def chat(request, pk):
         .exclude(status=Outbox.Status.SENT)
         .order_by("created_at")[:20],
     )
+
+
+@login_not_required
+def unread_badge(request):
+    """Menyu belgisi. Login talab qilinmaydi: aks holda sessiya tugaganda login sahifasi belgi ichiga tushardi."""
+    if not request.user.is_authenticated:
+        return HttpResponse('<span class="nav-badge-slot"></span>')
+    context = {"telegram_unread": services.unread_total(), "dot": "dot" in request.GET}
+    return render(request, "userbot/partials/nav_badge.html", context)
 
 
 def peek(request, pk):

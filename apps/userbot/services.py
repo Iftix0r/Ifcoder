@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from django.core.files.base import ContentFile
 from django.db import close_old_connections, transaction
-from django.db.models import F
+from django.db.models import F, Sum
 from django.utils import timezone
 
 from apps.core.telegram import h, send_message
@@ -270,6 +270,13 @@ def _refresh_preview(dialog: Dialog) -> None:
     else:
         dialog.last_text = "Xabarlar o'chirilgan"  # vaqt qoladi: suhbat ro'yxatdan yo'qolmaydi
     dialog.save(update_fields=["last_text", "last_message_at"])
+
+
+def unread_total() -> int:
+    """Menyudagi raqam. Akkaunt uzilgan bo'lsa, eski son ko'rsatilmaydi."""
+    if not Account.objects.filter(status=Account.Status.CONNECTED).exists():
+        return 0
+    return Dialog.objects.aggregate(total=Sum("unread"))["total"] or 0
 
 
 def needs_reconcile() -> bool:

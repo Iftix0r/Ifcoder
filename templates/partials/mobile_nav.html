@@ -10,7 +10,7 @@
     {% endfor %}
     <li>
       <button type="button" @click="$store.sidebar.mobileOpen = true" class="flex w-full flex-col items-center gap-0.5 pt-1.5 pb-2 text-[10.5px] font-medium text-ink-3 hover:text-ink">
-        <span class="flex h-7 w-12 items-center justify-center">{% icon "layout-grid" "size-[21px]" "1.8" %}</span>
+        <span class="relative flex h-7 w-12 items-center justify-center">{% icon "layout-grid" "size-[21px]" "1.8" %}{% include "userbot/partials/nav_badge.html" with dot=True %}</span>
         <span>Menyu</span>
       </button>
     </li>

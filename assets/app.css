@@ -228,6 +228,20 @@
     background-image: linear-gradient(180deg, var(--color-brand-500), var(--color-violet-brand));
   }
   .nav-link.is-active svg { @apply text-brand-600 dark:text-brand-300; }
+  /* Telegram: o'qilmagan xabarlar soni */
+  .nav-badge-slot { margin-left: auto; display: inline-flex; flex: none; }
+  .nav-badge {
+    min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+    background: linear-gradient(135deg, #fb7185, #e11d48); color: #fff;
+    box-shadow: 0 2px 8px rgb(225 29 72 / 0.45), inset 0 0 0 1px rgb(255 255 255 / 0.18);
+    font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 20px; text-align: center;
+  }
+  .nav-badge-dot { position: absolute; top: 2px; right: 12px; width: 9px; height: 9px; border: 2px solid var(--color-surface); border-radius: 999px; background: #e11d48; box-sizing: content-box; }
+  @media (min-width: 1024px) {
+    .sb-collapsed .nav-badge-slot { position: absolute; top: -3px; right: 3px; margin: 0; }
+    .sb-collapsed .nav-badge { min-width: 16px; height: 16px; padding: 0 4px; font-size: 9.5px; line-height: 16px; }
+  }
+
   /* Menyu uzun bo'lsa — yuqori/pastki chekka yumshoq so'nadi (scroll borligini bildiradi) */
   .nav-scroll {
     mask-image: linear-gradient(to bottom, transparent, #000 14px, #000 calc(100% - 28px), transparent);

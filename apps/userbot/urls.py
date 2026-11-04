@@ -12,6 +12,7 @@ urlpatterns = [
     path("telegram/sync/", views.sync, name="telegram_sync"),
     path("telegram/options/", views.options, name="telegram_options"),
     path("telegram/open/", views.open_chat, name="telegram_open"),
+    path("telegram/unread/", views.unread_badge, name="telegram_unread"),
     path("telegram/voice/preview/", views.voice_preview, name="telegram_voice_preview"),
     path("telegram/debts/<int:pk>/remind/", views.debt_remind, name="telegram_debt_remind"),
     path("telegram/media/<int:pk>/", views.media, name="telegram_media"),

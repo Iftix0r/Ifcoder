@@ -11,6 +11,7 @@
                class="nav-link {% active item.key %} {% if not mobile %}collapsed:justify-center collapsed:px-0{% endif %}">
               {% icon item.icon "size-[18px] shrink-0" "1.9" %}
               <span class="truncate {% if not mobile %}collapsed:hidden{% endif %}">{{ item.label }}</span>
+              {% if item.key == "telegram" %}{% include "userbot/partials/nav_badge.html" %}{% endif %}
             </a>
           </li>
         {% endfor %}

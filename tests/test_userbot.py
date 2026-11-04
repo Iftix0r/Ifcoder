@@ -1311,6 +1311,46 @@ def test_peek_button_only_for_unread(client_in):
     assert reverse("telegram_peek", args=[read.pk]) not in html
 
 
+def test_menu_shows_unread_total_on_every_page(client_in):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1), item(2)])
+    services.record(Peer(11, 5, "Vali"), [item(3)])
+    html = client_in.get(reverse("dashboard")).content.decode()
+    assert '<span class="nav-badge">3</span>' in html and "nav-badge-dot" in html
+
+
+def test_menu_has_no_badge_without_unread_or_account(client_in):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1)], unread=0)
+    Dialog.objects.update(unread=0)
+    assert 'class="nav-badge"' not in client_in.get(reverse("dashboard")).content.decode()
+    Dialog.objects.update(unread=4)
+    Account.objects.update(status="off")
+    assert 'class="nav-badge"' not in client_in.get(reverse("dashboard")).content.decode()
+
+
+def test_badge_caps_at_99(client_in):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1)])
+    Dialog.objects.update(unread=150)
+    assert ">99+<" in client_in.get(reverse("telegram_unread"), **HX).content.decode()
+
+
+def test_badge_endpoint_keeps_polling_and_dot_variant(client_in):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1)])
+    plain = client_in.get(reverse("telegram_unread"), **HX).content.decode()
+    dot = client_in.get(reverse("telegram_unread") + "?dot=1", **HX).content.decode()
+    assert "every 10s" in plain and ">1<" in plain
+    assert "nav-badge-dot" in dot and "dot=1" in dot
+
+
+def test_badge_stops_quietly_when_session_ends(client, db):
+    resp = client.get(reverse("telegram_unread"), **HX)
+    assert resp.status_code == 200 and "hx-get" not in resp.content.decode()
+    assert "password" not in resp.content.decode()
+
+
 def test_activity_model_untouched_by_outgoing(db):
     connected()
     Contact.objects.create(name="Ali", telegram="@ali")
