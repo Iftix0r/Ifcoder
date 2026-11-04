@@ -5,7 +5,7 @@
 <div class="card overflow-hidden animate-fade-up">
   <div class="card-header">
     <div class="flex min-w-0 items-center gap-3">
-      <span class="avatar size-9 shrink-0 rounded-lg text-xs">{{ dialog.title|initials }}</span>
+      {% include "userbot/partials/avatar.html" %}
       <div class="min-w-0"><p class="card-title truncate">{{ dialog.title }}</p><p class="truncate text-xs text-ink-3">{% if dialog.username %}@{{ dialog.username }}{% endif %}{% if dialog.username and dialog.phone %} · {% endif %}{% if dialog.phone %}+{{ dialog.phone }}{% endif %}</p></div>
     </div>
     {% if dialog.contact %}
@@ -14,7 +14,7 @@
       <form method="post" action="{% url 'telegram_contact' dialog.pk %}">{% csrf_token %}<button class="btn btn-secondary btn-sm shrink-0">{% icon "user-plus" "size-3.5" %}CRM'ga qo'shish</button></form>
     {% endif %}
   </div>
-  <div id="chat-region" hx-get="{{ request.path }}" hx-trigger="changed from:body, every 5s" hx-select="#chat-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*" class="flex h-[60vh] flex-col-reverse gap-2 overflow-y-auto p-4">
+  <div id="chat-region" hx-get="{{ request.path }}" hx-trigger="changed from:body, every 5s [document.getElementById('chat-region').scrollTop > -80]" hx-select="#chat-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*" class="flex h-[60vh] flex-col-reverse gap-2 overflow-y-auto p-4">
     {% for q in queued %}
       <div class="ml-auto max-w-[85%] rounded-2xl border border-line px-3.5 py-2 text-sm sm:max-w-[70%]">
         <p class="break-words whitespace-pre-wrap">{{ q.text }}</p>
@@ -23,7 +23,8 @@
     {% endfor %}
     {% for m in chat_messages %}
       <div class="{% if m.outgoing %}ml-auto bg-brand-gradient text-white{% else %}mr-auto border border-line{% endif %} max-w-[85%] rounded-2xl px-3.5 py-2 text-sm sm:max-w-[70%]">
-        <p class="break-words whitespace-pre-wrap">{{ m.text }}</p>
+        {% if m.image %}<a href="{{ m.image.url }}" target="_blank" rel="noopener" hx-boost="false"><img src="{{ m.image.url }}" alt="Rasm" loading="lazy" class="mb-1.5 max-h-80 rounded-xl"></a>{% endif %}
+        {% if not m.image or m.text != "[Rasm]" %}<p class="break-words whitespace-pre-wrap">{{ m.text }}</p>{% endif %}
         <p class="mt-1 text-[11px] {% if m.outgoing %}text-white/70{% else %}text-ink-3{% endif %}">{{ m.date|date:"j M, H:i" }}</p>
       </div>
     {% empty %}

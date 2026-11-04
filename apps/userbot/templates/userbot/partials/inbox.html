@@ -12,7 +12,7 @@
       <ul class="divide-y divide-line">
         {% for d in dialogs %}
           <li><a href="{% url 'telegram_chat' d.pk %}" class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-surface-2">
-            <span class="avatar size-9 shrink-0 rounded-lg text-xs">{{ d.title|initials }}</span>
+            {% include "userbot/partials/avatar.html" with dialog=d %}
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-semibold">{{ d.title }}{% if d.contact %} <span class="badge badge-brand">Mijoz</span>{% endif %}</p>
               <p class="truncate text-xs text-ink-3">{{ d.last_text }}</p>

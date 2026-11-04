@@ -96,6 +96,9 @@ class Dialog(TimeStamped):
     name = models.CharField(max_length=200, blank=True)
     username = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=20, blank=True)
+    avatar = models.FileField(upload_to="telegram/avatars", blank=True)
+    photo_id = models.BigIntegerField(default=0)  # Telegram'dagi joriy profil rasmi (0 — yo'q)
+    avatar_photo_id = models.BigIntegerField(default=0)  # yuklab olingani; farq qilsa runner yangilaydi
     contact = models.ForeignKey(
         "crm.Contact", null=True, blank=True, on_delete=models.SET_NULL, related_name="telegram_dialogs"
     )
@@ -121,6 +124,8 @@ class Message(models.Model):
     tg_id = models.BigIntegerField()
     outgoing = models.BooleanField(default=False)
     text = models.TextField(blank=True)
+    has_photo = models.BooleanField(default=False)  # runner rasmni alohida navbat bilan yuklaydi
+    image = models.FileField(upload_to="telegram/photos", blank=True)
     date = models.DateTimeField()
 
     class Meta:

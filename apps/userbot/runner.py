@@ -9,7 +9,7 @@ import time
 
 from asgiref.sync import sync_to_async as db
 from telethon import errors, events
-from telethon.tl.types import InputPeerUser
+from telethon.tl.types import InputPeerUser, MessageMediaPhoto
 
 from . import commands, services
 from .client import build_client
@@ -53,7 +53,14 @@ def is_private_person(entity) -> bool:
 
 def to_peer(entity) -> Peer:
     name = " ".join(filter(None, [entity.first_name, entity.last_name]))
-    return Peer(entity.id, entity.access_hash or 0, name, entity.username or "", entity.phone or "")
+    photo_id = getattr(entity.photo, "photo_id", 0)  # UserProfilePhotoEmpty da yo'q
+    return Peer(entity.id, entity.access_hash or 0, name, entity.username or "", entity.phone or "", photo_id)
+
+
+def has_saveable_photo(message) -> bool:
+    """Havola preview rasmi hisobga olinmaydi; bir marta ko'riladigan rasmlar saqlanmaydi."""
+    media = message.media
+    return isinstance(media, MessageMediaPhoto) and bool(media.photo) and not media.ttl_seconds
 
 
 def to_item(message) -> Item | None:
@@ -75,7 +82,7 @@ def to_item(message) -> Item | None:
                 break
         else:
             text = "[Media]"
-    return Item(message.id, bool(message.out), text, message.date) if text else None
+    return Item(message.id, bool(message.out), text, message.date, has_saveable_photo(message)) if text else None
 
 
 class Runner:
@@ -84,6 +91,7 @@ class Runner:
         self.client = None
         self.me = None
         self.pause_sends_until = 0.0
+        self.pause_media_until = 0.0
 
     async def run(self, *, once: bool = False) -> None:
         await db(services.fail_stale_sends)()
@@ -128,6 +136,7 @@ class Runner:
                     await self.sync()
                     next_sync = time.monotonic() + RESYNC_EVERY
                 await self.flush_outbox()
+                await self.fetch_media()
                 if once:
                     return
                 await asyncio.sleep(TICK)
@@ -171,6 +180,7 @@ class Runner:
                 continue
             last_at, last_id = known.get(dialog.entity.id, (None, 0))
             if last_at and dialog.date and dialog.date <= last_at:
+                await db(services.set_photo_id)(dialog.entity.id, to_peer(dialog.entity).photo_id)
                 continue
             history = self.client.iter_messages(dialog.entity, limit=HISTORY_LIMIT, min_id=last_id)
             items = [item async for message in history if (item := to_item(message))]
@@ -188,6 +198,37 @@ class Runner:
         missed = [m async for m in self.client.iter_messages("me", limit=COMMAND_LIMIT, min_id=last_id)]
         for message in reversed(missed):
             await self.run_command(message)
+
+    async def fetch_media(self) -> None:
+        """Rasmlar oz-ozdan yuklanadi: xabar qabul qilish va yuborishni ushlab qolmasin."""
+        if time.monotonic() < self.pause_media_until:
+            return
+        try:
+            for row in await db(services.pending_avatars)():
+                data = None
+                if row.photo_id:
+                    peer = InputPeerUser(row.peer_id, row.access_hash)
+                    data = await self.client.download_profile_photo(peer, file=bytes)
+                await db(services.save_avatar)(row.id, row.photo_id, data)
+            for row in await db(services.pending_images)():
+                await self.fetch_image(row)
+        except errors.FloodWaitError as exc:
+            self.pause_media_until = time.monotonic() + exc.seconds
+
+    async def fetch_image(self, row) -> None:
+        peer = InputPeerUser(row.peer_id, row.access_hash)
+        try:
+            message = await self.client.get_messages(peer, ids=row.tg_id)
+            data = await self.client.download_media(message, file=bytes) if message else None
+        except (*REVOKED, errors.FloodWaitError):
+            raise
+        except errors.RPCError as exc:
+            log.warning("Rasm yuklanmadi: %s", exc)
+            data = None
+        if data:
+            await db(services.save_image)(row.id, data)
+        else:
+            await db(services.skip_image)(row.id)
 
     async def flush_outbox(self) -> None:
         if time.monotonic() < self.pause_sends_until:

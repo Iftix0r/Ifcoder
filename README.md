@@ -172,6 +172,9 @@ Ulanishni faqat shu jarayon ushlaydi; panel u bilan baza orqali gaplashadi (`Mes
 `IFCODER_FERNET_KEY` bilan shifrlanadi, kirish kodi va 2FA parol saqlanmaydi. Faqat shaxsiy suhbatlar nusxalanadi:
 guruh, kanal, bot, «Saqlangan xabarlar» va Telegram xizmat chati (kirish kodlari) bazaga tushmaydi.
 
+Profil rasmlari va chatdagi rasmlar `public/media/telegram/` ga yuklanadi (faqat tizimga kirgan foydalanuvchiga ochiq,
+`backup_db` ga kirmaydi). Bir marta ko'riladigan rasmlar saqlanmaydi.
+
 «Saqlangan xabarlar» ga yoziladigan buyruqlar: `.vazifa`, `.eslatma`, `.kirim`, `.chiqim`, `.mijoz`, `.bugun`, `.help`.
 
 Ommaviy xabar yuborish yo'q va qo'shmang: Telegram akkauntni spam uchun bloklaydi.

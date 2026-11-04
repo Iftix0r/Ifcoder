@@ -10,6 +10,7 @@ from asgiref.sync import async_to_sync
 from django.urls import reverse
 from django.utils import timezone
 from telethon import errors
+from telethon.tl.types import MessageMediaPhoto, MessageMediaWebPage, Photo, WebPageEmpty
 
 from apps.crm.models import Activity, Contact
 from apps.finance.models import Transaction
@@ -295,6 +296,7 @@ def user(id=10, **extra):
         "bot": False,
         "is_self": False,
         "deleted": False,
+        "photo": None,
     }
     return SimpleNamespace(**{**base, **extra})
 
@@ -317,6 +319,23 @@ class FakeClient:
         self.dialogs, self.history, self.saved = dialogs, history or {}, list(saved)
         self.send_error = send_error
         self.sent = []
+        self.remote = {}
+        self.download_error = None
+        self.avatar_calls = 0
+
+    async def get_messages(self, peer, ids):
+        return self.remote.get(ids)
+
+    async def download_media(self, message, file):
+        if self.download_error:
+            raise self.download_error
+        return b"rasm"
+
+    async def download_profile_photo(self, peer, file):
+        if self.download_error:
+            raise self.download_error
+        self.avatar_calls += 1
+        return b"avatar"
 
     def iter_dialogs(self, limit):
         return agen(self.dialogs)
@@ -500,9 +519,123 @@ def test_changed_fernet_key_asks_to_reconnect(db, settings):
 
 
 def test_media_placeholder_and_service_messages():
-    photo = SimpleNamespace(**{**vars(tg_message(1, "")), "media": object(), "photo": object()})
-    assert to_item(photo).text == "[Rasm]"
+    photo = with_media(tg_message(1, ""), photo_media(), photo=object())
+    assert to_item(photo).text == "[Rasm]" and to_item(photo).has_photo
     assert to_item(SimpleNamespace(**{**vars(tg_message(2)), "action": object()})) is None
+
+
+def photo_media(ttl=None):
+    photo = Photo(id=1, access_hash=1, file_reference=b"", date=timezone.now(), sizes=[], dc_id=2)
+    return MessageMediaPhoto(photo=photo, ttl_seconds=ttl)
+
+
+def with_media(message, media, **extra):
+    return SimpleNamespace(**{**vars(message), "media": media, **extra})
+
+
+def test_view_once_and_link_preview_not_downloaded():
+    once = with_media(tg_message(1, ""), photo_media(ttl=10), photo=object())
+    assert to_item(once).text == "[Rasm]" and not to_item(once).has_photo
+    preview = with_media(tg_message(2, "https://x.uz"), MessageMediaWebPage(webpage=WebPageEmpty(id=1)))
+    assert not to_item(preview).has_photo
+
+
+def test_image_downloaded_and_shown(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    fake = FakeClient()
+    fake.remote[7] = tg_message(7, "")
+    async_to_sync(runner_with(fake).fetch_media)()
+    message = Message.objects.get()
+    assert message.image.read() == b"rasm"
+    html = client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+    assert message.image.url in html and "[Rasm]" not in html
+
+
+def test_image_caption_stays_visible(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [Item(7, False, "Mana chek", timezone.now(), True)])
+    services.save_image(Message.objects.get().pk, b"rasm")
+    assert "Mana chek" in client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+
+
+def test_deleted_message_leaves_image_queue(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    async_to_sync(runner_with(FakeClient()).fetch_media)()
+    assert not services.pending_images()
+
+
+def test_image_flood_wait_keeps_queue_and_pauses(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    fake = FakeClient()
+    fake.remote[7] = tg_message(7, "")
+    fake.download_error = errors.FloodWaitError(request=None, capture=100)
+    runner = runner_with(fake)
+    async_to_sync(runner.fetch_media)()
+    assert services.pending_images() and runner.pause_media_until > 0
+
+
+def test_revoked_during_image_download_is_raised(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    fake = FakeClient()
+    fake.remote[7] = tg_message(7, "")
+    fake.download_error = errors.AuthKeyUnregisteredError(request=None)
+    with pytest.raises(errors.AuthKeyUnregisteredError):
+        async_to_sync(runner_with(fake).fetch_media)()
+
+
+def test_avatar_downloaded_once_then_replaced_and_removed(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali", photo_id=77), [item()])
+    fake = FakeClient()
+    runner = runner_with(fake)
+    async_to_sync(runner.fetch_media)()
+    async_to_sync(runner.fetch_media)()
+    dialog.refresh_from_db()
+    assert fake.avatar_calls == 1 and dialog.avatar.read() == b"avatar"
+    assert dialog.avatar.url in client_in.get(reverse("telegram_home")).content.decode()
+
+    services.set_photo_id(10, 88)
+    async_to_sync(runner.fetch_media)()
+    dialog.refresh_from_db()
+    assert fake.avatar_calls == 2 and "88" in dialog.avatar.name
+
+    services.set_photo_id(10, 0)
+    async_to_sync(runner.fetch_media)()
+    dialog.refresh_from_db()
+    assert not dialog.avatar and fake.avatar_calls == 2
+
+
+def test_sent_message_keeps_photo_id(db):
+    row = services.enqueue(services.record(Peer(10, 5, "Ali", photo_id=77), [item()]), "Javob")
+    services.mark_sent(row.pk, 50, timezone.now())
+    assert Dialog.objects.get().photo_id == 77
+
+
+def test_sync_updates_photo_of_unchanged_dialog(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1, date=timezone.now())])
+    entity = user(10, photo=SimpleNamespace(photo_id=77))
+    dialog = tg_dialog(entity)
+    dialog.date = timezone.now() - timedelta(days=1)
+    async_to_sync(runner_with(FakeClient([dialog])).sync)()
+    assert Dialog.objects.get().photo_id == 77
+
+
+def test_other_account_login_deletes_files(db):
+    account = connected()
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    services.save_image(Message.objects.get().pk, b"rasm")
+    storage, name = Message.objects.get().image.storage, Message.objects.get().image.name
+    services.finish_login(account, "new", tg.Me(id=2, name="Boshqa", username=""))
+    assert not storage.exists(name)
+
+
+def test_media_requires_login(client, db):
+    assert client.get("/media/telegram/photos/1-1.jpg").status_code == 302
 
 
 def test_activity_model_untouched_by_outgoing(db):

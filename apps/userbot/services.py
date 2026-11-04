@@ -4,7 +4,9 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 
+from django.core.files.base import ContentFile
 from django.db import close_old_connections, transaction
+from django.db.models import F
 from django.utils import timezone
 
 from apps.crm.models import Activity, Contact
@@ -13,6 +15,7 @@ from .models import Account, Dialog, Message, Outbox
 
 HEARTBEAT_EVERY = 30  # soniya
 PENDING_BATCH = 5
+MEDIA_BATCH = 3
 
 
 @dataclass
@@ -22,6 +25,7 @@ class Peer:
     name: str = ""
     username: str = ""
     phone: str = ""
+    photo_id: int = 0
 
 
 @dataclass
@@ -30,6 +34,7 @@ class Item:
     outgoing: bool
     text: str
     date: datetime
+    has_photo: bool = False
 
 
 @dataclass
@@ -52,6 +57,22 @@ class PendingSend:
     peer_id: int
     access_hash: int
     text: str
+
+
+@dataclass
+class PendingAvatar:
+    id: int
+    peer_id: int
+    access_hash: int
+    photo_id: int
+
+
+@dataclass
+class PendingImage:
+    id: int
+    peer_id: int
+    access_hash: int
+    tg_id: int
 
 
 def _digits(value: str) -> str:
@@ -94,6 +115,7 @@ def record(peer: Peer, items: list[Item], *, unread: int | None = None) -> Dialo
     dialog, _ = Dialog.objects.get_or_create(peer_id=peer.id)
     dialog.access_hash = peer.access_hash or dialog.access_hash
     dialog.name, dialog.username, dialog.phone = peer.name[:200], peer.username[:100], peer.phone[:20]
+    dialog.photo_id = peer.photo_id
     if dialog.contact_id is None:
         dialog.contact = find_contact(peer)
 
@@ -102,7 +124,7 @@ def record(peer: Peer, items: list[Item], *, unread: int | None = None) -> Dialo
         _, is_new = Message.objects.get_or_create(
             dialog=dialog,
             tg_id=item.tg_id,
-            defaults={"outgoing": item.outgoing, "text": item.text, "date": item.date},
+            defaults={"outgoing": item.outgoing, "text": item.text, "date": item.date, "has_photo": item.has_photo},
         )
         if is_new:
             created.append(item)
@@ -126,6 +148,51 @@ def known_dialogs() -> dict[int, tuple[datetime | None, int]]:
         latest = dialog.messages.first()
         result[dialog.peer_id] = (dialog.last_message_at, latest.tg_id if latest else 0)
     return result
+
+
+# --- Rasmlar --------------------------------------------------------------------------
+
+
+def set_photo_id(peer_id: int, photo_id: int) -> None:
+    """Yangi xabari bo'lmagan suhbatda ham profil rasmi o'zgargan bo'lishi mumkin."""
+    Dialog.objects.filter(peer_id=peer_id).update(photo_id=photo_id)
+
+
+def pending_avatars() -> list[PendingAvatar]:
+    rows = Dialog.objects.exclude(photo_id=F("avatar_photo_id"))[:MEDIA_BATCH]
+    return [PendingAvatar(d.pk, d.peer_id, d.access_hash, d.photo_id) for d in rows]
+
+
+def save_avatar(dialog_id: int, photo_id: int, data: bytes | None) -> None:
+    dialog = Dialog.objects.get(pk=dialog_id)
+    if dialog.avatar:
+        dialog.avatar.delete(save=False)
+    if data:
+        dialog.avatar.save(f"{dialog.peer_id}-{photo_id}.jpg", ContentFile(data), save=False)
+    dialog.avatar_photo_id = photo_id
+    dialog.save(update_fields=["avatar", "avatar_photo_id"])
+
+
+def pending_images() -> list[PendingImage]:
+    rows = Message.objects.filter(has_photo=True, image="").select_related("dialog")[:MEDIA_BATCH]
+    return [PendingImage(m.pk, m.dialog.peer_id, m.dialog.access_hash, m.tg_id) for m in rows]
+
+
+def save_image(message_id: int, data: bytes) -> None:
+    message = Message.objects.get(pk=message_id)
+    message.image.save(f"{message.dialog_id}-{message.tg_id}.jpg", ContentFile(data), save=True)
+
+
+def skip_image(message_id: int) -> None:
+    """Rasm endi yo'q (xabar o'chirilgan): qayta-qayta urinmaslik uchun navbatdan chiqariladi."""
+    Message.objects.filter(pk=message_id).update(has_photo=False)
+
+
+def delete_media() -> None:
+    for dialog in Dialog.objects.exclude(avatar=""):
+        dialog.avatar.delete(save=False)
+    for message in Message.objects.exclude(image=""):
+        message.image.delete(save=False)
 
 
 # --- Holat -----------------------------------------------------------------------------
@@ -179,6 +246,7 @@ def begin_login(api_id: int, api_hash: str, phone: str, session: str, code_hash:
 
 def finish_login(account: Account, session: str, me) -> None:
     if account.tg_id and account.tg_id != me.id:
+        delete_media()
         Dialog.objects.all().delete()  # boshqa akkaunt — eski suhbatlar aralashmasin
         account.last_command_id = 0
     account.session, account.code_hash = session, ""
@@ -232,7 +300,7 @@ def claim_pending() -> list[PendingSend]:
 def mark_sent(outbox_id: int, tg_id: int, date: datetime) -> None:
     row = Outbox.objects.select_related("dialog").get(pk=outbox_id)
     dialog = row.dialog
-    peer = Peer(dialog.peer_id, dialog.access_hash, dialog.name, dialog.username, dialog.phone)
+    peer = Peer(dialog.peer_id, dialog.access_hash, dialog.name, dialog.username, dialog.phone, dialog.photo_id)
     record(peer, [Item(tg_id, True, row.text, date)], unread=dialog.unread)
     Outbox.objects.filter(pk=outbox_id).update(status=Outbox.Status.SENT, error="")
 
