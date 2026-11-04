@@ -20,7 +20,7 @@
      @play.capture="$el.dataset.playing = 1" @pause.capture="delete $el.dataset.playing">
   <div id="tg-thread" hx-get="{{ request.get_full_path }}"
        hx-trigger="changed from:body, every 4s [!document.querySelector('.tg-messages[data-playing], #tg-thread details[open]')]"
-       hx-select="#tg-thread" hx-select-oob="#tg-status" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+       hx-select="#tg-thread" hx-select-oob="#tg-status,#tg-replies" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
     {% if chat_messages and limit < 1000 %}
       <form method="post" action="{% url 'telegram_older' dialog.pk %}?n={{ limit }}" class="tg-day">{% csrf_token %}<button>{% icon "chevron-up" "size-3.5" %}Eskilarini yuklash</button></form>
     {% endif %}
@@ -40,6 +40,7 @@
         </div>
         <div class="tg-actions">
           {% if not m.deleted_at %}<button type="button" title="Javob berish" aria-label="Javob berish" @click="startReply($el.closest('[data-id]'))">{% icon "reply" "size-4" %}</button>{% endif %}
+          <button type="button" title="Vazifa qilish" aria-label="Vazifa qilish" hx-post="{% url 'telegram_task' dialog.pk %}" hx-vals='{"id": {{ m.tg_id }}}' hx-swap="none">{% icon "list-todo" "size-4" %}</button>
           {% if m.caption %}<button type="button" title="Nusxa olish" aria-label="Nusxa olish" @click="navigator.clipboard.writeText($el.closest('[data-id]').dataset.text)">{% icon "copy" "size-4" %}</button>{% endif %}
           {% if m.outgoing and m.caption and not m.deleted_at %}<button type="button" title="Tahrirlash" aria-label="Tahrirlash" @click="startEdit($el.closest('[data-id]'))">{% icon "pencil" "size-4" %}</button>{% endif %}
           {% if not m.deleted_at %}<button type="button" title="O'chirish" aria-label="O'chirish" hx-post="{% url 'telegram_delete' dialog.pk %}" hx-vals='{"id": {{ m.tg_id }}}' hx-confirm="Telegram'da ikki tomondan o'chirilsinmi? Panelda belgi bilan qoladi." hx-swap="none">{% icon "trash-2" "size-4" %}</button>{% endif %}
@@ -53,9 +54,9 @@
         <div class="tg-bubble {% if q.status == 'failed' %}is-failed{% endif %}">
           {% if q.file_name %}<p class="tg-file">{% icon "file" "size-4 shrink-0" %}<span>{{ q.file_name }}</span></p>{% endif %}
           {% if q.text %}<p class="tg-text">{{ q.text }}</p>{% endif %}
-          <span class="tg-meta">{% if q.kind == "edit" %}tahrir · {% elif q.kind == "voice" %}ovozli · {% endif %}{% if q.status == "failed" %}{{ q.error }}{% else %}{% icon "clock" "size-3.5" %}{% endif %}</span>
+          <span class="tg-meta">{% if q.kind == "edit" %}tahrir · {% elif q.kind == "voice" %}ovozli · {% endif %}{% if q.status == "failed" %}{{ q.error }}{% elif q.send_at %}{% icon "calendar-clock" "size-3.5" %}{{ q.send_at|date:"j E, H:i" }} da yuboriladi{% else %}{% icon "clock" "size-3.5" %}{% endif %}</span>
         </div>
-        {% if q.status == "failed" %}<div class="tg-actions"><button type="button" title="Olib tashlash" aria-label="Olib tashlash" hx-post="{% url 'telegram_dismiss' q.pk %}" hx-swap="none">{% icon "x" "size-4" %}</button></div>{% endif %}
+        {% if q.status == "failed" or q.status == "pending" and q.send_at %}<div class="tg-actions"><button type="button" title="Olib tashlash" aria-label="Olib tashlash" hx-post="{% url 'telegram_dismiss' q.pk %}" hx-swap="none">{% icon "x" "size-4" %}</button></div>{% endif %}
       </div>
     {% endfor %}
   </div>
@@ -69,13 +70,34 @@
     <p class="min-w-0 flex-1 truncate" x-text="edit ? 'Xabarni tahrirlash' : (reply ? reply.text : file)"></p>
     <button type="button" @click="clear()" aria-label="Bekor qilish">{% icon "x" "size-4" %}</button>
   </div>
-  <form x-ref="form" class="tg-composer" method="post" action="{% url 'telegram_send' dialog.pk %}" hx-post="{% url 'telegram_send' dialog.pk %}" hx-encoding="multipart/form-data" hx-swap="none" @htmx:after-request="if ($event.detail.successful) clear()">
+  <div x-cloak x-show="sendAt" class="tg-context">
+    {% icon "calendar-clock" "size-4 shrink-0" %}
+    <p class="min-w-0 flex-1 truncate" x-text="'Yuboriladi: ' + sendAt.replace('T', ' ')"></p>
+    <button type="button" @click="sendAt = ''" aria-label="Rejani bekor qilish">{% icon "x" "size-4" %}</button>
+  </div>
+  <div x-cloak x-show="tools" class="tg-pop" @click.outside="tools = false">
+    <label class="block text-xs font-semibold text-ink-2">Keyin yuborish
+      <input type="datetime-local" name="send_at" form="tg-form" x-model="sendAt" class="input mt-1" aria-label="Yuborish vaqti">
+    </label>
+    <div class="mt-3 flex items-center justify-between"><p class="text-xs font-semibold text-ink-2">Tezkor javoblar</p>
+      <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'telegram_reply_create' %}" hx-target="#modal-content">{% icon "plus" "size-3.5" %}Yangi</button></div>
+    <div id="tg-replies">
+      {% for r in quick_replies %}
+        <div class="tg-reply"><button type="button" class="min-w-0 flex-1 text-left" data-text="{{ r.text }}" @click="useReply($el)"><b>{{ r.title }}</b><span>{{ r.text|truncatechars:70 }}</span></button>
+          <button type="button" hx-get="{% url 'telegram_reply_edit' r.pk %}" hx-target="#modal-content" aria-label="Shablonni tahrirlash">{% icon "pencil" "size-3.5" %}</button></div>
+      {% empty %}
+        <p class="tg-hint">Shablon yo'q. Tez-tez yoziladigan javobni qo'shing.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <form id="tg-form" x-ref="form" data-name="{{ dialog.name|default:dialog.title }}" class="tg-composer" method="post" action="{% url 'telegram_send' dialog.pk %}" hx-post="{% url 'telegram_send' dialog.pk %}" hx-encoding="multipart/form-data" hx-swap="none" @htmx:after-request="if ($event.detail.successful) clear()">
     {% csrf_token %}
     <input type="hidden" name="reply_to" :value="reply ? reply.id : ''">
     <input type="hidden" name="edit_id" :value="edit ? edit.id : ''">
     <input x-ref="asVoice" type="hidden" name="as_voice" value="">
     <input x-ref="file" type="file" name="file" class="hidden" @change="pick()" aria-label="Fayl tanlash">
     <button type="button" class="btn btn-ghost btn-icon shrink-0" :disabled="edit" @click="$refs.file.click()" aria-label="Fayl biriktirish">{% icon "paperclip" "size-5" %}</button>
+    <button type="button" class="btn btn-ghost btn-icon shrink-0" :class="sendAt && 'text-brand-500'" @click.stop="tools = !tools" title="Tezkor javob va keyin yuborish" aria-label="Tezkor javob va keyin yuborish">{% icon "zap" "size-5" %}</button>
     <textarea x-ref="box" x-model="text" name="text" rows="1" maxlength="4096" placeholder="Xabar yozing…" aria-label="Xabar" class="tg-input" @keydown.enter="enter($event)" @paste="paste($event)"></textarea>
     <button type="button" class="btn btn-ghost btn-icon shrink-0" title="Matnni ovozli xabar qilib yuborish" aria-label="Ovozli xabar qilib yuborish" :disabled="edit || file || !text.trim()" @click="$refs.asVoice.value = 'on'; $refs.form.requestSubmit(); $nextTick(() => $refs.asVoice.value = '')">{% icon "mic" "size-5" %}</button>
     <button class="btn btn-primary btn-icon shrink-0" aria-label="Yuborish">{% icon "send" "size-4" %}</button>

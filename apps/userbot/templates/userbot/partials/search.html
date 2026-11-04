@@ -1,0 +1,12 @@
+{% if query|length >= 2 %}
+  <p class="tg-section">Xabarlar</p>
+  {% for m in results %}
+    <a class="tg-found" href="{% url 'telegram_chat' m.dialog_id %}?n=1000&at={{ m.tg_id }}">
+      <b>{{ m.dialog.title }}<time>{{ m.date|date:"j.m.y" }}</time></b>
+      <span>{% if m.deleted_at %}🗑 {% endif %}{{ m.text|truncatechars:90 }}</span>
+    </a>
+  {% empty %}
+    <p class="tg-hint">Xabarlardan topilmadi.</p>
+  {% endfor %}
+  <p class="tg-section">Chatlar</p>
+{% endif %}

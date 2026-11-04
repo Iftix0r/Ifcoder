@@ -1,12 +1,16 @@
+from datetime import timedelta
+
 from django import forms
 from django.core.validators import RegexValidator
+from django.utils import timezone
 
 from apps.core.forms import StyledFormMixin
 
-from .models import Account
+from .models import Account, QuickReply
 from .voice import MAX_TEXT, SPEEDS, voice_choices
 
 MAX_UPLOAD = 20 * 1024 * 1024
+MAX_SCHEDULE_DAYS = 365
 CAPTION_LIMIT = 1024
 
 
@@ -61,6 +65,13 @@ class SendForm(forms.Form):
     reply_to = forms.IntegerField(required=False)
     edit_id = forms.IntegerField(required=False)
     as_voice = forms.BooleanField(required=False)
+    send_at = forms.DateTimeField(required=False, input_formats=["%Y-%m-%dT%H:%M"])
+
+    def clean_send_at(self):
+        send_at = self.cleaned_data["send_at"]
+        if send_at and not timezone.now() < send_at < timezone.now() + timedelta(days=MAX_SCHEDULE_DAYS):
+            raise forms.ValidationError("Yuborish vaqti kelajakda va bir yil ichida bo'lsin.")
+        return send_at
 
     def clean_file(self):
         file = self.cleaned_data["file"]
@@ -92,6 +103,15 @@ class VoiceForm(StyledFormMixin, forms.Form):
     def __init__(self, *args, instance=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["voice"].choices = voice_choices()
+
+
+class QuickReplyForm(StyledFormMixin, forms.ModelForm):
+    wide_fields = ("title",)
+
+    class Meta:
+        model = QuickReply
+        fields = ["title", "text"]
+        widgets = {"text": forms.Textarea(attrs={"rows": 5})}
 
 
 class OpenForm(forms.Form):

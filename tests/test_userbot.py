@@ -30,7 +30,7 @@ from apps.notes.models import Note
 from apps.planner.models import Task
 from apps.userbot import client as tg
 from apps.userbot import commands, services, voice
-from apps.userbot.models import Account, Dialog, Message, Outbox
+from apps.userbot.models import Account, Dialog, Message, Outbox, QuickReply
 from apps.userbot.runner import Runner, restart_stamp, seen_fields, to_item
 from apps.userbot.services import Item, Peer
 
@@ -1410,6 +1410,105 @@ def test_wide_mode_controls_on_list_and_chat(client_in):
     chat = client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
     assert home.count('aria-label="Kengaytirish"') == 1 and chat.count('aria-label="Kengaytirish"') == 1
     assert "tg-resizer" in home
+
+
+def test_awaiting_reply_tracks_last_message(db):
+    connected()
+    peer = Peer(10, 5, "Ali")
+    dialog = services.record(peer, [item(1, "Salom")])
+    assert dialog.awaiting_reply
+    dialog = services.record(peer, [item(2, "Javob", outgoing=True)])
+    assert not dialog.awaiting_reply
+    services.mark_deleted([2])
+    dialog.refresh_from_db()
+    assert dialog.awaiting_reply
+    services.mark_deleted([1])
+    dialog.refresh_from_db()
+    assert not dialog.awaiting_reply
+
+
+def test_task_from_message_links_contact(client_in):
+    connected()
+    contact = Contact.objects.create(name="Ali", telegram="@ali")
+    dialog = services.record(Peer(10, 5, "Ali", username="ali"), [item(4, "Logoni o'zgartiring\nKo'kroq bo'lsin")])
+    assert client_in.post(reverse("telegram_task", args=[dialog.pk]), {"id": "4"}, **HX).status_code == 204
+    task = Task.objects.get()
+    assert task.title == "Logoni o'zgartiring" and task.contact == contact and "Ko'kroq" in task.notes
+    assert task.planned_for == timezone.localdate()
+
+
+def test_task_from_media_message_has_title(client_in):
+    connected()
+    dialog = services.record(
+        Peer(10, 5, "Ali"), [Item(4, False, "[Rasm]", timezone.now(), True, "photo", "image/jpeg")]
+    )
+    services.save_media(Message.objects.get().pk, b"rasm")
+    client_in.post(reverse("telegram_task", args=[dialog.pk]), {"id": "4"}, **HX)
+    assert Task.objects.get().title == "Telegram: Ali"
+    assert client_in.post(reverse("telegram_task", args=[dialog.pk]), {"id": "x"}, **HX).status_code == 404
+
+
+def test_quick_reply_crud_and_escaped_in_chat(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    data = {"title": "Narx", "text": 'Salom {ism}, <b>"narx"</b>'}
+    assert client_in.post(reverse("telegram_reply_create"), data, **HX).status_code == 204
+    reply = QuickReply.objects.get()
+    html = client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+    assert "Salom {ism}" in html and '<b>"narx"' not in html
+    assert client_in.get(reverse("telegram_reply_edit", args=[reply.pk]), **HX).status_code == 200
+    client_in.post(reverse("telegram_reply_delete", args=[reply.pk]), **HX)
+    assert not QuickReply.objects.exists()
+
+
+def local_input(delta):
+    return timezone.localtime(timezone.now() + delta).strftime("%Y-%m-%dT%H:%M")
+
+
+def test_scheduled_message_waits_for_time(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    data = {"text": "Ertaga", "send_at": local_input(timedelta(hours=2))}
+    assert client_in.post(reverse("telegram_send", args=[dialog.pk]), data, **HX).status_code == 204
+    fake, runner = job_runner()
+    async_to_sync(runner.flush_outbox)()
+    row = Outbox.objects.get()
+    assert not fake.sent and row.status == "pending"
+    assert "da yuboriladi" in client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+    Outbox.objects.update(send_at=timezone.now() - timedelta(minutes=1))
+    async_to_sync(runner.flush_outbox)()
+    row.refresh_from_db()
+    assert fake.sent and row.status == "sent"
+
+
+@pytest.mark.parametrize("delta", [timedelta(hours=-1), timedelta(days=400)])
+def test_schedule_rejects_past_and_far_future(client_in, delta):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    data = {"text": "x", "send_at": local_input(delta)}
+    assert client_in.post(reverse("telegram_send", args=[dialog.pk]), data, **HX).status_code == 422
+    assert not Outbox.objects.exists()
+
+
+def test_scheduled_can_be_cancelled_but_not_immediate(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    now_row = services.enqueue(dialog, "Darhol")
+    later = services.enqueue(dialog, "Keyin", send_at=timezone.now() + timedelta(hours=1))
+    assert client_in.post(reverse("telegram_dismiss", args=[now_row.pk]), **HX).status_code == 404
+    assert client_in.post(reverse("telegram_dismiss", args=[later.pk]), **HX).status_code == 204
+    assert list(Outbox.objects.values_list("text", flat=True)) == ["Darhol"]
+
+
+def test_search_finds_messages_including_deleted(client_in):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(4, "Shartnoma tayyor"), item(5, "Boshqa gap")])
+    services.mark_deleted([4])
+    url = reverse("telegram_search")
+    html = client_in.get(url, {"q": "shartnoma"}, **HX).content.decode()
+    assert "Shartnoma tayyor" in html and "at=4" in html and "Boshqa" not in html
+    assert "Shartnoma" not in client_in.get(url, {"q": "s"}, **HX).content.decode()
+    assert "<script" not in client_in.get(url, {"q": "<script>"}, **HX).content.decode()
 
 
 def test_activity_model_untouched_by_outgoing(db):

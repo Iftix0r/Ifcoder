@@ -7,7 +7,7 @@
   {% elif m.media_kind == "video" and m.is_inline or m.media_kind == "round" and m.is_inline %}
     <video class="tg-photo {% if m.media_kind == 'round' %}tg-round{% endif %}" src="{{ src }}" controls preload="metadata"></video>
   {% elif m.media_kind == "voice" and m.is_inline or m.media_kind == "audio" and m.is_inline %}
-    <audio class="tg-audio" src="{{ src }}" controls preload="none"></audio>
+    <audio class="tg-audio" src="{{ src }}" controls preload="metadata"></audio>
   {% else %}
     <a class="tg-file" href="{{ src }}" hx-boost="false">{% icon "download" "size-4 shrink-0" %}<span>{{ m.file_name|default:"Yuklab olish" }}</span></a>
   {% endif %}

@@ -2,7 +2,7 @@
   <div class="tg-resizer" @pointerdown.prevent="resize($event)" @dblclick="side = 340; remember('tg-side', 340)" title="Surib kengligini o'zgartiring, ikki marta bossangiz asl holatga qaytadi"></div>
   <div class="tg-side-head">
     <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="settings = true" aria-label="Sozlamalar">{% icon "settings" "size-5" %}</button>
-    <label class="tg-search">{% icon "search" "size-4" %}<input type="search" x-model="q" placeholder="Qidirish" aria-label="Suhbatlarni qidirish" autocomplete="off"></label>
+    <label class="tg-search">{% icon "search" "size-4" %}<input type="search" name="q" x-model="q" placeholder="Chat va xabarlardan qidirish" aria-label="Suhbatlarni qidirish" autocomplete="off" hx-get="{% url 'telegram_search' %}" hx-trigger="input changed delay:350ms, search" hx-target="#tg-search-results" hx-swap="innerHTML"></label>
     <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="newChat = !newChat" aria-label="Yangi suhbat">{% icon "message-circle-plus" "size-5" %}</button>
     {% if not dialog %}{% include "userbot/partials/wide_button.html" %}{% endif %}
   </div>
@@ -14,9 +14,11 @@
   <div class="tg-tabs" role="tablist">
     <button type="button" role="tab" :class="tab === 'all' && 'is-active'" @click="tab = 'all'">Hammasi</button>
     <button type="button" role="tab" :class="tab === 'unread' && 'is-active'" @click="tab = 'unread'">O'qilmagan</button>
+    <button type="button" role="tab" :class="tab === 'waiting' && 'is-active'" @click="tab = 'waiting'" title="Oxirgi xabar suhbatdoshdan">Javobsiz</button>
     <button type="button" role="tab" :class="tab === 'clients' && 'is-active'" @click="tab = 'clients'">Mijozlar</button>
   </div>
   <div class="tg-scroll">
+    <div id="tg-search-results" x-show="q.length >= 2"></div>
     <div id="tg-list" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body, every 8s" hx-select="#tg-list" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
       {% if not account.runner_alive %}
         <p class="tg-alert">{% icon "terminal" "size-4 shrink-0" %}<span>Userbot ishlamayapti: xabarlar kelmaydi. <code class="font-mono">python manage.py userbot</code></span></p>
@@ -24,7 +26,7 @@
       {% if account.last_error %}<p class="tg-alert">{% icon "circle-alert" "size-4 shrink-0" %}<span>{{ account.last_error }}</span></p>{% endif %}
       {% for d in dialogs %}
         <div class="tg-dialog-row" x-show="shows($el)"
-             data-search="{{ d.title|lower }} {{ d.username|lower }} {{ d.last_text|lower }}" data-unread="{{ d.unread }}" data-client="{% if d.contact_id %}1{% else %}0{% endif %}">
+             data-search="{{ d.title|lower }} {{ d.username|lower }} {{ d.last_text|lower }}" data-unread="{{ d.unread }}" data-waiting="{{ d.awaiting_reply|yesno:'1,0' }}" data-client="{% if d.contact_id %}1{% else %}0{% endif %}">
         <a href="{% url 'telegram_chat' d.pk %}" class="tg-dialog {% if dialog.pk == d.pk %}is-active{% endif %}">
           {% include "userbot/partials/avatar.html" with dialog=d %}
           <span class="tg-dialog-body">

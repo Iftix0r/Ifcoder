@@ -7,20 +7,23 @@ from django.contrib.auth.decorators import login_not_required
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.core.crud import done, form_modal
+from apps.core.crud import delete_done, done, form_modal
 from apps.core.htmx import add_triggers, trigger_toast
 from apps.finance.models import Debt
+from apps.planner.models import Task
 from apps.vault.services import has_2fa
 
 from . import client, services, voice
-from .forms import CodeForm, ConnectForm, OpenForm, OptionsForm, PasswordForm, SendForm, VoiceForm
-from .models import Account, Dialog, Message, Outbox
+from .forms import CodeForm, ConnectForm, OpenForm, OptionsForm, PasswordForm, QuickReplyForm, SendForm, VoiceForm
+from .models import Account, Dialog, Message, Outbox, QuickReply
 
 CHAT_LIMIT = 100
 CHAT_MAX = 1000
 PEEK_LIMIT = 20
+SEARCH_LIMIT = 30
 DIALOG_LIMIT = 200
 
 
@@ -197,6 +200,7 @@ def chat(request, pk):
         dialog=dialog,
         chat_messages=rows[::-1],
         limit=limit,
+        quick_replies=QuickReply.objects.all(),
         queued=dialog.outbox.filter(kind__in=[Outbox.Kind.SEND, Outbox.Kind.EDIT, Outbox.Kind.VOICE])
         .exclude(status=Outbox.Status.SENT)
         .order_by("created_at")[:20],
@@ -234,9 +238,16 @@ def send(request, pk):
         return _changed()
     if data["as_voice"]:
         account = Account.load()
-        services.enqueue(dialog, data["text"], kind=Outbox.Kind.VOICE, voice=account.voice, speed=account.voice_speed)
+        services.enqueue(
+            dialog,
+            data["text"],
+            kind=Outbox.Kind.VOICE,
+            voice=account.voice,
+            speed=account.voice_speed,
+            send_at=data["send_at"],
+        )
         return _changed()
-    row = services.enqueue(dialog, data["text"], reply_to_id=data["reply_to"])
+    row = services.enqueue(dialog, data["text"], reply_to_id=data["reply_to"], send_at=data["send_at"])
     if data["file"]:
         # Asl nom faqat Telegram'ga yuborish uchun; diskda xavfsiz .bin nom bilan turadi
         row.file_name = os.path.basename(data["file"].name)[:200]
@@ -244,13 +255,61 @@ def send(request, pk):
     return _changed()
 
 
+def _posted_message(request, dialog, **filters):
+    try:
+        return get_object_or_404(dialog.messages, tg_id=int(request.POST.get("id", "")), **filters)
+    except ValueError as exc:
+        raise Http404 from exc
+
+
+@require_POST
+def make_task(request, pk):
+    dialog = get_object_or_404(Dialog.objects.select_related("contact"), pk=pk)
+    message = _posted_message(request, dialog)
+    lines = message.caption.strip().splitlines()
+    Task.objects.create(
+        title=(lines[0] if lines else f"Telegram: {dialog.title}")[:250],
+        notes=f"Telegram, {dialog.title}:\n{message.text}",
+        contact=dialog.contact,
+        planned_for=timezone.localdate(),
+    )
+    return done("Vazifa qo'shildi.", close=False)
+
+
+def search_messages(request):
+    query = request.GET.get("q", "").strip()
+    rows = []
+    if len(query) >= 2:
+        rows = Message.objects.filter(text__icontains=query).select_related("dialog")[:SEARCH_LIMIT]
+    return render(request, "userbot/partials/search.html", {"results": rows, "query": query})
+
+
+def reply_create(request):
+    return form_modal(request, QuickReplyForm, title="Tezkor javob", icon="zap", tone="tone-amber")
+
+
+def reply_edit(request, pk):
+    reply = get_object_or_404(QuickReply, pk=pk)
+    return form_modal(
+        request,
+        QuickReplyForm,
+        instance=reply,
+        title=reply.title,
+        icon="zap",
+        tone="tone-amber",
+        delete_url=reverse("telegram_reply_delete", args=[pk]),
+    )
+
+
+@require_POST
+def reply_delete(request, pk):
+    return delete_done(get_object_or_404(QuickReply, pk=pk), "Shablon o'chirildi.")
+
+
 @require_POST
 def delete_message(request, pk):
     dialog = get_object_or_404(Dialog, pk=pk)
-    try:
-        message = get_object_or_404(dialog.messages, tg_id=int(request.POST.get("id", "")), deleted_at=None)
-    except ValueError as exc:
-        raise Http404 from exc
+    message = _posted_message(request, dialog, deleted_at=None)
     services.enqueue(dialog, kind=Outbox.Kind.DELETE, target_id=message.tg_id)
     return done("Telegram'dan o'chiriladi, panelda belgi bilan qoladi.", close=False)
 
@@ -323,7 +382,13 @@ def voice_preview(request):
 
 @require_POST
 def dismiss(request, pk):
-    get_object_or_404(Outbox, pk=pk, status=Outbox.Status.FAILED).delete()
+    """Yuborilmagan xabarni olib tashlash yoki rejalashtirilganini bekor qilish."""
+    row = get_object_or_404(Outbox, pk=pk, status__in=[Outbox.Status.FAILED, Outbox.Status.PENDING])
+    if row.status == Outbox.Status.PENDING and not row.send_at:
+        raise Http404  # darhol yuboriladigan xabar: runner olib ketayotgan bo'lishi mumkin
+    if row.file:
+        row.file.delete(save=False)
+    row.delete()
     return _changed()
 
 

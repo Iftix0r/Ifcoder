@@ -117,6 +117,7 @@ class Dialog(TimeStamped):
     photo_id = models.BigIntegerField(default=0)  # Telegram'dagi joriy profil rasmi (0 — yo'q)
     avatar_photo_id = models.BigIntegerField(default=0)  # yuklab olingani; farq qilsa runner yangilaydi
     pinned = models.BooleanField(default=False)
+    awaiting_reply = models.BooleanField(default=False)  # oxirgi xabar suhbatdoshdan: «Javobsiz» tabi
     read_outbox_id = models.BigIntegerField(default=0)  # suhbatdosh shu id gacha o'qigan
     seen_kind = models.CharField(max_length=10, blank=True)  # online, offline, recently, week, month
     seen_at = models.DateTimeField(null=True, blank=True)  # online: tugash vaqti, offline: oxirgi ko'rilgan
@@ -205,6 +206,21 @@ class Message(models.Model):
         return self.mime in INLINE_MIMES
 
 
+class QuickReply(TimeStamped):
+    """Tezkor javob shabloni. {ism} o'rniga suhbatdosh ismi qo'yiladi."""
+
+    title = models.CharField("Nomi", max_length=60)
+    text = models.TextField("Matn", max_length=4096, help_text="{ism} o'rniga mijoz ismi qo'yiladi")
+
+    class Meta:
+        ordering = ["title"]
+        verbose_name = "Tezkor javob"
+        verbose_name_plural = "Tezkor javoblar"
+
+    def __str__(self):
+        return self.title
+
+
 class MessageEdit(models.Model):
     """Tahrirdan oldingi matn."""
 
@@ -245,6 +261,7 @@ class Outbox(TimeStamped):
     file = models.FileField(upload_to="telegram/outbox", blank=True)
     voice = models.CharField(max_length=30, blank=True)
     speed = models.CharField(max_length=8, blank=True)
+    send_at = models.DateTimeField(null=True, blank=True)  # keyin yuborish; bo'sh bo'lsa darhol
     debt = models.ForeignKey(
         "finance.Debt", null=True, blank=True, on_delete=models.SET_NULL, related_name="voice_reminders"
     )

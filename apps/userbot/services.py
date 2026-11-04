@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from django.core.files.base import ContentFile
 from django.db import close_old_connections, transaction
-from django.db.models import F, Sum
+from django.db.models import F, Q, Sum
 from django.utils import timezone
 
 from apps.core.telegram import h, send_message
@@ -167,7 +167,7 @@ def record(peer: Peer, items: list[Item], *, unread: int | None = None) -> Dialo
         dialog.unread = unread if unread is not None else dialog.unread + len(incoming)
         latest = dialog.messages.filter(deleted_at=None).first()
         if latest:
-            dialog.last_text, dialog.last_message_at = latest.text[:200], latest.date
+            _apply_latest(dialog, latest)
     dialog.save()
 
     if incoming and dialog.contact_id and Account.load().log_to_crm:
@@ -266,10 +266,16 @@ def _notify(text: str) -> None:
 def _refresh_preview(dialog: Dialog) -> None:
     latest = dialog.messages.filter(deleted_at=None).first()
     if latest:
-        dialog.last_text, dialog.last_message_at = latest.text[:200], latest.date
+        _apply_latest(dialog, latest)
     else:
         dialog.last_text = "Xabarlar o'chirilgan"  # vaqt qoladi: suhbat ro'yxatdan yo'qolmaydi
-    dialog.save(update_fields=["last_text", "last_message_at"])
+        dialog.awaiting_reply = False
+    dialog.save(update_fields=["last_text", "last_message_at", "awaiting_reply"])
+
+
+def _apply_latest(dialog: Dialog, latest: Message) -> None:
+    dialog.last_text, dialog.last_message_at = latest.text[:200], latest.date
+    dialog.awaiting_reply = not latest.outgoing
 
 
 def unread_total() -> int:
@@ -414,7 +420,8 @@ def fail_stale_sends() -> None:
 
 def claim_pending() -> list[Job]:
     claimed = []
-    for row in Outbox.objects.filter(status=Outbox.Status.PENDING).select_related("dialog")[:PENDING_BATCH]:
+    due = Q(send_at=None) | Q(send_at__lte=timezone.now())
+    for row in Outbox.objects.filter(due, status=Outbox.Status.PENDING).select_related("dialog")[:PENDING_BATCH]:
         taken = Outbox.objects.filter(pk=row.pk, status=Outbox.Status.PENDING).update(status=Outbox.Status.SENDING)
         if taken:
             dialog = row.dialog

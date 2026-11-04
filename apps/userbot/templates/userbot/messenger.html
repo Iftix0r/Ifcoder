@@ -1,14 +1,32 @@
 {% extends "layouts/app.html" %}
 {% block page_title %}{% if dialog %}{{ dialog.title }}{% else %}Telegram{% endif %}{% endblock %}
 {% block content %}
-<div class="tg-shell {% if dialog %}tg-has-chat{% endif %}" :class="wide && 'is-wide'" :style="`--tg-side-w: ${side}px`"
+<div class="tg-shell {% if dialog %}tg-has-chat{% endif %}" data-dialog="{{ dialog.pk|default:'' }}" :class="wide && 'is-wide'" :style="`--tg-side-w: ${side}px`"
      @keydown.escape.window="if (wide && !$store.modal.open) toggleWide()" x-data="{
-  wide: false, side: 340,
+  wide: false, side: 340, tools: false, sendAt: '',
   init() {
+    const pk = this.$el.dataset.dialog;
     try {
       this.wide = localStorage.getItem('tg-wide') === '1';
       this.side = Math.min(560, Math.max(240, +localStorage.getItem('tg-side') || 340));
+      if (pk) this.text = localStorage.getItem('tg-draft-' + pk) || '';
     } catch (e) {}
+    if (pk) this.$watch('text', (value) => {
+      try {
+        if (value) localStorage.setItem('tg-draft-' + pk, value);
+        else localStorage.removeItem('tg-draft-' + pk);
+      } catch (e) {}
+    });
+    const at = new URLSearchParams(location.search).get('at');
+    if (at) this.$nextTick(() => {
+      const line = document.getElementById('m' + at);
+      if (line) { line.scrollIntoView({ block: 'center' }); line.classList.add('is-found'); }
+    });
+  },
+  useReply(el) {
+    this.text = el.dataset.text.replaceAll('{ism}', this.$refs.form.dataset.name);
+    this.tools = false;
+    this.$refs.box.focus();
   },
   remember(key, value) { try { localStorage.setItem(key, value); } catch (e) {} },
   toggleWide() { this.wide = !this.wide; this.remember('tg-wide', this.wide ? '1' : '0'); },
@@ -31,6 +49,7 @@
     const d = el.dataset;
     if (this.tab === 'unread' && d.unread === '0') return false;
     if (this.tab === 'clients' && d.client === '0') return false;
+    if (this.tab === 'waiting' && d.waiting === '0') return false;
     return !this.q || d.search.includes(this.q.toLowerCase());
   },
   found(el) {
@@ -39,7 +58,7 @@
   },
   startReply(el) { this.edit = null; this.reply = { id: el.dataset.id, text: el.dataset.text || 'Media' }; this.$refs.box.focus(); },
   startEdit(el) { this.reply = null; this.edit = { id: el.dataset.id }; this.text = el.dataset.text; this.$refs.box.focus(); },
-  clear() { this.reply = null; this.edit = null; this.text = ''; this.file = ''; this.$refs.file.value = ''; },
+  clear() { this.reply = null; this.edit = null; this.text = ''; this.file = ''; this.sendAt = ''; this.tools = false; this.$refs.file.value = ''; },
   pick() { this.file = this.$refs.file.files[0]?.name || ''; },
   paste(e) {
     const f = e.clipboardData?.files?.[0];
