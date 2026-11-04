@@ -10,6 +10,7 @@ import time
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async as db
+from django.conf import settings
 from django.utils import timezone
 from telethon import errors, events
 from telethon.tl.types import (
@@ -147,6 +148,19 @@ def to_item(message) -> Item | None:
     )
 
 
+class RestartRequested(Exception):
+    """deploy.sh yangi kod chiqardi: jarayon chiqadi, cron yangi kod bilan qayta yoqadi."""
+
+
+def restart_stamp() -> float:
+    # Passenger uchun deploy.sh shu faylni yangilaydi. pkill'ga tayanib bo'lmaydi: cPanel'da cron jarayoni
+    # SSH'dan ko'rinmasligi mumkin
+    try:
+        return (settings.BASE_DIR / "tmp" / "restart.txt").stat().st_mtime
+    except OSError:
+        return 0.0
+
+
 class Runner:
     def __init__(self, client_factory=build_client):
         self.client_factory = client_factory
@@ -154,10 +168,24 @@ class Runner:
         self.me = None
         self.pause_sends_until = 0.0
         self.pause_media_until = 0.0
+        self.started_stamp = restart_stamp()
+
+    def check_restart(self) -> None:
+        if restart_stamp() != self.started_stamp:
+            raise RestartRequested
 
     async def run(self, *, once: bool = False) -> None:
+        if not once:  # cPanel'da jarayon ko'rinmasligi mumkin: ishga tushgani logdan bilinadi
+            log.warning("Userbot ishga tushdi")
         await db(services.fail_stale_sends)()
+        try:
+            await self.loop(once=once)
+        except RestartRequested:
+            log.warning("Yangi kod chiqdi: userbot qayta ishga tushadi")
+
+    async def loop(self, *, once: bool) -> None:
         while True:
+            self.check_restart()
             creds = await db(services.load_credentials)()
             delay = IDLE
             if creds is not None:
@@ -197,6 +225,7 @@ class Runner:
             await self.sync()
             next_sync = time.monotonic() + RESYNC_EVERY
             while True:
+                self.check_restart()
                 state = await db(services.tick)()
                 if state.encrypted_session != creds.encrypted_session:
                     return  # panelda uzildi yoki boshqa akkaunt ulandi

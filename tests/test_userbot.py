@@ -1,6 +1,7 @@
 """Telegram userbot: ulanish oqimi, suhbatlar, navbat va buyruqlar (Telegram'ga haqiqiy ulanishsiz)."""
 
 import io
+import os
 import wave
 from datetime import date, timedelta
 from decimal import Decimal
@@ -30,7 +31,7 @@ from apps.planner.models import Task
 from apps.userbot import client as tg
 from apps.userbot import commands, services, voice
 from apps.userbot.models import Account, Dialog, Message, Outbox
-from apps.userbot.runner import Runner, seen_fields, to_item
+from apps.userbot.runner import Runner, restart_stamp, seen_fields, to_item
 from apps.userbot.services import Item, Peer
 
 HX = {"HTTP_HX_REQUEST": "true"}
@@ -1357,6 +1358,49 @@ def test_heartbeat_is_sent_during_long_first_sync(db):
     with mock.patch("apps.userbot.services.tick", wraps=services.tick) as tick:
         async_to_sync(runner_with(FakeClient(dialogs)).sync)()
     assert tick.call_count >= 3 and Account.load().runner_alive
+
+
+def test_runner_exits_when_deploy_touches_restart_file(db, settings, tmp_path):
+    connected()
+    (tmp_path / "tmp").mkdir()
+    stamp = tmp_path / "tmp" / "restart.txt"
+    stamp.write_text("")
+    settings.BASE_DIR = tmp_path
+    calls = []
+
+    class Client:
+        def __init__(self, *args):
+            calls.append(1)
+
+        async def connect(self):
+            os.utime(stamp, (1, 1))  # deploy shu payt bo'ldi
+
+        async def disconnect(self):
+            calls.append("disconnected")
+
+        async def is_user_authorized(self):
+            return True
+
+        async def get_me(self):
+            return SimpleNamespace(id=1)
+
+        def add_event_handler(self, *args):
+            pass
+
+        def iter_dialogs(self, limit):
+            return agen([])
+
+        def iter_messages(self, entity, limit, min_id=0):
+            return agen([])
+
+    async_to_sync(Runner(Client).run)()  # chiqmasa test osilib qoladi
+    assert "disconnected" in calls and Account.load().is_connected
+
+
+def test_missing_restart_file_is_safe(settings, tmp_path):
+    settings.BASE_DIR = tmp_path
+    assert restart_stamp() == 0.0
+    Runner().check_restart()
 
 
 def test_activity_model_untouched_by_outgoing(db):
