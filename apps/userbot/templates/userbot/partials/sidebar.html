@@ -56,6 +56,7 @@
         {% csrf_token %}
         <label class="flex items-center gap-2.5 text-sm">{{ options_form.commands_enabled }}{{ options_form.commands_enabled.label }}</label>
         <label class="flex items-center gap-2.5 text-sm">{{ options_form.log_to_crm }}{{ options_form.log_to_crm.label }}</label>
+        <label class="flex items-center gap-2.5 text-sm">{{ options_form.notify_changes }}{{ options_form.notify_changes.label }}</label>
         <label class="block text-sm"><span class="mb-1 block text-xs text-ink-3">Ovozli xabar ovozi</span>{{ options_form.voice }}</label>
         <label class="block text-sm"><span class="mb-1 block text-xs text-ink-3">Ovoz tezligi</span>{{ options_form.voice_speed }}</label>
       </form>

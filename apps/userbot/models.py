@@ -52,11 +52,13 @@ class Account(TimeStamped):
     log_to_crm = models.BooleanField("Mijoz yozganda aloqalar tarixiga qo'shish", default=True)
     voice = models.CharField("Ovoz", max_length=30, choices=VOICES, default=DEFAULT_VOICE)
     voice_speed = models.CharField("Tezlik", max_length=8, choices=SPEEDS, default=DEFAULT_SPEED)
+    notify_changes = models.BooleanField("Xabar o'chirilsa yoki tahrirlansa, botdan xabar berish", default=True)
 
     heartbeat_at = models.DateTimeField(null=True, blank=True)
     synced_at = models.DateTimeField(null=True, blank=True)
     sync_requested = models.BooleanField(default=False)
     last_command_id = models.BigIntegerField(default=0)
+    reconciled_at = models.DateTimeField(null=True, blank=True)
     last_error = models.CharField(max_length=300, blank=True)
 
     class Meta:
@@ -181,6 +183,9 @@ class Message(models.Model):
     file_name = models.CharField(max_length=200, blank=True)
     reply_to_id = models.BigIntegerField(null=True, blank=True)
     edited = models.BooleanField(default=False)
+    # Xabar bazadan hech qachon o'chirilmaydi: Telegram'da o'chsa, shu belgi qo'yiladi
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_by_me = models.BooleanField(default=False)  # faqat paneldan o'chirilgani aniq ma'lum
     date = models.DateTimeField()
 
     class Meta:
@@ -198,6 +203,20 @@ class Message(models.Model):
     @property
     def is_inline(self):
         return self.mime in INLINE_MIMES
+
+
+class MessageEdit(models.Model):
+    """Tahrirdan oldingi matn."""
+
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="edits")
+    text = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return self.text[:60]
 
 
 class Outbox(TimeStamped):

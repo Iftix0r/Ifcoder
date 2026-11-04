@@ -475,6 +475,14 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .tg-bubble { position: relative; max-width: min(78%, 520px); padding: 0.375rem 0.625rem; border-radius: var(--tg-radius); border-bottom-left-radius: 5px; background: var(--color-surface); box-shadow: 0 1px 1px rgb(15 23 42 / 0.08); font-size: 0.875rem; line-height: 1.4; }
   .is-mine .tg-bubble { border-radius: var(--tg-radius); border-bottom-right-radius: 5px; background: var(--tg-mine); }
   .tg-bubble.is-failed { outline: 1px solid #f43f5e; }
+  .tg-bubble.is-deleted { outline: 1px dashed color-mix(in srgb, #f43f5e 60%, transparent); }
+  .tg-bubble.is-deleted :is(.tg-text, img, video, audio) { opacity: 0.72; }
+  .tg-mark { color: #f43f5e; font-weight: 600; }
+  .tg-mark-edit { color: #f59e0b; font-weight: 600; }
+  .tg-history { margin-top: 3px; color: var(--color-ink-2); font-size: 0.8125rem; }
+  .tg-history summary { color: #f59e0b; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
+  .tg-history p { margin-top: 4px; padding-left: 8px; border-left: 2px solid #f59e0b; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .tg-history time { display: block; color: var(--color-ink-3); font-size: 0.6875rem; }
   .tg-text { overflow-wrap: anywhere; white-space: pre-wrap; }
   .tg-text a { color: var(--color-brand-500); text-decoration: underline; }
   .tg-meta { display: flex; align-items: center; justify-content: flex-end; gap: 0.1875rem; margin-top: 1px; color: var(--color-ink-3); font-size: 0.6875rem; }

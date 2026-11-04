@@ -2,20 +2,26 @@
 
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.core.files.base import ContentFile
 from django.db import close_old_connections, transaction
 from django.db.models import F
 from django.utils import timezone
 
+from apps.core.telegram import h, send_message
 from apps.crm.models import Activity, Contact
 
-from .models import Account, Dialog, Message, Outbox
+from .models import Account, Dialog, Message, MessageEdit, Outbox
 
 HEARTBEAT_EVERY = 30  # soniya
 PENDING_BATCH = 5
 MEDIA_BATCH = 3
+NOTIFY_LINES = 5
+RECONCILE_EVERY = 15 * 60  # soniya
+RECONCILE_DAYS = 7
+RECONCILE_DIALOGS = 20
+RECONCILE_MESSAGES = 50
 
 
 @dataclass
@@ -68,6 +74,13 @@ class Job:
     has_file: bool
     voice: str = ""
     speed: str = ""
+
+
+@dataclass
+class ReconcileTarget:
+    peer_id: int
+    access_hash: int
+    messages: dict[int, str]
 
 
 @dataclass
@@ -152,8 +165,9 @@ def record(peer: Peer, items: list[Item], *, unread: int | None = None) -> Dialo
     incoming = [i for i in created if not i.outgoing]
     if created:
         dialog.unread = unread if unread is not None else dialog.unread + len(incoming)
-        latest = dialog.messages.first()
-        dialog.last_text, dialog.last_message_at = latest.text[:200], latest.date
+        latest = dialog.messages.filter(deleted_at=None).first()
+        if latest:
+            dialog.last_text, dialog.last_message_at = latest.text[:200], latest.date
     dialog.save()
 
     if incoming and dialog.contact_id and Account.load().log_to_crm:
@@ -211,30 +225,71 @@ def skip_media(message_id: int) -> None:
     Message.objects.filter(pk=message_id).update(media_pending=False)
 
 
-def apply_edit(peer_id: int, tg_id: int, text: str) -> None:
-    updated = (
-        Message.objects.filter(dialog__peer_id=peer_id, tg_id=tg_id).exclude(text=text).update(text=text, edited=True)
-    )
-    if updated:
-        _refresh_preview(Dialog.objects.get(peer_id=peer_id))
+def apply_edit(peer_id: int, tg_id: int, text: str, *, notify: bool = True) -> None:
+    """Yangi matn qo'yiladi, eskisi tarixda qoladi."""
+    message = Message.objects.select_related("dialog").filter(dialog__peer_id=peer_id, tg_id=tg_id).first()
+    if message is None or message.text == text:
+        return
+    old = message.text
+    with transaction.atomic():
+        MessageEdit.objects.create(message=message, text=old)
+        message.text, message.edited = text, True
+        message.save(update_fields=["text", "edited"])
+        _refresh_preview(message.dialog)
+    if notify and not message.outgoing:
+        _notify(
+            f"✏️ <b>{h(message.dialog.title)}</b> xabarni tahrirladi\n\nOldin: {h(old[:300])}\nHozir: {h(text[:300])}"
+        )
 
 
-def remove_messages(tg_ids: list[int]) -> None:
+def mark_deleted(tg_ids: list[int], *, by_me: bool = False, notify: bool = True) -> None:
     """Shaxsiy chatlarda xabar id'lari akkaunt bo'yicha yagona, shuning uchun suhbatsiz ham topiladi."""
-    rows = list(Message.objects.filter(tg_id__in=tg_ids).select_related("dialog"))
-    for message in rows:
-        if message.media:
-            message.media.delete(save=False)
-        message.delete()
+    rows = list(Message.objects.filter(tg_id__in=tg_ids, deleted_at=None).select_related("dialog"))
+    if not rows:
+        return
+    Message.objects.filter(pk__in=[m.pk for m in rows]).update(deleted_at=timezone.now(), deleted_by_me=by_me)
     for dialog in {m.dialog_id: m.dialog for m in rows}.values():
         _refresh_preview(dialog)
+    incoming = [m for m in rows if not m.outgoing]
+    if notify and not by_me and incoming:
+        title = h(incoming[0].dialog.title)
+        lines = "\n".join(f"• {h(m.text[:200])}" for m in incoming[:NOTIFY_LINES])
+        more = f"\n…yana {len(incoming) - NOTIFY_LINES} ta" if len(incoming) > NOTIFY_LINES else ""
+        _notify(f"🗑 <b>{title}</b>: {len(incoming)} ta xabar o'chirildi\n\n{lines}{more}")
+
+
+def _notify(text: str) -> None:
+    if Account.load().notify_changes:
+        send_message(text)
 
 
 def _refresh_preview(dialog: Dialog) -> None:
-    latest = dialog.messages.first()
-    dialog.last_text = latest.text[:200] if latest else ""
-    dialog.last_message_at = latest.date if latest else None
+    latest = dialog.messages.filter(deleted_at=None).first()
+    if latest:
+        dialog.last_text, dialog.last_message_at = latest.text[:200], latest.date
+    else:
+        dialog.last_text = "Xabarlar o'chirilgan"  # vaqt qoladi: suhbat ro'yxatdan yo'qolmaydi
     dialog.save(update_fields=["last_text", "last_message_at"])
+
+
+def needs_reconcile() -> bool:
+    account = Account.load()
+    return not account.reconciled_at or (timezone.now() - account.reconciled_at).total_seconds() >= RECONCILE_EVERY
+
+
+def reconcile_targets() -> list[ReconcileTarget]:
+    """Yaqinda faol suhbatlardagi xabarlar: userbot to'xtagan paytdagi o'zgarishlarni topish uchun."""
+    since = timezone.now() - timedelta(days=RECONCILE_DAYS)
+    targets = []
+    for dialog in Dialog.objects.filter(last_message_at__gte=since).order_by("-last_message_at")[:RECONCILE_DIALOGS]:
+        rows = dialog.messages.filter(deleted_at=None).values_list("tg_id", "text")[:RECONCILE_MESSAGES]
+        if rows:
+            targets.append(ReconcileTarget(dialog.peer_id, dialog.access_hash, dict(rows)))
+    return targets
+
+
+def reconciled() -> None:
+    Account.objects.filter(pk=1).update(reconciled_at=timezone.now())
 
 
 def delete_media() -> None:

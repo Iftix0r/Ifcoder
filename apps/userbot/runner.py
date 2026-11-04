@@ -231,7 +231,7 @@ class Runner:
 
     async def on_delete(self, event) -> None:
         if not event.chat_id:  # kanal/superguruhda chat_id bor; shaxsiy chatlarda yo'q
-            await db(services.remove_messages)(event.deleted_ids)
+            await db(services.mark_deleted)(event.deleted_ids)
 
     async def on_read(self, event) -> None:
         if event.outbox:
@@ -281,7 +281,31 @@ class Runner:
                 **seen_fields(entity.status),
             )
         await self.sync_commands()
+        if await db(services.needs_reconcile)():
+            await self.reconcile()
         await db(services.sync_finished)()
+
+    async def reconcile(self) -> None:
+        """Userbot to'xtagan paytda o'chirilgan/tahrirlangan xabarlarni topadi (hodisa kelmagan bo'ladi)."""
+        for target in await db(services.reconcile_targets)():
+            peer = InputPeerUser(target.peer_id, target.access_hash)
+            ids = list(target.messages)
+            # Telegram o'chganlarini umuman qaytarmasligi mumkin: tartibga emas, id ga qaraladi
+            found = {m.id: m for m in await self.client.get_messages(peer, ids=ids) if m}
+            if not found and not await self.history_is_gone(peer, min(ids)):
+                continue  # javobga ishonib bo'lmaydi: yolg'on «o'chirildi» belgisi xabarni yo'qotgandan yomon
+            gone = [tg_id for tg_id in ids if tg_id not in found]
+            if gone:
+                await db(services.mark_deleted)(gone, notify=False)
+            for tg_id, message in found.items():
+                item = to_item(message)
+                if item and getattr(message, "edit_date", None) and item.text != target.messages[tg_id]:
+                    await db(services.apply_edit)(target.peer_id, tg_id, item.text, notify=False)
+        await db(services.reconciled)()
+
+    async def history_is_gone(self, peer, oldest_id: int) -> bool:
+        latest = await self.client.get_messages(peer, limit=1)
+        return not latest or latest[0].id < oldest_id
 
     async def sync_commands(self) -> None:
         last_id, _ = await db(services.command_state)()
@@ -378,11 +402,11 @@ class Runner:
             await self.perform_voice(row, peer)
         elif row.kind == Outbox.Kind.EDIT:
             await self.client.edit_message(peer, row.target_id, row.text, parse_mode=None)
-            await db(services.apply_edit)(row.peer_id, row.target_id, row.text)
+            await db(services.apply_edit)(row.peer_id, row.target_id, row.text, notify=False)
             await db(services.finish_job)(row.id)
         elif row.kind == Outbox.Kind.DELETE:
             await self.client.delete_messages(peer, [row.target_id], revoke=True)
-            await db(services.remove_messages)([row.target_id])
+            await db(services.mark_deleted)([row.target_id], by_me=True)
             await db(services.finish_job)(row.id)
         elif row.kind == Outbox.Kind.READ:
             await self.client.send_read_acknowledge(peer, max_id=row.target_id)

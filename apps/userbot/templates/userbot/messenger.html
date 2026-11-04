@@ -3,14 +3,17 @@
 {% block content %}
 <div class="tg-shell {% if dialog %}tg-has-chat{% endif %}" x-data="{
   q: '', tab: 'all', settings: false, newChat: false, find: '', findOpen: false,
-  reply: null, edit: null, text: '', file: '', away: false,
+  reply: null, edit: null, text: '', file: '', away: false, changedOnly: false,
   shows(el) {
     const d = el.dataset;
     if (this.tab === 'unread' && d.unread === '0') return false;
     if (this.tab === 'clients' && d.client === '0') return false;
     return !this.q || d.search.includes(this.q.toLowerCase());
   },
-  found(el) { return !this.find || (el.dataset.text || '').toLowerCase().includes(this.find.toLowerCase()); },
+  found(el) {
+    if (this.changedOnly && !el.dataset.changed) return false;
+    return !this.find || (el.dataset.text || '').toLowerCase().includes(this.find.toLowerCase());
+  },
   startReply(el) { this.edit = null; this.reply = { id: el.dataset.id, text: el.dataset.text || 'Media' }; this.$refs.box.focus(); },
   startEdit(el) { this.reply = null; this.edit = { id: el.dataset.id }; this.text = el.dataset.text; this.$refs.box.focus(); },
   clear() { this.reply = null; this.edit = null; this.text = ''; this.file = ''; this.$refs.file.value = ''; },

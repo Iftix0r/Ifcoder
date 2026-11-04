@@ -183,6 +183,10 @@ tayyorlaydi, tinglab ko'rib yuborasiz (bir qarzga kuniga bitta). Ovoz `edge-tts`
 lekin bu Microsoft Edge'ning norasmiy xizmati, to'xtab qolishi mumkin. Xabar avtomatik ekani matnda aytiladi.
 Tabiiyroq ovoz uchun `.env` ga `AISHA_API_KEY=` yozing (voicelab.uz): tanlovda Gulnoza paydo bo'ladi.
 
+Xabarlar bazadan o'chirilmaydi: Telegram'da o'chsa «o'chirilgan» belgisi bilan, tahrirlansa eski matni bilan panelda
+qoladi (chat tepasidagi soat tugmasi faqat shularni ko'rsatadi). Userbot to'xtagan paytdagi o'zgarishlar har 15 daqiqada
+Telegram bilan solishtirib topiladi (oxirgi 7 kun, 20 suhbat, har birida 50 xabar). Bir marta ko'riladigan media saqlanmaydi.
+
 Ommaviy xabar yuborish yo'q va qo'shmang: Telegram akkauntni spam uchun bloklaydi.
 
 ### 2FA'ga kirish yo'qolsa

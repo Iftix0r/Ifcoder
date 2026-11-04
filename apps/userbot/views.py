@@ -176,7 +176,7 @@ def _limit(request):
 def chat(request, pk):
     dialog = get_object_or_404(Dialog.objects.select_related("contact"), pk=pk)
     limit = _limit(request)
-    rows = list(dialog.messages.all()[:limit])
+    rows = list(dialog.messages.prefetch_related("edits")[:limit])
     if dialog.unread:
         Dialog.objects.filter(pk=pk).update(unread=0)
         if rows:
@@ -211,7 +211,7 @@ def send(request, pk):
     if data["edit_id"]:
         if not data["text"]:
             return _error("Xabar bo'sh.")
-        get_object_or_404(dialog.messages, tg_id=data["edit_id"], outgoing=True)
+        get_object_or_404(dialog.messages, tg_id=data["edit_id"], outgoing=True, deleted_at=None)
         services.enqueue(dialog, data["text"], kind=Outbox.Kind.EDIT, target_id=data["edit_id"])
         return _changed()
     if data["as_voice"]:
@@ -230,11 +230,11 @@ def send(request, pk):
 def delete_message(request, pk):
     dialog = get_object_or_404(Dialog, pk=pk)
     try:
-        message = get_object_or_404(dialog.messages, tg_id=int(request.POST.get("id", "")))
+        message = get_object_or_404(dialog.messages, tg_id=int(request.POST.get("id", "")), deleted_at=None)
     except ValueError as exc:
         raise Http404 from exc
     services.enqueue(dialog, kind=Outbox.Kind.DELETE, target_id=message.tg_id)
-    return done("O'chirish navbatga qo'yildi.", close=False)
+    return done("Telegram'dan o'chiriladi, panelda belgi bilan qoladi.", close=False)
 
 
 @require_POST

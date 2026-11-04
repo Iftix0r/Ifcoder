@@ -6,6 +6,7 @@
     <p id="tg-status" class="truncate text-xs {% if dialog.is_online or dialog.is_typing %}text-brand-500{% else %}text-ink-3{% endif %}">{{ dialog.status_label|default:"&nbsp;"|safe }}</p>
   </div>
   <input x-cloak x-show="findOpen" x-model="find" x-ref="find" class="input tg-find" placeholder="Chatdan qidirish" aria-label="Chatdan qidirish">
+  <button type="button" class="btn btn-ghost btn-icon btn-sm" :class="changedOnly && 'text-brand-500'" @click="changedOnly = !changedOnly" title="Faqat o'chirilgan va tahrirlanganlar" aria-label="Faqat o'chirilgan va tahrirlanganlar">{% icon "history" "size-5" %}</button>
   <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="findOpen = !findOpen; find = ''; $nextTick(() => findOpen && $refs.find.focus())" aria-label="Chatdan qidirish">{% icon "search" "size-5" %}</button>
   {% if dialog.contact %}
     <a href="{{ dialog.contact.get_absolute_url }}" class="btn btn-secondary btn-sm shrink-0" title="Mijoz kartasi">{% icon "user-round" "size-4" %}<span class="hidden sm:inline">Mijoz</span></a>
@@ -17,25 +18,30 @@
 <div class="tg-wall tg-messages" @scroll.passive="away = $el.scrollTop < -300" x-ref="messages"
      @play.capture="$el.dataset.playing = 1" @pause.capture="delete $el.dataset.playing">
   <div id="tg-thread" hx-get="{{ request.get_full_path }}"
-       hx-trigger="changed from:body, every 4s [!document.querySelector('.tg-messages[data-playing]')]"
+       hx-trigger="changed from:body, every 4s [!document.querySelector('.tg-messages[data-playing], #tg-thread details[open]')]"
        hx-select="#tg-thread" hx-select-oob="#tg-status" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
     {% if chat_messages and limit < 1000 %}
       <form method="post" action="{% url 'telegram_older' dialog.pk %}?n={{ limit }}" class="tg-day">{% csrf_token %}<button>{% icon "chevron-up" "size-3.5" %}Eskilarini yuklash</button></form>
     {% endif %}
     {% for m in chat_messages %}
       {% ifchanged m.date|date:"Y-m-d" %}<div class="tg-day"><span>{{ m.date|date:"j E" }}</span></div>{% endifchanged %}
-      <div id="m{{ m.tg_id }}" class="tg-line {% if m.outgoing %}is-mine{% endif %}" data-id="{{ m.tg_id }}" data-text="{{ m.caption }}" x-show="found($el)">
-        <div class="tg-bubble">
+      <div id="m{{ m.tg_id }}" class="tg-line {% if m.outgoing %}is-mine{% endif %}" data-id="{{ m.tg_id }}" data-text="{{ m.caption }}" data-changed="{% if m.edited or m.deleted_at %}1{% endif %}" x-show="found($el)">
+        <div class="tg-bubble {% if m.deleted_at %}is-deleted{% endif %}">
           {% if m.quote %}<button type="button" class="tg-quote" @click="goto({{ m.quote.tg_id }})"><b>{% if m.quote.outgoing %}Siz{% else %}{{ dialog.title }}{% endif %}</b><span>{{ m.quote.text|truncatechars:80 }}</span></button>{% endif %}
           {% include "userbot/partials/media.html" %}
           {% if m.caption %}<p class="tg-text">{{ m.caption|urlize }}</p>{% endif %}
-          <span class="tg-meta">{% if m.edited %}tahrirlangan · {% endif %}{{ m.date|date:"H:i" }}{% if m.outgoing %}{% if m.is_read %}{% icon "check-check" "size-3.5 tg-read" %}{% else %}{% icon "check" "size-3.5" %}{% endif %}{% endif %}</span>
+          {% if m.edits.all %}
+            <details class="tg-history"><summary>Oldingi matn ({{ m.edits.all|length }})</summary>
+              {% for e in m.edits.all %}<p><time>{{ e.created_at|date:"j E, H:i" }} gacha</time>{{ e.text }}</p>{% endfor %}
+            </details>
+          {% endif %}
+          <span class="tg-meta">{% if m.deleted_at %}{% icon "trash-2" "size-3" %}<span class="tg-mark">{% if m.deleted_by_me %}siz o'chirdingiz{% else %}o'chirilgan{% endif %} {{ m.deleted_at|date:"j E, H:i" }}</span> · {% endif %}{% if m.edited %}<span class="tg-mark-edit">tahrirlangan</span> · {% endif %}{{ m.date|date:"H:i" }}{% if m.outgoing %}{% if m.is_read %}{% icon "check-check" "size-3.5 tg-read" %}{% else %}{% icon "check" "size-3.5" %}{% endif %}{% endif %}</span>
         </div>
         <div class="tg-actions">
-          <button type="button" title="Javob berish" aria-label="Javob berish" @click="startReply($el.closest('[data-id]'))">{% icon "reply" "size-4" %}</button>
+          {% if not m.deleted_at %}<button type="button" title="Javob berish" aria-label="Javob berish" @click="startReply($el.closest('[data-id]'))">{% icon "reply" "size-4" %}</button>{% endif %}
           {% if m.caption %}<button type="button" title="Nusxa olish" aria-label="Nusxa olish" @click="navigator.clipboard.writeText($el.closest('[data-id]').dataset.text)">{% icon "copy" "size-4" %}</button>{% endif %}
-          {% if m.outgoing and m.caption %}<button type="button" title="Tahrirlash" aria-label="Tahrirlash" @click="startEdit($el.closest('[data-id]'))">{% icon "pencil" "size-4" %}</button>{% endif %}
-          <button type="button" title="O'chirish" aria-label="O'chirish" hx-post="{% url 'telegram_delete' dialog.pk %}" hx-vals='{"id": {{ m.tg_id }}}' hx-confirm="Xabar ikkala tomonda ham o'chirilsinmi?" hx-swap="none">{% icon "trash-2" "size-4" %}</button>
+          {% if m.outgoing and m.caption and not m.deleted_at %}<button type="button" title="Tahrirlash" aria-label="Tahrirlash" @click="startEdit($el.closest('[data-id]'))">{% icon "pencil" "size-4" %}</button>{% endif %}
+          {% if not m.deleted_at %}<button type="button" title="O'chirish" aria-label="O'chirish" hx-post="{% url 'telegram_delete' dialog.pk %}" hx-vals='{"id": {{ m.tg_id }}}' hx-confirm="Telegram'da ikki tomondan o'chirilsinmi? Panelda belgi bilan qoladi." hx-swap="none">{% icon "trash-2" "size-4" %}</button>{% endif %}
         </div>
       </div>
     {% empty %}

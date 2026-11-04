@@ -46,7 +46,7 @@ class PasswordForm(StyledFormMixin, forms.Form):
 class OptionsForm(forms.ModelForm):
     class Meta:
         model = Account
-        fields = ["commands_enabled", "log_to_crm", "voice", "voice_speed"]
+        fields = ["commands_enabled", "log_to_crm", "notify_changes", "voice", "voice_speed"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

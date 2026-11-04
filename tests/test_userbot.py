@@ -347,8 +347,13 @@ class FakeClient:
         self.avatar_calls = 0
         self.calls = []
         self.entities = {}
+        self.latest = []
 
-    async def get_messages(self, peer, ids):
+    async def get_messages(self, peer, ids=None, limit=None):
+        if limit:
+            return self.latest
+        if isinstance(ids, list):
+            return [self.remote[i] for i in ids if i in self.remote]  # Telegram o'chganini tashlab yuborishi mumkin
         return self.remote.get(ids)
 
     async def download_media(self, message, file):
@@ -824,7 +829,9 @@ def test_delete_message_for_both_sides(client_in):
     async_to_sync(runner.flush_outbox)()
     assert fake.calls == [("delete", [5], True)]
     dialog.refresh_from_db()
-    assert not Message.objects.filter(tg_id=5).exists() and dialog.last_text == "Birinchi"
+    message = Message.objects.get(tg_id=5)
+    assert message.deleted_at and message.deleted_by_me and dialog.last_text == "Birinchi"
+    assert client_in.post(url, {"id": "5"}, **HX).status_code == 404
 
 
 def test_opening_chat_marks_read_on_telegram(client_in):
@@ -897,9 +904,10 @@ def test_delete_event_ignores_channels(db):
     services.record(Peer(10, 5, "Ali"), [item(4)])
     runner = runner_with(FakeClient())
     async_to_sync(runner.on_delete)(SimpleNamespace(chat_id=-100123, deleted_ids=[4]))
-    assert Message.objects.exists()
+    assert not Message.objects.get().deleted_at
     async_to_sync(runner.on_delete)(SimpleNamespace(chat_id=None, deleted_ids=[4]))
-    assert not Message.objects.exists()
+    message = Message.objects.get()
+    assert message.deleted_at and not message.deleted_by_me
 
 
 def test_read_events_show_ticks_and_clear_unread(client_in):
@@ -1152,6 +1160,134 @@ def test_wav_becomes_mp3():
 def test_bad_wav_is_clear_error():
     with pytest.raises(voice.VoiceError):
         voice.wav_to_mp3(b"not audio")
+
+
+def edit_of(tg_id, text):
+    return SimpleNamespace(**{**vars(tg_message(tg_id, text)), "edit_date": timezone.now()})
+
+
+def test_deleted_message_stays_with_mark_and_media(client_in):
+    connected()
+    dialog = services.record(
+        Peer(10, 5, "Ali"), [Item(4, False, "[Rasm]", timezone.now(), True, "photo", "image/jpeg")]
+    )
+    services.save_media(Message.objects.get().pk, b"rasm")
+    services.mark_deleted([4])
+    html = client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+    thread = html.split('id="tg-thread"')[1]
+    assert "o&#x27;chirilgan" in thread or "o'chirilgan" in thread
+    assert "is-deleted" in thread and reverse("telegram_media", args=[Message.objects.get().pk]) in thread
+    assert 'aria-label="Javob berish"' not in thread and Message.objects.get().media.read() == b"rasm"
+
+
+def test_chat_wiped_keeps_dialog_and_all_messages(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1, "Bir"), item(2, "Ikki")])
+    services.mark_deleted([1, 2])
+    dialog = Dialog.objects.get()
+    assert dialog.messages.count() == 2 and dialog.last_text == "Xabarlar o'chirilgan" and dialog.last_message_at
+
+
+def test_resync_does_not_undelete(db):
+    connected()
+    peer = Peer(10, 5, "Ali")
+    services.record(peer, [item(1, "Bir")])
+    services.mark_deleted([1])
+    services.record(peer, [item(1, "Bir")])
+    assert Message.objects.get().deleted_at
+
+
+def test_edit_keeps_every_old_text(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(4, "Birinchi")])
+    services.apply_edit(10, 4, "Ikkinchi")
+    services.apply_edit(10, 4, "Ikkinchi")
+    services.apply_edit(10, 4, "<b>Uchinchi</b>")
+    message = Message.objects.get()
+    assert list(message.edits.values_list("text", flat=True)) == ["Birinchi", "Ikkinchi"]
+    thread = client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode().split('id="tg-thread"')[1]
+    assert "Oldingi matn (2)" in thread and "Birinchi" in thread and "<b>Uchinchi" not in thread
+
+
+def test_deleted_message_cannot_be_edited(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(4, "Matn", outgoing=True)])
+    services.mark_deleted([4], by_me=True)
+    url = reverse("telegram_send", args=[dialog.pk])
+    assert client_in.post(url, {"text": "x", "edit_id": "4"}, **HX).status_code == 404
+
+
+def test_reconcile_uses_ids_not_positions(db):
+    """Telegram o'chganini tashlab yuborsa, qolganlari siljiydi: yolg'on belgi qo'yilmasligi kerak."""
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1, "Bir"), item(2, "Ikki"), item(3, "Uch")])
+    fake = FakeClient()
+    fake.remote = {1: tg_message(1, "Bir"), 3: tg_message(3, "Uch")}
+    async_to_sync(runner_with(fake).reconcile)()
+    assert list(Message.objects.exclude(deleted_at=None).values_list("tg_id", flat=True)) == [2]
+
+
+def test_reconcile_finds_offline_edit_without_notifying(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1, "Eski")])
+    fake = FakeClient()
+    fake.remote = {1: edit_of(1, "Yangi")}
+    with mock.patch("apps.userbot.services.send_message") as send:
+        async_to_sync(runner_with(fake).reconcile)()
+    assert Message.objects.get().text == "Yangi" and Message.objects.get().edits.count() == 1 and not send.called
+
+
+def test_reconcile_same_text_without_edit_date_is_not_edit(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1, "Matn")])
+    fake = FakeClient()
+    fake.remote = {1: tg_message(1, "Boshqa ko'rinish")}
+    async_to_sync(runner_with(fake).reconcile)()
+    assert Message.objects.get().text == "Matn"
+
+
+def test_reconcile_distrusts_empty_answer_when_chat_has_messages(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(5, "Bir"), item(6, "Ikki")])
+    fake = FakeClient()
+    fake.latest = [tg_message(9, "Yangi")]
+    async_to_sync(runner_with(fake).reconcile)()
+    assert not Message.objects.exclude(deleted_at=None).exists()
+
+
+def test_reconcile_marks_wiped_chat(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(5, "Bir"), item(6, "Ikki")])
+    async_to_sync(runner_with(FakeClient()).reconcile)()
+    assert Message.objects.exclude(deleted_at=None).count() == 2
+
+
+def test_reconcile_runs_only_every_15_minutes(db):
+    connected()
+    assert services.needs_reconcile()
+    services.reconciled()
+    assert not services.needs_reconcile()
+    Account.objects.update(reconciled_at=timezone.now() - timedelta(minutes=16))
+    assert services.needs_reconcile()
+
+
+def test_incoming_change_notifies_owner_escaped(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(1, "<i>Sir</i>"), item(2, "Mening", outgoing=True)])
+    with mock.patch("apps.userbot.services.send_message") as send:
+        services.mark_deleted([1, 2])
+    text = send.call_args.args[0]
+    assert "1 ta xabar" in text and "&lt;i&gt;" in text and "Mening" not in text
+
+
+def test_own_delete_and_disabled_option_do_not_notify(db):
+    connected(notify_changes=False)
+    services.record(Peer(10, 5, "Ali"), [item(1, "Bir"), item(2, "Ikki")])
+    with mock.patch("apps.userbot.services.send_message") as send:
+        services.mark_deleted([1])
+        Account.objects.update(notify_changes=True)
+        services.mark_deleted([2], by_me=True)
+    assert not send.called
 
 
 def test_activity_model_untouched_by_outgoing(db):
