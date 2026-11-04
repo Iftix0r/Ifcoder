@@ -7,10 +7,19 @@ from unittest import mock
 
 import pytest
 from asgiref.sync import async_to_sync
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 from telethon import errors
-from telethon.tl.types import MessageMediaPhoto, MessageMediaWebPage, Photo, WebPageEmpty
+from telethon.tl.types import (
+    MessageMediaDocument,
+    MessageMediaPhoto,
+    MessageMediaWebPage,
+    Photo,
+    UserStatusOffline,
+    UserStatusOnline,
+    WebPageEmpty,
+)
 
 from apps.crm.models import Activity, Contact
 from apps.finance.models import Transaction
@@ -19,7 +28,7 @@ from apps.planner.models import Task
 from apps.userbot import client as tg
 from apps.userbot import commands, services
 from apps.userbot.models import Account, Dialog, Message, Outbox
-from apps.userbot.runner import Runner, to_item
+from apps.userbot.runner import Runner, seen_fields, to_item
 from apps.userbot.services import Item, Peer
 
 HX = {"HTTP_HX_REQUEST": "true"}
@@ -199,8 +208,8 @@ def test_send_enqueues_and_rejects_empty(client_in):
     dialog = services.record(Peer(10, 5, "Ali"), [item()])
     url = reverse("telegram_send", args=[dialog.pk])
     assert client_in.post(url, {"text": "Javob"}, **HX).status_code == 204
-    assert client_in.post(url, {"text": "   "}, **HX).status_code == 204
-    assert client_in.post(url, {"text": "x" * 4097}, **HX).status_code == 204
+    assert client_in.post(url, {"text": "   "}, **HX).status_code == 422
+    assert client_in.post(url, {"text": "x" * 4097}, **HX).status_code == 422
     assert list(Outbox.objects.values_list("text", "status")) == [("Javob", "pending")]
 
 
@@ -297,6 +306,7 @@ def user(id=10, **extra):
         "is_self": False,
         "deleted": False,
         "photo": None,
+        "status": None,
     }
     return SimpleNamespace(**{**base, **extra})
 
@@ -306,7 +316,14 @@ def tg_message(id, text="Salom", out=False):
 
 
 def tg_dialog(entity, *, is_user=True, unread=1):
-    return SimpleNamespace(is_user=is_user, entity=entity, unread_count=unread, date=timezone.now())
+    return SimpleNamespace(
+        is_user=is_user,
+        entity=entity,
+        unread_count=unread,
+        date=timezone.now(),
+        pinned=False,
+        dialog=SimpleNamespace(read_outbox_max_id=0),
+    )
 
 
 async def agen(values):
@@ -322,6 +339,8 @@ class FakeClient:
         self.remote = {}
         self.download_error = None
         self.avatar_calls = 0
+        self.calls = []
+        self.entities = {}
 
     async def get_messages(self, peer, ids):
         return self.remote.get(ids)
@@ -340,15 +359,35 @@ class FakeClient:
     def iter_dialogs(self, limit):
         return agen(self.dialogs)
 
-    def iter_messages(self, entity, limit, min_id=0):
-        messages = self.saved if entity == "me" else self.history.get(entity.id, [])
-        return agen(sorted((m for m in messages if m.id > min_id), key=lambda m: -m.id)[:limit])
+    def iter_messages(self, entity, limit, min_id=0, max_id=0):
+        peer_id = getattr(entity, "id", None) or getattr(entity, "user_id", None)
+        messages = self.saved if entity == "me" else self.history.get(peer_id, [])
+        rows = (m for m in messages if m.id > min_id and (not max_id or m.id < max_id))
+        return agen(sorted(rows, key=lambda m: -m.id)[:limit])
 
     async def send_message(self, peer, text, **kwargs):
         if self.send_error:
             raise self.send_error
         self.sent.append((peer, text, kwargs))
-        return SimpleNamespace(id=900 + len(self.sent), date=timezone.now())
+        return tg_message(900 + len(self.sent), text, out=True)
+
+    async def send_file(self, peer, file, **kwargs):
+        self.sent.append((peer, file, kwargs))
+        return tg_message(900 + len(self.sent), kwargs.get("caption") or "Fayl", out=True)
+
+    async def edit_message(self, peer, message_id, text, **kwargs):
+        self.calls.append(("edit", message_id, text))
+
+    async def delete_messages(self, peer, ids, revoke):
+        self.calls.append(("delete", ids, revoke))
+
+    async def send_read_acknowledge(self, peer, max_id):
+        self.calls.append(("read", max_id))
+
+    async def get_entity(self, username):
+        if username not in self.entities:
+            raise ValueError("No user has that username")
+        return self.entities[username]
 
 
 def runner_with(fake):
@@ -520,7 +559,7 @@ def test_changed_fernet_key_asks_to_reconnect(db, settings):
 
 def test_media_placeholder_and_service_messages():
     photo = with_media(tg_message(1, ""), photo_media(), photo=object())
-    assert to_item(photo).text == "[Rasm]" and to_item(photo).has_photo
+    assert to_item(photo).text == "[Rasm]" and to_item(photo).media_pending
     assert to_item(SimpleNamespace(**{**vars(tg_message(2)), "action": object()})) is None
 
 
@@ -535,51 +574,52 @@ def with_media(message, media, **extra):
 
 def test_view_once_and_link_preview_not_downloaded():
     once = with_media(tg_message(1, ""), photo_media(ttl=10), photo=object())
-    assert to_item(once).text == "[Rasm]" and not to_item(once).has_photo
+    assert to_item(once).text == "[Rasm]" and not to_item(once).media_pending
     preview = with_media(tg_message(2, "https://x.uz"), MessageMediaWebPage(webpage=WebPageEmpty(id=1)))
-    assert not to_item(preview).has_photo
+    assert not to_item(preview).media_pending
 
 
 def test_image_downloaded_and_shown(client_in):
     connected()
-    dialog = services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    dialog = services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True, "photo")])
     fake = FakeClient()
     fake.remote[7] = tg_message(7, "")
     async_to_sync(runner_with(fake).fetch_media)()
     message = Message.objects.get()
-    assert message.image.read() == b"rasm"
+    assert message.media.read() == b"rasm"
     html = client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
-    assert message.image.url in html and "[Rasm]" not in html
+    thread = html.split('id="tg-thread"')[1]
+    assert reverse("telegram_media", args=[message.pk]) in thread and "[Rasm]" not in thread
 
 
 def test_image_caption_stays_visible(client_in):
     connected()
-    dialog = services.record(Peer(10, 5, "Ali"), [Item(7, False, "Mana chek", timezone.now(), True)])
-    services.save_image(Message.objects.get().pk, b"rasm")
+    dialog = services.record(Peer(10, 5, "Ali"), [Item(7, False, "Mana chek", timezone.now(), True, "photo")])
+    services.save_media(Message.objects.get().pk, b"rasm")
     assert "Mana chek" in client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
 
 
 def test_deleted_message_leaves_image_queue(db):
     connected()
-    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True, "photo")])
     async_to_sync(runner_with(FakeClient()).fetch_media)()
-    assert not services.pending_images()
+    assert not services.pending_media()
 
 
 def test_image_flood_wait_keeps_queue_and_pauses(db):
     connected()
-    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True, "photo")])
     fake = FakeClient()
     fake.remote[7] = tg_message(7, "")
     fake.download_error = errors.FloodWaitError(request=None, capture=100)
     runner = runner_with(fake)
     async_to_sync(runner.fetch_media)()
-    assert services.pending_images() and runner.pause_media_until > 0
+    assert services.pending_media() and runner.pause_media_until > 0
 
 
 def test_revoked_during_image_download_is_raised(db):
     connected()
-    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True, "photo")])
     fake = FakeClient()
     fake.remote[7] = tg_message(7, "")
     fake.download_error = errors.AuthKeyUnregisteredError(request=None)
@@ -598,12 +638,12 @@ def test_avatar_downloaded_once_then_replaced_and_removed(client_in):
     assert fake.avatar_calls == 1 and dialog.avatar.read() == b"avatar"
     assert dialog.avatar.url in client_in.get(reverse("telegram_home")).content.decode()
 
-    services.set_photo_id(10, 88)
+    services.update_state(10, photo_id=88)
     async_to_sync(runner.fetch_media)()
     dialog.refresh_from_db()
     assert fake.avatar_calls == 2 and "88" in dialog.avatar.name
 
-    services.set_photo_id(10, 0)
+    services.update_state(10, photo_id=0)
     async_to_sync(runner.fetch_media)()
     dialog.refresh_from_db()
     assert not dialog.avatar and fake.avatar_calls == 2
@@ -611,7 +651,7 @@ def test_avatar_downloaded_once_then_replaced_and_removed(client_in):
 
 def test_sent_message_keeps_photo_id(db):
     row = services.enqueue(services.record(Peer(10, 5, "Ali", photo_id=77), [item()]), "Javob")
-    services.mark_sent(row.pk, 50, timezone.now())
+    services.mark_sent(row.pk, Item(50, True, "Javob", timezone.now()))
     assert Dialog.objects.get().photo_id == 77
 
 
@@ -627,15 +667,274 @@ def test_sync_updates_photo_of_unchanged_dialog(db):
 
 def test_other_account_login_deletes_files(db):
     account = connected()
-    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True)])
-    services.save_image(Message.objects.get().pk, b"rasm")
-    storage, name = Message.objects.get().image.storage, Message.objects.get().image.name
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Rasm]", timezone.now(), True, "photo")])
+    services.save_media(Message.objects.get().pk, b"rasm")
+    storage, name = Message.objects.get().media.storage, Message.objects.get().media.name
     services.finish_login(account, "new", tg.Me(id=2, name="Boshqa", username=""))
     assert not storage.exists(name)
 
 
 def test_media_requires_login(client, db):
     assert client.get("/media/telegram/photos/1-1.jpg").status_code == 302
+
+
+def doc_media(ttl=None):
+    return MessageMediaDocument(document=SimpleNamespace(), ttl_seconds=ttl)
+
+
+def doc_message(**extra):
+    file = SimpleNamespace(mime_type=extra.pop("mime", "application/pdf"), size=extra.pop("size", 10), name="a.pdf")
+    return with_media(tg_message(1, ""), doc_media(extra.pop("ttl", None)), file=file, **extra)
+
+
+@pytest.mark.parametrize(
+    ("extra", "kind", "label"),
+    [
+        ({"voice": 1, "mime": "audio/ogg"}, "voice", "[Ovozli xabar]"),
+        ({"video_note": 1, "mime": "video/mp4"}, "round", "[Video xabar]"),
+        ({"video": 1, "mime": "video/mp4"}, "video", "[Video]"),
+        ({"audio": 1, "mime": "audio/mpeg"}, "audio", "[Audio]"),
+        ({"sticker": 1, "mime": "image/webp"}, "sticker", "[Stiker]"),
+        ({}, "document", "[Fayl]"),
+    ],
+)
+def test_media_kinds(extra, kind, label):
+    result = to_item(doc_message(**extra))
+    assert (result.media_kind, result.text, result.media_pending) == (kind, label, True)
+
+
+def test_large_animated_and_view_once_files_not_downloaded():
+    assert not to_item(doc_message(size=21 * 1024 * 1024)).media_pending
+    assert not to_item(doc_message(sticker=1, mime="application/x-tgsticker")).media_pending
+    assert not to_item(doc_message(ttl=5)).media_pending
+
+
+def saved_file(mime, name="x"):
+    services.record(Peer(10, 5, "Ali"), [Item(7, False, "[Fayl]", timezone.now(), True, "document", mime, name)])
+    message = Message.objects.get()
+    services.save_media(message.pk, b"<script>alert(1)</script>")
+    return reverse("telegram_media", args=[message.pk])
+
+
+@pytest.mark.parametrize("mime", ["text/html", "image/svg+xml", "application/pdf", ""])
+def test_unsafe_files_are_download_only(client_in, mime):
+    resp = client_in.get(saved_file(mime, "evil.html"))
+    assert resp["Content-Disposition"].startswith("attachment")
+    assert resp["Content-Type"] == "application/octet-stream"
+    assert Message.objects.get().media.name.endswith(".bin")
+
+
+def test_safe_image_opens_inline(client_in):
+    resp = client_in.get(saved_file("image/jpeg", "a.jpg"))
+    assert resp["Content-Type"] == "image/jpeg" and not resp["Content-Disposition"].startswith("attachment")
+
+
+def test_media_view_requires_login_and_file(client, client_in):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item()])
+    assert client_in.get(reverse("telegram_media", args=[Message.objects.get().pk])).status_code == 404
+    client_in.logout()
+    assert client.get(reverse("telegram_media", args=[1])).status_code == 302
+
+
+def job_runner():
+    fake = FakeClient()
+    return fake, runner_with(fake)
+
+
+def test_reply_is_sent_and_quoted(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(4, "Asl xabar")])
+    client_in.post(reverse("telegram_send", args=[dialog.pk]), {"text": "Javob", "reply_to": "4"}, **HX)
+    fake, runner = job_runner()
+    async_to_sync(runner.flush_outbox)()
+    assert fake.sent[0][2]["reply_to"] == 4
+    message = Message.objects.get(text="Javob")
+    assert message.reply_to_id == 4
+    assert "tg-quote" in client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+
+
+def test_file_upload_is_sent_with_name_and_removed(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    upload = SimpleUploadedFile("chek.pdf", b"PDF")
+    resp = client_in.post(reverse("telegram_send", args=[dialog.pk]), {"text": "Mana", "file": upload}, **HX)
+    assert resp.status_code == 204
+    row = Outbox.objects.get()
+    storage, name = row.file.storage, row.file.name
+    assert name.endswith(".bin") and row.file_name == "chek.pdf"
+    fake, runner = job_runner()
+    async_to_sync(runner.flush_outbox)()
+    buffer, kwargs = fake.sent[0][1], fake.sent[0][2]
+    assert buffer.name == "chek.pdf" and buffer.read() == b"PDF" and kwargs["caption"] == "Mana"
+    row.refresh_from_db()
+    assert row.status == "sent" and not storage.exists(name)
+
+
+def test_multiline_text_uses_unix_newlines(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    client_in.post(reverse("telegram_send", args=[dialog.pk]), {"text": "bir\r\nikki"}, **HX)
+    assert Outbox.objects.get().text == "bir\nikki"
+
+
+def test_last_label_shows_time_today_and_date_before(db):
+    today = services.record(Peer(10, 5, "Ali"), [item()])
+    old = services.record(Peer(11, 5, "Vali"), [item(date=timezone.now() - timedelta(days=3))])
+    assert ":" in today.last_label and "." in old.last_label
+
+
+def test_too_big_upload_rejected(client_in, settings):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    with mock.patch("apps.userbot.forms.MAX_UPLOAD", 2):
+        resp = client_in.post(
+            reverse("telegram_send", args=[dialog.pk]), {"file": SimpleUploadedFile("a.bin", b"123")}, **HX
+        )
+    assert resp.status_code == 422 and not Outbox.objects.exists()
+
+
+def test_edit_own_message(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(4, "Xato", outgoing=True), item(5, "Begona")])
+    url = reverse("telegram_send", args=[dialog.pk])
+    assert client_in.post(url, {"text": "Yangi", "edit_id": "5"}, **HX).status_code == 404
+    assert client_in.post(url, {"text": "Yangi", "edit_id": "4"}, **HX).status_code == 204
+    fake, runner = job_runner()
+    async_to_sync(runner.flush_outbox)()
+    assert fake.calls == [("edit", 4, "Yangi")]
+    message = Message.objects.get(tg_id=4)
+    assert message.text == "Yangi" and message.edited
+
+
+def test_delete_message_for_both_sides(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(4, "Birinchi"), item(5, "Ikkinchi")])
+    url = reverse("telegram_delete", args=[dialog.pk])
+    assert client_in.post(url, {"id": "999"}, **HX).status_code == 404
+    assert client_in.post(url, {"id": "abc"}, **HX).status_code == 404
+    client_in.post(url, {"id": "5"}, **HX)
+    fake, runner = job_runner()
+    async_to_sync(runner.flush_outbox)()
+    assert fake.calls == [("delete", [5], True)]
+    dialog.refresh_from_db()
+    assert not Message.objects.filter(tg_id=5).exists() and dialog.last_text == "Birinchi"
+
+
+def test_opening_chat_marks_read_on_telegram(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(4)])
+    client_in.get(reverse("telegram_chat", args=[dialog.pk]))
+    client_in.get(reverse("telegram_chat", args=[dialog.pk]))
+    assert Outbox.objects.filter(kind="read").count() == 1
+    fake, runner = job_runner()
+    async_to_sync(runner.flush_outbox)()
+    assert fake.calls == [("read", 4)]
+
+
+def test_load_older_history(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(50, "Yangi")])
+    resp = client_in.post(reverse("telegram_older", args=[dialog.pk]) + "?n=100")
+    assert resp.url.endswith("?n=200")
+    fake, runner = job_runner()
+    old = SimpleNamespace(**{**vars(tg_message(49, "Eski")), "date": timezone.now() - timedelta(days=9)})
+    fake.history = {10: [old, tg_message(50, "Yangi")]}
+    async_to_sync(runner.flush_outbox)()
+    dialog.refresh_from_db()
+    assert Message.objects.filter(text="Eski").exists() and dialog.last_text == "Yangi" and dialog.unread == 1
+
+
+def test_open_chat_by_username(client_in):
+    connected()
+    assert client_in.post(reverse("telegram_open"), {"username": "x y"}, **HX).status_code == 422
+    client_in.post(reverse("telegram_open"), {"username": "@ali_valiyev"}, **HX)
+    client_in.post(reverse("telegram_open"), {"username": "yoq_odam"}, **HX)
+    fake, runner = job_runner()
+    fake.entities["ali_valiyev"] = user(10, username="ali_valiyev")
+    with mock.patch("apps.userbot.runner.SEND_GAP", 0):
+        async_to_sync(runner.flush_outbox)()
+    assert Dialog.objects.get().username == "ali_valiyev"
+    assert Outbox.objects.get(text="yoq_odam").status == "failed"
+    assert "yoq_odam" in Account.load().last_error
+
+
+def test_open_chat_rejects_bot(db):
+    connected()
+    services.enqueue(None, "some_bot", kind="open")
+    fake, runner = job_runner()
+    fake.entities["some_bot"] = user(10, bot=True)
+    async_to_sync(runner.flush_outbox)()
+    assert not Dialog.objects.exists() and Outbox.objects.get().status == "failed"
+
+
+def test_failed_message_can_be_dismissed(client_in):
+    connected()
+    row = services.enqueue(services.record(Peer(10, 5, "Ali"), [item()]), "Javob")
+    assert client_in.post(reverse("telegram_dismiss", args=[row.pk]), **HX).status_code == 404
+    services.mark_failed(row.pk, "xato")
+    assert client_in.post(reverse("telegram_dismiss", args=[row.pk]), **HX).status_code == 204
+    assert not Outbox.objects.exists()
+
+
+def test_edit_event_updates_known_message_only(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(4, "Eski")])
+    runner = runner_with(FakeClient())
+    async_to_sync(runner.on_edit)(SimpleNamespace(is_private=True, chat_id=10, message=tg_message(4, "Yangi")))
+    async_to_sync(runner.on_edit)(SimpleNamespace(is_private=True, chat_id=777000, message=tg_message(9, "Kod 12345")))
+    assert list(Message.objects.values_list("text", "edited")) == [("Yangi", True)]
+
+
+def test_delete_event_ignores_channels(db):
+    connected()
+    services.record(Peer(10, 5, "Ali"), [item(4)])
+    runner = runner_with(FakeClient())
+    async_to_sync(runner.on_delete)(SimpleNamespace(chat_id=-100123, deleted_ids=[4]))
+    assert Message.objects.exists()
+    async_to_sync(runner.on_delete)(SimpleNamespace(chat_id=None, deleted_ids=[4]))
+    assert not Message.objects.exists()
+
+
+def test_read_events_show_ticks_and_clear_unread(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(4), item(5, "Javob", outgoing=True)])
+    runner = runner_with(FakeClient())
+    async_to_sync(runner.on_read)(SimpleNamespace(outbox=True, chat_id=10, max_id=5))
+    async_to_sync(runner.on_read)(SimpleNamespace(outbox=False, chat_id=10, max_id=4))
+    dialog.refresh_from_db()
+    assert dialog.read_outbox_id == 5 and dialog.unread == 0
+    assert "tg-read" in client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+
+
+def test_online_typing_and_last_seen(db):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    runner = runner_with(FakeClient())
+    soon = timezone.now() + timedelta(minutes=5)
+    async_to_sync(runner.on_user)(SimpleNamespace(user_id=10, status=UserStatusOnline(expires=soon), typing=None))
+    dialog.refresh_from_db()
+    assert dialog.is_online and dialog.status_label == "online"
+    async_to_sync(runner.on_user)(SimpleNamespace(user_id=10, status=None, typing=True))
+    dialog.refresh_from_db()
+    assert dialog.status_label == "yozmoqda…"
+    services.update_state(10, typing_until=None, **seen_fields(UserStatusOffline(was_online=timezone.now())))
+    dialog.refresh_from_db()
+    assert not dialog.is_online and "ko'rilgan" in dialog.status_label
+
+
+def test_chat_keeps_html_out_of_data_attributes(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item(4, '"><img src=x onerror=alert(1)>')])
+    html = client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+    assert "<img src=x" not in html
+
+
+def test_pinned_dialog_first(db):
+    services.record(Peer(10, 5, "Eski"), [item(1, date=timezone.now() - timedelta(days=5))])
+    services.record(Peer(11, 5, "Yangi"), [item(1)])
+    services.update_state(10, pinned=True)
+    assert Dialog.objects.first().name == "Eski"
 
 
 def test_activity_model_untouched_by_outgoing(db):

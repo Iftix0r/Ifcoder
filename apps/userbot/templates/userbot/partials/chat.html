@@ -1,0 +1,74 @@
+<header class="tg-head">
+  <a href="{% url 'telegram_home' %}" class="btn btn-ghost btn-icon btn-sm lg:hidden" aria-label="Suhbatlar">{% icon "arrow-left" "size-5" %}</a>
+  {% include "userbot/partials/avatar.html" with ava_class="tg-ava-sm" %}
+  <div class="min-w-0 flex-1">
+    <p class="truncate text-sm font-semibold">{{ dialog.title }}</p>
+    <p id="tg-status" class="truncate text-xs {% if dialog.is_online or dialog.is_typing %}text-brand-500{% else %}text-ink-3{% endif %}">{{ dialog.status_label|default:"&nbsp;"|safe }}</p>
+  </div>
+  <input x-cloak x-show="findOpen" x-model="find" x-ref="find" class="input tg-find" placeholder="Chatdan qidirish" aria-label="Chatdan qidirish">
+  <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="findOpen = !findOpen; find = ''; $nextTick(() => findOpen && $refs.find.focus())" aria-label="Chatdan qidirish">{% icon "search" "size-5" %}</button>
+  {% if dialog.contact %}
+    <a href="{{ dialog.contact.get_absolute_url }}" class="btn btn-secondary btn-sm shrink-0" title="Mijoz kartasi">{% icon "user-round" "size-4" %}<span class="hidden sm:inline">Mijoz</span></a>
+  {% else %}
+    <form method="post" action="{% url 'telegram_contact' dialog.pk %}">{% csrf_token %}<button class="btn btn-secondary btn-sm shrink-0" title="CRM'ga qo'shish">{% icon "user-plus" "size-4" %}<span class="hidden sm:inline">CRM'ga</span></button></form>
+  {% endif %}
+</header>
+
+<div class="tg-wall tg-messages" @scroll.passive="away = $el.scrollTop < -300" x-ref="messages"
+     @play.capture="$el.dataset.playing = 1" @pause.capture="delete $el.dataset.playing">
+  <div id="tg-thread" hx-get="{{ request.get_full_path }}"
+       hx-trigger="changed from:body, every 4s [!document.querySelector('.tg-messages[data-playing]')]"
+       hx-select="#tg-thread" hx-select-oob="#tg-status" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+    {% if chat_messages and limit < 1000 %}
+      <form method="post" action="{% url 'telegram_older' dialog.pk %}?n={{ limit }}" class="tg-day">{% csrf_token %}<button>{% icon "chevron-up" "size-3.5" %}Eskilarini yuklash</button></form>
+    {% endif %}
+    {% for m in chat_messages %}
+      {% ifchanged m.date|date:"Y-m-d" %}<div class="tg-day"><span>{{ m.date|date:"j E" }}</span></div>{% endifchanged %}
+      <div id="m{{ m.tg_id }}" class="tg-line {% if m.outgoing %}is-mine{% endif %}" data-id="{{ m.tg_id }}" data-text="{{ m.caption }}" x-show="found($el)">
+        <div class="tg-bubble">
+          {% if m.quote %}<button type="button" class="tg-quote" @click="goto({{ m.quote.tg_id }})"><b>{% if m.quote.outgoing %}Siz{% else %}{{ dialog.title }}{% endif %}</b><span>{{ m.quote.text|truncatechars:80 }}</span></button>{% endif %}
+          {% include "userbot/partials/media.html" %}
+          {% if m.caption %}<p class="tg-text">{{ m.caption|urlize }}</p>{% endif %}
+          <span class="tg-meta">{% if m.edited %}tahrirlangan · {% endif %}{{ m.date|date:"H:i" }}{% if m.outgoing %}{% if m.is_read %}{% icon "check-check" "size-3.5 tg-read" %}{% else %}{% icon "check" "size-3.5" %}{% endif %}{% endif %}</span>
+        </div>
+        <div class="tg-actions">
+          <button type="button" title="Javob berish" aria-label="Javob berish" @click="startReply($el.closest('[data-id]'))">{% icon "reply" "size-4" %}</button>
+          {% if m.caption %}<button type="button" title="Nusxa olish" aria-label="Nusxa olish" @click="navigator.clipboard.writeText($el.closest('[data-id]').dataset.text)">{% icon "copy" "size-4" %}</button>{% endif %}
+          {% if m.outgoing and m.caption %}<button type="button" title="Tahrirlash" aria-label="Tahrirlash" @click="startEdit($el.closest('[data-id]'))">{% icon "pencil" "size-4" %}</button>{% endif %}
+          <button type="button" title="O'chirish" aria-label="O'chirish" hx-post="{% url 'telegram_delete' dialog.pk %}" hx-vals='{"id": {{ m.tg_id }}}' hx-confirm="Xabar ikkala tomonda ham o'chirilsinmi?" hx-swap="none">{% icon "trash-2" "size-4" %}</button>
+        </div>
+      </div>
+    {% empty %}
+      <div class="tg-day"><span>Xabarlar hali yo'q</span></div>
+    {% endfor %}
+    {% for q in queued %}
+      <div class="tg-line is-mine">
+        <div class="tg-bubble {% if q.status == 'failed' %}is-failed{% endif %}">
+          {% if q.file_name %}<p class="tg-file">{% icon "file" "size-4 shrink-0" %}<span>{{ q.file_name }}</span></p>{% endif %}
+          {% if q.text %}<p class="tg-text">{{ q.text }}</p>{% endif %}
+          <span class="tg-meta">{% if q.kind == "edit" %}tahrir · {% endif %}{% if q.status == "failed" %}{{ q.error }}{% else %}{% icon "clock" "size-3.5" %}{% endif %}</span>
+        </div>
+        {% if q.status == "failed" %}<div class="tg-actions"><button type="button" title="Olib tashlash" aria-label="Olib tashlash" hx-post="{% url 'telegram_dismiss' q.pk %}" hx-swap="none">{% icon "x" "size-4" %}</button></div>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+<div class="tg-composer-wrap">
+  <button x-cloak x-show="away" type="button" class="tg-down" @click="$refs.messages.scrollTo({ top: 0, behavior: 'smooth' })" aria-label="Pastga">{% icon "arrow-down" "size-5" %}</button>
+  <div x-cloak x-show="reply || edit || file" class="tg-context">
+    <span x-show="reply">{% icon "reply" "size-4 shrink-0" %}</span>
+    <span x-show="edit">{% icon "pencil" "size-4 shrink-0" %}</span>
+    <span x-show="file && !reply && !edit">{% icon "paperclip" "size-4 shrink-0" %}</span>
+    <p class="min-w-0 flex-1 truncate" x-text="edit ? 'Xabarni tahrirlash' : (reply ? reply.text : file)"></p>
+    <button type="button" @click="clear()" aria-label="Bekor qilish">{% icon "x" "size-4" %}</button>
+  </div>
+  <form x-ref="form" class="tg-composer" method="post" action="{% url 'telegram_send' dialog.pk %}" hx-post="{% url 'telegram_send' dialog.pk %}" hx-encoding="multipart/form-data" hx-swap="none" @htmx:after-request="if ($event.detail.successful) clear()">
+    {% csrf_token %}
+    <input type="hidden" name="reply_to" :value="reply ? reply.id : ''">
+    <input type="hidden" name="edit_id" :value="edit ? edit.id : ''">
+    <input x-ref="file" type="file" name="file" class="hidden" @change="pick()" aria-label="Fayl tanlash">
+    <button type="button" class="btn btn-ghost btn-icon shrink-0" :disabled="edit" @click="$refs.file.click()" aria-label="Fayl biriktirish">{% icon "paperclip" "size-5" %}</button>
+    <textarea x-ref="box" x-model="text" name="text" rows="1" maxlength="4096" placeholder="Xabar yozing…" aria-label="Xabar" class="tg-input" @keydown.enter="enter($event)" @paste="paste($event)"></textarea>
+    <button class="btn btn-primary btn-icon shrink-0" aria-label="Yuborish">{% icon "send" "size-4" %}</button>
+  </form>
+</div>

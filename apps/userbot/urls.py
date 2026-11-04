@@ -11,7 +11,12 @@ urlpatterns = [
     path("telegram/logout/", views.logout, name="telegram_logout"),
     path("telegram/sync/", views.sync, name="telegram_sync"),
     path("telegram/options/", views.options, name="telegram_options"),
+    path("telegram/open/", views.open_chat, name="telegram_open"),
+    path("telegram/media/<int:pk>/", views.media, name="telegram_media"),
+    path("telegram/outbox/<int:pk>/dismiss/", views.dismiss, name="telegram_dismiss"),
     path("telegram/chats/<int:pk>/", views.chat, name="telegram_chat"),
+    path("telegram/chats/<int:pk>/delete/", views.delete_message, name="telegram_delete"),
+    path("telegram/chats/<int:pk>/older/", views.older, name="telegram_older"),
     path("telegram/chats/<int:pk>/send/", views.send, name="telegram_send"),
     path("telegram/chats/<int:pk>/contact/", views.make_contact, name="telegram_contact"),
 ]

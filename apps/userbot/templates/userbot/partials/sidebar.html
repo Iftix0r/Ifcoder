@@ -1,0 +1,75 @@
+<aside class="tg-side">
+  <div class="tg-side-head">
+    <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="settings = true" aria-label="Sozlamalar">{% icon "settings" "size-5" %}</button>
+    <label class="tg-search">{% icon "search" "size-4" %}<input type="search" x-model="q" placeholder="Qidirish" aria-label="Suhbatlarni qidirish" autocomplete="off"></label>
+    <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="newChat = !newChat" aria-label="Yangi suhbat">{% icon "message-circle-plus" "size-5" %}</button>
+  </div>
+  <form x-cloak x-show="newChat" class="tg-new" method="post" action="{% url 'telegram_open' %}" hx-post="{% url 'telegram_open' %}" hx-swap="none" @htmx:after-request="if ($event.detail.successful) { newChat = false; $el.reset(); }">
+    {% csrf_token %}
+    <input class="input" name="username" placeholder="@username" required autocomplete="off" aria-label="Username">
+    <button class="btn btn-primary btn-sm">Ochish</button>
+  </form>
+  <div class="tg-tabs" role="tablist">
+    <button type="button" role="tab" :class="tab === 'all' && 'is-active'" @click="tab = 'all'">Hammasi</button>
+    <button type="button" role="tab" :class="tab === 'unread' && 'is-active'" @click="tab = 'unread'">O'qilmagan</button>
+    <button type="button" role="tab" :class="tab === 'clients' && 'is-active'" @click="tab = 'clients'">Mijozlar</button>
+  </div>
+  <div class="tg-scroll">
+    <div id="tg-list" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body, every 8s" hx-select="#tg-list" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+      {% if not account.runner_alive %}
+        <p class="tg-alert">{% icon "terminal" "size-4 shrink-0" %}<span>Userbot ishlamayapti: xabarlar kelmaydi. <code class="font-mono">python manage.py userbot</code></span></p>
+      {% endif %}
+      {% if account.last_error %}<p class="tg-alert">{% icon "circle-alert" "size-4 shrink-0" %}<span>{{ account.last_error }}</span></p>{% endif %}
+      {% for d in dialogs %}
+        <a href="{% url 'telegram_chat' d.pk %}" class="tg-dialog {% if dialog.pk == d.pk %}is-active{% endif %}" x-show="shows($el)"
+           data-search="{{ d.title|lower }} {{ d.username|lower }} {{ d.last_text|lower }}" data-unread="{{ d.unread }}" data-client="{% if d.contact_id %}1{% else %}0{% endif %}">
+          {% include "userbot/partials/avatar.html" with dialog=d %}
+          <span class="tg-dialog-body">
+            <span class="tg-dialog-top"><b>{{ d.title }}</b><time>{{ d.last_label }}</time></span>
+            <span class="tg-dialog-bottom">
+              <span>{% if d.is_typing %}<em>yozmoqda…</em>{% else %}{{ d.last_text }}{% endif %}</span>
+              {% if d.pinned %}{% icon "pin" "size-3.5 shrink-0" %}{% endif %}
+              {% if d.unread %}<i class="tg-count">{{ d.unread }}</i>{% endif %}
+            </span>
+          </span>
+        </a>
+      {% empty %}
+        <p class="tg-hint">Suhbatlar hali yo'q. Userbot ishga tushgach, shu yerda ko'rinadi.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div x-cloak x-show="settings" class="tg-settings">
+    <div class="tg-side-head">
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="settings = false" aria-label="Orqaga">{% icon "arrow-left" "size-5" %}</button>
+      <b class="flex-1 text-sm">Sozlamalar</b>
+    </div>
+    <div class="tg-scroll space-y-5 p-4">
+      <div>
+        <p class="text-sm font-semibold">{{ account.tg_name }}</p>
+        <p class="text-xs text-ink-3">{% if account.tg_username %}@{{ account.tg_username }} · {% endif %}{% if account.runner_alive %}userbot ishlayapti{% else %}userbot to'xtagan{% endif %}</p>
+      </div>
+      {% if not has_2fa %}
+        <a href="{% url '2fa_setup' %}" class="tg-alert">{% icon "shield-alert" "size-4 shrink-0" %}<span>Panelda 2FA yoqilmagan: panelga kirgan odam sizning nomingizdan yoza oladi. Yoqish</span></a>
+      {% endif %}
+      <form method="post" action="{% url 'telegram_options' %}" hx-post="{% url 'telegram_options' %}" hx-trigger="change" hx-swap="none" class="space-y-3">
+        {% csrf_token %}
+        <label class="flex items-center gap-2.5 text-sm">{{ options_form.commands_enabled }}{{ options_form.commands_enabled.label }}</label>
+        <label class="flex items-center gap-2.5 text-sm">{{ options_form.log_to_crm }}{{ options_form.log_to_crm.label }}</label>
+      </form>
+      <div class="space-y-1.5 text-xs text-ink-2">
+        <p class="mb-2 font-semibold text-ink">«Saqlangan xabarlar» buyruqlari</p>
+        <p><code class="font-mono">.vazifa Saytni deploy qilish</code></p>
+        <p><code class="font-mono">.eslatma Matn</code></p>
+        <p><code class="font-mono">.kirim 1 500 000 To'lov</code></p>
+        <p><code class="font-mono">.chiqim 50k Tushlik</code></p>
+        <p><code class="font-mono">.mijoz Ali Valiyev @ali</code></p>
+        <p><code class="font-mono">.bugun</code> · <code class="font-mono">.help</code></p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <form method="post" action="{% url 'telegram_sync' %}" hx-post="{% url 'telegram_sync' %}" hx-swap="none">{% csrf_token %}<button class="btn btn-secondary btn-sm">{% icon "refresh-cw" "size-4" %}Sinxronlash</button></form>
+        <form method="post" action="{% url 'telegram_logout' %}" hx-confirm="Telegram uzilsinmi? Sessiya bekor qilinadi.">{% csrf_token %}<button class="btn btn-ghost btn-sm">{% icon "log-out" "size-4" %}Uzish</button></form>
+      </div>
+    </div>
+  </div>
+</aside>

@@ -1,1 +1,4 @@
-{% if dialog.avatar %}<img src="{{ dialog.avatar.url }}" alt="" class="size-9 shrink-0 rounded-lg object-cover">{% else %}<span class="avatar size-9 shrink-0 rounded-lg text-xs">{{ dialog.title|initials }}</span>{% endif %}
+<span class="tg-ava {{ ava_class }}">
+  {% if dialog.avatar %}<img src="{{ dialog.avatar.url }}" alt="">{% else %}<span class="avatar">{{ dialog.title|initials }}</span>{% endif %}
+  {% if dialog.is_online %}<i class="tg-online" title="online"></i>{% endif %}
+</span>

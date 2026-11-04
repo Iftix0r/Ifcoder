@@ -16,7 +16,7 @@ Dizayn tizimi AIMarkaz bilan bir xil (indigo → violet, yorug'/qorong'i rejim, 
 | Vaqt hisobi | `/time/` | Taymer yozuvlari, 14 kunlik grafik, loyihalar bo'yicha vaqt |
 | Mijozlar | `/contacts/` | Mijoz kartasi, aloqalar tarixi (qo'ng'iroq/uchrashuv/xabar), keyingi aloqa eslatmasi |
 | Bitimlar | `/deals/` | Voronka kanbani: Yangi → Aloqa → Taklif → Muzokara → Yutildi/Yo'qotildi |
-| Telegram | `/telegram/` | Akkauntni API ID/Hash bilan ulash, shaxsiy suhbatlar, paneldan javob, CRM bilan bog'lash, buyruqlar |
+| Telegram | `/telegram/` | Akkauntni ulash, messenjer: suhbatlar, javob, tahrir, o'chirish, fayl yuborish, media, o'qildi, online, CRM, buyruqlar |
 | Kirim-chiqim | `/finance/` | Oylik hisob, 6 oylik grafik, xarajatlar tarkibi, toifalar (so'm va $) |
 | Hisob-fakturalar | `/invoices/` | Xizmat qatorlari, holatlar, chop etish/PDF; «To'landi» → kirim avtomatik yoziladi |
 | Qarzlar | `/debts/` | Menga qarzdor / men qarzdorman, qisman qaytarish, muddatlar |
@@ -172,8 +172,9 @@ Ulanishni faqat shu jarayon ushlaydi; panel u bilan baza orqali gaplashadi (`Mes
 `IFCODER_FERNET_KEY` bilan shifrlanadi, kirish kodi va 2FA parol saqlanmaydi. Faqat shaxsiy suhbatlar nusxalanadi:
 guruh, kanal, bot, «Saqlangan xabarlar» va Telegram xizmat chati (kirish kodlari) bazaga tushmaydi.
 
-Profil rasmlari va chatdagi rasmlar `public/media/telegram/` ga yuklanadi (faqat tizimga kirgan foydalanuvchiga ochiq,
-`backup_db` ga kirmaydi). Bir marta ko'riladigan rasmlar saqlanmaydi.
+Profil rasmlari va 20 MB gacha media `public/media/telegram/` ga yuklanadi (faqat tizimga kirgan foydalanuvchiga ochiq,
+`backup_db` ga kirmaydi). Fayllar `.bin` nomi bilan turadi va `/telegram/media/<id>/` orqali beriladi: xavfsiz
+rasm/video/audio ochiladi, qolgani (html, svg...) faqat yuklab olinadi. Bir marta ko'riladigan fayllar saqlanmaydi.
 
 «Saqlangan xabarlar» ga yoziladigan buyruqlar: `.vazifa`, `.eslatma`, `.kirim`, `.chiqim`, `.mijoz`, `.bugun`, `.help`.
 

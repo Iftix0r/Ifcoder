@@ -1,17 +1,9 @@
 {% extends "layouts/app.html" %}
 {% block page_title %}Telegram{% endblock %}
 {% block content %}
-<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Telegram</h1>
-    <p class="mt-1 text-sm text-ink-2">{% if account.is_connected %}{{ account.tg_name }}{% if account.tg_username %} · @{{ account.tg_username }}{% endif %}{% else %}Shaxsiy akkauntingizni panelga ulang.{% endif %}</p>
-  </div>
-  {% if account.is_connected %}
-  <div class="flex items-center gap-2">
-    <form method="post" action="{% url 'telegram_sync' %}" hx-post="{% url 'telegram_sync' %}" hx-swap="none">{% csrf_token %}<button class="btn btn-secondary">{% icon "refresh-cw" "size-4" %}Sinxronlash</button></form>
-    <form method="post" action="{% url 'telegram_logout' %}" hx-confirm="Telegram uzilsinmi? Sessiya bekor qilinadi.">{% csrf_token %}<button class="btn btn-ghost">{% icon "log-out" "size-4" %}Uzish</button></form>
-  </div>
-  {% endif %}
+<div class="mb-5 animate-fade-up">
+  <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Telegram</h1>
+  <p class="mt-1 text-sm text-ink-2">Shaxsiy akkauntingizni panelga ulang.</p>
 </div>
 
 {% if not has_2fa %}
@@ -22,9 +14,5 @@
 </div>
 {% endif %}
 
-{% if account.is_connected %}
-  {% include "userbot/partials/inbox.html" %}
-{% else %}
-  {% include "userbot/partials/connect.html" %}
-{% endif %}
+{% include "userbot/partials/connect.html" %}
 {% endblock %}

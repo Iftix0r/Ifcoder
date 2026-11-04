@@ -1,0 +1,16 @@
+{% if m.media %}
+  {% url 'telegram_media' m.pk as src %}
+  {% if m.media_kind == "photo" and m.is_inline %}
+    <a href="{{ src }}" target="_blank" rel="noopener" hx-boost="false"><img class="tg-photo" src="{{ src }}" alt="Rasm" loading="lazy"></a>
+  {% elif m.media_kind == "sticker" and m.is_inline %}
+    <img class="tg-sticker" src="{{ src }}" alt="Stiker" loading="lazy">
+  {% elif m.media_kind == "video" and m.is_inline or m.media_kind == "round" and m.is_inline %}
+    <video class="tg-photo {% if m.media_kind == 'round' %}tg-round{% endif %}" src="{{ src }}" controls preload="metadata"></video>
+  {% elif m.media_kind == "voice" and m.is_inline or m.media_kind == "audio" and m.is_inline %}
+    <audio class="tg-audio" src="{{ src }}" controls preload="none"></audio>
+  {% else %}
+    <a class="tg-file" href="{{ src }}" hx-boost="false">{% icon "download" "size-4 shrink-0" %}<span>{{ m.file_name|default:"Yuklab olish" }}</span></a>
+  {% endif %}
+{% elif m.media_kind %}
+  <p class="tg-file">{% icon "file" "size-4 shrink-0" %}<span>{% if m.media_pending %}Yuklanmoqda…{% else %}{{ m.file_name|default:"Telegram'da oching" }}{% endif %}</span></p>
+{% endif %}

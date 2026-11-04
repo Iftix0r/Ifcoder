@@ -13,6 +13,17 @@ from apps.core.models import TimeStamped
 from apps.vault.crypto import decrypt, encrypt
 
 HEARTBEAT_ALIVE = timedelta(seconds=90)
+# Faqat shu turlar brauzerda ochiladi. Qolgani (html, svg, ...) panel domenida ishga tushmasligi uchun yuklab olinadi.
+INLINE_MIMES = {
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "video/mp4",
+    "audio/ogg",
+    "audio/mpeg",
+    "audio/mp4",
+}
+MEDIA_LABELS = {"[Rasm]", "[Ovozli xabar]", "[Video xabar]", "[Video]", "[Stiker]", "[Audio]", "[Fayl]", "[Media]"}
 
 
 class Account(TimeStamped):
@@ -99,6 +110,11 @@ class Dialog(TimeStamped):
     avatar = models.FileField(upload_to="telegram/avatars", blank=True)
     photo_id = models.BigIntegerField(default=0)  # Telegram'dagi joriy profil rasmi (0 — yo'q)
     avatar_photo_id = models.BigIntegerField(default=0)  # yuklab olingani; farq qilsa runner yangilaydi
+    pinned = models.BooleanField(default=False)
+    read_outbox_id = models.BigIntegerField(default=0)  # suhbatdosh shu id gacha o'qigan
+    seen_kind = models.CharField(max_length=10, blank=True)  # online, offline, recently, week, month
+    seen_at = models.DateTimeField(null=True, blank=True)  # online: tugash vaqti, offline: oxirgi ko'rilgan
+    typing_until = models.DateTimeField(null=True, blank=True)
     contact = models.ForeignKey(
         "crm.Contact", null=True, blank=True, on_delete=models.SET_NULL, related_name="telegram_dialogs"
     )
@@ -107,7 +123,7 @@ class Dialog(TimeStamped):
     last_message_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = [models.F("last_message_at").desc(nulls_last=True)]
+        ordering = ["-pinned", models.F("last_message_at").desc(nulls_last=True)]
         verbose_name = "Telegram suhbat"
         verbose_name_plural = "Telegram suhbatlar"
 
@@ -118,14 +134,49 @@ class Dialog(TimeStamped):
     def title(self):
         return self.name or (f"@{self.username}" if self.username else str(self.peer_id))
 
+    @property
+    def last_label(self):
+        if not self.last_message_at:
+            return ""
+        local = timezone.localtime(self.last_message_at)
+        return f"{local:%H:%M}" if local.date() == timezone.localdate() else f"{local:%d.%m.%y}"
+
+    @property
+    def is_online(self):
+        return self.seen_kind == "online" and bool(self.seen_at and self.seen_at > timezone.now())
+
+    @property
+    def is_typing(self):
+        return bool(self.typing_until and self.typing_until > timezone.now())
+
+    @property
+    def status_label(self):
+        if self.is_typing:
+            return "yozmoqda…"
+        if self.is_online:
+            return "online"
+        if self.seen_at and self.seen_kind in ("online", "offline"):
+            seen = timezone.localtime(self.seen_at)
+            if seen.date() == timezone.localdate():
+                return f"bugun {seen:%H:%M} da ko'rilgan"
+            return f"{seen:%d.%m.%Y %H:%M} da ko'rilgan"
+        return {"recently": "yaqinda ko'rilgan", "week": "shu hafta ko'rilgan", "month": "shu oy ko'rilgan"}.get(
+            self.seen_kind, ""
+        )
+
 
 class Message(models.Model):
     dialog = models.ForeignKey(Dialog, on_delete=models.CASCADE, related_name="messages")
     tg_id = models.BigIntegerField()
     outgoing = models.BooleanField(default=False)
     text = models.TextField(blank=True)
-    has_photo = models.BooleanField(default=False)  # runner rasmni alohida navbat bilan yuklaydi
-    image = models.FileField(upload_to="telegram/photos", blank=True)
+    media_pending = models.BooleanField(default=False)  # runner faylni alohida navbat bilan yuklaydi
+    media = models.FileField(upload_to="telegram/photos", blank=True)
+    media_kind = models.CharField(max_length=10, blank=True)  # photo, sticker, video, round, voice, audio, document
+    mime = models.CharField(max_length=100, blank=True)
+    file_name = models.CharField(max_length=200, blank=True)
+    reply_to_id = models.BigIntegerField(null=True, blank=True)
+    edited = models.BooleanField(default=False)
     date = models.DateTimeField()
 
     class Meta:
@@ -135,9 +186,26 @@ class Message(models.Model):
     def __str__(self):
         return self.text[:60]
 
+    @property
+    def caption(self):
+        """Matn; media ko'rsatilayotgan bo'lsa «[Rasm]» kabi yorliqsiz."""
+        return "" if self.media and self.text in MEDIA_LABELS else self.text
+
+    @property
+    def is_inline(self):
+        return self.mime in INLINE_MIMES
+
 
 class Outbox(TimeStamped):
-    """Paneldan yuborilgan xabar. ``manage.py userbot`` olib ketadi."""
+    """Paneldan berilgan topshiriq (xabar, tahrir, o'chirish...). ``manage.py userbot`` bajaradi."""
+
+    class Kind(models.TextChoices):
+        SEND = "send", "Xabar"
+        EDIT = "edit", "Tahrir"
+        DELETE = "delete", "O'chirish"
+        READ = "read", "O'qildi"
+        HISTORY = "history", "Eski xabarlar"
+        OPEN = "open", "Yangi suhbat"
 
     class Status(models.TextChoices):
         PENDING = "pending", "Navbatda"
@@ -145,8 +213,13 @@ class Outbox(TimeStamped):
         SENT = "sent", "Yuborildi"
         FAILED = "failed", "Yuborilmadi"
 
-    dialog = models.ForeignKey(Dialog, on_delete=models.CASCADE, related_name="outbox")
-    text = models.TextField()
+    kind = models.CharField(max_length=8, choices=Kind.choices, default=Kind.SEND)
+    dialog = models.ForeignKey(Dialog, null=True, blank=True, on_delete=models.CASCADE, related_name="outbox")
+    text = models.TextField(blank=True)
+    target_id = models.BigIntegerField(null=True, blank=True)
+    reply_to_id = models.BigIntegerField(null=True, blank=True)
+    file = models.FileField(upload_to="telegram/outbox", blank=True)
+    file_name = models.CharField(max_length=200, blank=True)
     status = models.CharField(max_length=8, choices=Status.choices, default=Status.PENDING)
     error = models.CharField(max_length=300, blank=True)
 

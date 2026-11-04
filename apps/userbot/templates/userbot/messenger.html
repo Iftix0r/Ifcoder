@@ -1,0 +1,36 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}{% if dialog %}{{ dialog.title }}{% else %}Telegram{% endif %}{% endblock %}
+{% block content %}
+<div class="tg-shell {% if dialog %}tg-has-chat{% endif %}" x-data="{
+  q: '', tab: 'all', settings: false, newChat: false, find: '', findOpen: false,
+  reply: null, edit: null, text: '', file: '', away: false,
+  shows(el) {
+    const d = el.dataset;
+    if (this.tab === 'unread' && d.unread === '0') return false;
+    if (this.tab === 'clients' && d.client === '0') return false;
+    return !this.q || d.search.includes(this.q.toLowerCase());
+  },
+  found(el) { return !this.find || (el.dataset.text || '').toLowerCase().includes(this.find.toLowerCase()); },
+  startReply(el) { this.edit = null; this.reply = { id: el.dataset.id, text: el.dataset.text || 'Media' }; this.$refs.box.focus(); },
+  startEdit(el) { this.reply = null; this.edit = { id: el.dataset.id }; this.text = el.dataset.text; this.$refs.box.focus(); },
+  clear() { this.reply = null; this.edit = null; this.text = ''; this.file = ''; this.$refs.file.value = ''; },
+  pick() { this.file = this.$refs.file.files[0]?.name || ''; },
+  paste(e) {
+    const f = e.clipboardData?.files?.[0];
+    if (!f) return;
+    const box = new DataTransfer(); box.items.add(f);
+    this.$refs.file.files = box.files; this.pick();
+  },
+  enter(e) { if (!e.shiftKey) { e.preventDefault(); this.$refs.form.requestSubmit(); } },
+  goto(id) { document.getElementById('m' + id)?.scrollIntoView({ block: 'center', behavior: 'smooth' }); },
+}">
+  {% include "userbot/partials/sidebar.html" %}
+  <section class="tg-main">
+    {% if dialog %}
+      {% include "userbot/partials/chat.html" %}
+    {% else %}
+      <div class="tg-wall tg-empty"><span>Suhbatni tanlang</span></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

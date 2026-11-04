@@ -34,7 +34,11 @@ class Item:
     outgoing: bool
     text: str
     date: datetime
-    has_photo: bool = False
+    media_pending: bool = False
+    media_kind: str = ""
+    mime: str = ""
+    file_name: str = ""
+    reply_to_id: int | None = None
 
 
 @dataclass
@@ -52,11 +56,16 @@ class Tick:
 
 
 @dataclass
-class PendingSend:
+class Job:
     id: int
+    kind: str
     peer_id: int
     access_hash: int
     text: str
+    target_id: int | None
+    reply_to_id: int | None
+    file_name: str
+    has_file: bool
 
 
 @dataclass
@@ -68,7 +77,7 @@ class PendingAvatar:
 
 
 @dataclass
-class PendingImage:
+class PendingMedia:
     id: int
     peer_id: int
     access_hash: int
@@ -124,7 +133,16 @@ def record(peer: Peer, items: list[Item], *, unread: int | None = None) -> Dialo
         _, is_new = Message.objects.get_or_create(
             dialog=dialog,
             tg_id=item.tg_id,
-            defaults={"outgoing": item.outgoing, "text": item.text, "date": item.date, "has_photo": item.has_photo},
+            defaults={
+                "outgoing": item.outgoing,
+                "text": item.text,
+                "date": item.date,
+                "media_pending": item.media_pending,
+                "media_kind": item.media_kind,
+                "mime": item.mime[:100],
+                "file_name": item.file_name[:200],
+                "reply_to_id": item.reply_to_id,
+            },
         )
         if is_new:
             created.append(item)
@@ -153,9 +171,9 @@ def known_dialogs() -> dict[int, tuple[datetime | None, int]]:
 # --- Rasmlar --------------------------------------------------------------------------
 
 
-def set_photo_id(peer_id: int, photo_id: int) -> None:
-    """Yangi xabari bo'lmagan suhbatda ham profil rasmi o'zgargan bo'lishi mumkin."""
-    Dialog.objects.filter(peer_id=peer_id).update(photo_id=photo_id)
+def update_state(peer_id: int, **fields) -> None:
+    """Xabardan tashqari holat: profil rasmi, o'qilganlik, online, qadalgan."""
+    Dialog.objects.filter(peer_id=peer_id).update(**fields)
 
 
 def pending_avatars() -> list[PendingAvatar]:
@@ -173,26 +191,57 @@ def save_avatar(dialog_id: int, photo_id: int, data: bytes | None) -> None:
     dialog.save(update_fields=["avatar", "avatar_photo_id"])
 
 
-def pending_images() -> list[PendingImage]:
-    rows = Message.objects.filter(has_photo=True, image="").select_related("dialog")[:MEDIA_BATCH]
-    return [PendingImage(m.pk, m.dialog.peer_id, m.dialog.access_hash, m.tg_id) for m in rows]
+def pending_media() -> list[PendingMedia]:
+    rows = Message.objects.filter(media_pending=True, media="").select_related("dialog")[:MEDIA_BATCH]
+    return [PendingMedia(m.pk, m.dialog.peer_id, m.dialog.access_hash, m.tg_id) for m in rows]
 
 
-def save_image(message_id: int, data: bytes) -> None:
+def save_media(message_id: int, data: bytes) -> None:
+    # .bin: /media/ orqali to'g'ridan-to'g'ri ochilsa ham brauzer html/svg sifatida ishga tushirmaydi
     message = Message.objects.get(pk=message_id)
-    message.image.save(f"{message.dialog_id}-{message.tg_id}.jpg", ContentFile(data), save=True)
+    message.media.save(f"{message.dialog_id}-{message.tg_id}.bin", ContentFile(data), save=False)
+    message.media_pending = False
+    message.save(update_fields=["media", "media_pending"])
 
 
-def skip_image(message_id: int) -> None:
-    """Rasm endi yo'q (xabar o'chirilgan): qayta-qayta urinmaslik uchun navbatdan chiqariladi."""
-    Message.objects.filter(pk=message_id).update(has_photo=False)
+def skip_media(message_id: int) -> None:
+    """Fayl endi yo'q (xabar o'chirilgan): qayta-qayta urinmaslik uchun navbatdan chiqariladi."""
+    Message.objects.filter(pk=message_id).update(media_pending=False)
+
+
+def apply_edit(peer_id: int, tg_id: int, text: str) -> None:
+    updated = (
+        Message.objects.filter(dialog__peer_id=peer_id, tg_id=tg_id).exclude(text=text).update(text=text, edited=True)
+    )
+    if updated:
+        _refresh_preview(Dialog.objects.get(peer_id=peer_id))
+
+
+def remove_messages(tg_ids: list[int]) -> None:
+    """Shaxsiy chatlarda xabar id'lari akkaunt bo'yicha yagona, shuning uchun suhbatsiz ham topiladi."""
+    rows = list(Message.objects.filter(tg_id__in=tg_ids).select_related("dialog"))
+    for message in rows:
+        if message.media:
+            message.media.delete(save=False)
+        message.delete()
+    for dialog in {m.dialog_id: m.dialog for m in rows}.values():
+        _refresh_preview(dialog)
+
+
+def _refresh_preview(dialog: Dialog) -> None:
+    latest = dialog.messages.first()
+    dialog.last_text = latest.text[:200] if latest else ""
+    dialog.last_message_at = latest.date if latest else None
+    dialog.save(update_fields=["last_text", "last_message_at"])
 
 
 def delete_media() -> None:
     for dialog in Dialog.objects.exclude(avatar=""):
         dialog.avatar.delete(save=False)
-    for message in Message.objects.exclude(image=""):
-        message.image.delete(save=False)
+    for message in Message.objects.exclude(media=""):
+        message.media.delete(save=False)
+    for row in Outbox.objects.exclude(file=""):
+        row.file.delete(save=False)
 
 
 # --- Holat -----------------------------------------------------------------------------
@@ -277,8 +326,8 @@ def command_state() -> tuple[int, bool]:
 # --- Navbat ----------------------------------------------------------------------------
 
 
-def enqueue(dialog: Dialog, text: str) -> Outbox:
-    return Outbox.objects.create(dialog=dialog, text=text)
+def enqueue(dialog: Dialog | None, text: str = "", **fields) -> Outbox:
+    return Outbox.objects.create(dialog=dialog, text=text, **fields)
 
 
 def fail_stale_sends() -> None:
@@ -288,21 +337,55 @@ def fail_stale_sends() -> None:
     )
 
 
-def claim_pending() -> list[PendingSend]:
+def claim_pending() -> list[Job]:
     claimed = []
     for row in Outbox.objects.filter(status=Outbox.Status.PENDING).select_related("dialog")[:PENDING_BATCH]:
         taken = Outbox.objects.filter(pk=row.pk, status=Outbox.Status.PENDING).update(status=Outbox.Status.SENDING)
         if taken:
-            claimed.append(PendingSend(row.pk, row.dialog.peer_id, row.dialog.access_hash, row.text))
+            dialog = row.dialog
+            claimed.append(
+                Job(
+                    row.pk,
+                    row.kind,
+                    dialog.peer_id if dialog else 0,
+                    dialog.access_hash if dialog else 0,
+                    row.text,
+                    row.target_id,
+                    row.reply_to_id,
+                    row.file_name,
+                    bool(row.file),
+                )
+            )
     return claimed
 
 
-def mark_sent(outbox_id: int, tg_id: int, date: datetime) -> None:
-    row = Outbox.objects.select_related("dialog").get(pk=outbox_id)
-    dialog = row.dialog
-    peer = Peer(dialog.peer_id, dialog.access_hash, dialog.name, dialog.username, dialog.phone, dialog.photo_id)
-    record(peer, [Item(tg_id, True, row.text, date)], unread=dialog.unread)
-    Outbox.objects.filter(pk=outbox_id).update(status=Outbox.Status.SENT, error="")
+def peer_of(dialog: Dialog) -> Peer:
+    return Peer(dialog.peer_id, dialog.access_hash, dialog.name, dialog.username, dialog.phone, dialog.photo_id)
+
+
+def read_file(outbox_id: int) -> bytes:
+    row = Outbox.objects.get(pk=outbox_id)
+    with row.file.open("rb") as handle:
+        return handle.read()
+
+
+def finish_job(outbox_id: int) -> None:
+    row = Outbox.objects.get(pk=outbox_id)
+    if row.file:
+        row.file.delete(save=False)  # Telegram'ga ketdi; nusxa xabar sifatida qaytib yuklanadi
+    Outbox.objects.filter(pk=outbox_id).update(status=Outbox.Status.SENT, error="", file="")
+
+
+def mark_sent(outbox_id: int, item: Item) -> None:
+    dialog = Outbox.objects.select_related("dialog").get(pk=outbox_id).dialog
+    record(peer_of(dialog), [item], unread=dialog.unread)
+    finish_job(outbox_id)
+
+
+def store_history(outbox_id: int, items: list[Item]) -> None:
+    dialog = Outbox.objects.select_related("dialog").get(pk=outbox_id).dialog
+    record(peer_of(dialog), items, unread=dialog.unread)
+    finish_job(outbox_id)
 
 
 def mark_failed(outbox_id: int, error: str) -> None:

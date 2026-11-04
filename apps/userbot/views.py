@@ -1,26 +1,50 @@
+import os
+
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.core.crud import done
-from apps.core.htmx import trigger_toast
+from apps.core.htmx import add_triggers, trigger_toast
 from apps.vault.services import has_2fa
 
 from . import client, services
-from .forms import CodeForm, ConnectForm, OptionsForm, PasswordForm, SendForm
-from .models import Account, Dialog, Outbox
+from .forms import CodeForm, ConnectForm, OpenForm, OptionsForm, PasswordForm, SendForm
+from .models import Account, Dialog, Message, Outbox
 
 CHAT_LIMIT = 100
-DIALOG_LIMIT = 100
+CHAT_MAX = 1000
+DIALOG_LIMIT = 200
+
+
+def _changed():
+    return add_triggers(HttpResponse(status=204), {"changed": True})
+
+
+def _error(message):
+    """4xx: htmx formani tozalamaydi, matn yo'qolmaydi."""
+    return trigger_toast(HttpResponse(status=422), message, "error")
+
+
+def _messenger(request, account, **extra):
+    context = {
+        "nav_active": "telegram",
+        "account": account,
+        "has_2fa": has_2fa(request.user),
+        "dialogs": Dialog.objects.select_related("contact")[:DIALOG_LIMIT],
+        "options_form": OptionsForm(instance=account),
+        **extra,
+    }
+    return render(request, "userbot/messenger.html", context)
 
 
 def _render_home(request, account, form=None):
-    context = {"nav_active": "telegram", "account": account, "has_2fa": has_2fa(request.user)}
     if account.is_connected:
-        context["dialogs"] = Dialog.objects.select_related("contact")[:DIALOG_LIMIT]
-        context["options_form"] = OptionsForm(instance=account)
-    elif account.status == Account.Status.CODE_SENT:
+        return _messenger(request, account)
+    context = {"nav_active": "telegram", "account": account, "has_2fa": has_2fa(request.user)}
+    if account.status == Account.Status.CODE_SENT:
         context["form"] = form or CodeForm()
     elif account.status == Account.Status.PASSWORD:
         context["form"] = form or PasswordForm()
@@ -139,31 +163,109 @@ def options(request):
     return done("Saqlandi.", close=False)
 
 
+def _limit(request):
+    try:
+        return max(CHAT_LIMIT, min(int(request.GET.get("n", CHAT_LIMIT)), CHAT_MAX))
+    except ValueError:
+        return CHAT_LIMIT
+
+
 def chat(request, pk):
     dialog = get_object_or_404(Dialog.objects.select_related("contact"), pk=pk)
+    limit = _limit(request)
+    rows = list(dialog.messages.all()[:limit])
     if dialog.unread:
         Dialog.objects.filter(pk=pk).update(unread=0)
-    return render(
+        if rows:
+            services.enqueue(dialog, kind=Outbox.Kind.READ, target_id=rows[0].tg_id)
+        dialog.unread = 0
+
+    wanted = {m.reply_to_id for m in rows if m.reply_to_id}
+    quotes = {m.tg_id: m for m in dialog.messages.filter(tg_id__in=wanted)}
+    for message in rows:
+        message.quote = quotes.get(message.reply_to_id)
+        message.is_read = message.outgoing and message.tg_id <= dialog.read_outbox_id
+
+    return _messenger(
         request,
-        "userbot/chat.html",
-        {
-            "nav_active": "telegram",
-            "account": Account.load(),
-            "dialog": dialog,
-            "chat_messages": list(dialog.messages.all()[:CHAT_LIMIT]),
-            "queued": dialog.outbox.exclude(status=Outbox.Status.SENT).order_by("-created_at")[:20],
-        },
+        Account.load(),
+        dialog=dialog,
+        chat_messages=rows[::-1],
+        limit=limit,
+        queued=dialog.outbox.filter(kind__in=[Outbox.Kind.SEND, Outbox.Kind.EDIT])
+        .exclude(status=Outbox.Status.SENT)
+        .order_by("created_at")[:20],
     )
 
 
 @require_POST
 def send(request, pk):
     dialog = get_object_or_404(Dialog, pk=pk)
-    form = SendForm(request.POST)
+    form = SendForm(request.POST, request.FILES)
     if not form.is_valid():
-        return trigger_toast(HttpResponse(status=204), "Xabar bo'sh yoki juda uzun (4096 belgigacha).", "error")
-    services.enqueue(dialog, form.cleaned_data["text"])
-    return done("Navbatga qo'yildi.", close=False)
+        return _error(next(iter(form.errors.values()))[0])
+    data = form.cleaned_data
+    if data["edit_id"]:
+        if not data["text"]:
+            return _error("Xabar bo'sh.")
+        get_object_or_404(dialog.messages, tg_id=data["edit_id"], outgoing=True)
+        services.enqueue(dialog, data["text"], kind=Outbox.Kind.EDIT, target_id=data["edit_id"])
+        return _changed()
+    row = services.enqueue(dialog, data["text"], reply_to_id=data["reply_to"])
+    if data["file"]:
+        # Asl nom faqat Telegram'ga yuborish uchun; diskda xavfsiz .bin nom bilan turadi
+        row.file_name = os.path.basename(data["file"].name)[:200]
+        row.file.save(f"{row.pk}.bin", data["file"], save=True)
+    return _changed()
+
+
+@require_POST
+def delete_message(request, pk):
+    dialog = get_object_or_404(Dialog, pk=pk)
+    try:
+        message = get_object_or_404(dialog.messages, tg_id=int(request.POST.get("id", "")))
+    except ValueError as exc:
+        raise Http404 from exc
+    services.enqueue(dialog, kind=Outbox.Kind.DELETE, target_id=message.tg_id)
+    return done("O'chirish navbatga qo'yildi.", close=False)
+
+
+@require_POST
+def older(request, pk):
+    dialog = get_object_or_404(Dialog, pk=pk)
+    oldest = dialog.messages.order_by("tg_id").first()
+    if oldest:
+        services.enqueue(dialog, kind=Outbox.Kind.HISTORY, target_id=oldest.tg_id)
+    limit = _limit(request)
+    return redirect(f"{reverse('telegram_chat', args=[pk])}?n={min(limit + CHAT_LIMIT, CHAT_MAX)}")
+
+
+@require_POST
+def open_chat(request):
+    form = OpenForm(request.POST)
+    if not form.is_valid():
+        return _error("Username noto'g'ri. Masalan: @durov")
+    services.enqueue(None, form.cleaned_data["username"].lstrip("@"), kind=Outbox.Kind.OPEN)
+    return done("Suhbat qidirilmoqda…", close=False)
+
+
+@require_POST
+def dismiss(request, pk):
+    get_object_or_404(Outbox, pk=pk, status=Outbox.Status.FAILED).delete()
+    return _changed()
+
+
+def media(request, pk):
+    message = get_object_or_404(Message, pk=pk)
+    if not message.media:
+        raise Http404
+    name = message.file_name or f"telegram-{message.tg_id}"
+    if message.is_inline:
+        return FileResponse(message.media.open("rb"), filename=name, content_type=message.mime)
+    # Noma'lum tur (html, svg, ...) panel domenida ochilmasin
+    return FileResponse(
+        message.media.open("rb"), as_attachment=True, filename=name, content_type="application/octet-stream"
+    )
 
 
 @require_POST
