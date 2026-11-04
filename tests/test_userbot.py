@@ -1403,6 +1403,15 @@ def test_missing_restart_file_is_safe(settings, tmp_path):
     Runner().check_restart()
 
 
+def test_wide_mode_controls_on_list_and_chat(client_in):
+    connected()
+    dialog = services.record(Peer(10, 5, "Ali"), [item()])
+    home = client_in.get(reverse("telegram_home")).content.decode()
+    chat = client_in.get(reverse("telegram_chat", args=[dialog.pk])).content.decode()
+    assert home.count('aria-label="Kengaytirish"') == 1 and chat.count('aria-label="Kengaytirish"') == 1
+    assert "tg-resizer" in home
+
+
 def test_activity_model_untouched_by_outgoing(db):
     connected()
     Contact.objects.create(name="Ali", telegram="@ali")

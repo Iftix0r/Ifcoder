@@ -1,7 +1,30 @@
 {% extends "layouts/app.html" %}
 {% block page_title %}{% if dialog %}{{ dialog.title }}{% else %}Telegram{% endif %}{% endblock %}
 {% block content %}
-<div class="tg-shell {% if dialog %}tg-has-chat{% endif %}" x-data="{
+<div class="tg-shell {% if dialog %}tg-has-chat{% endif %}" :class="wide && 'is-wide'" :style="`--tg-side-w: ${side}px`"
+     @keydown.escape.window="if (wide && !$store.modal.open) toggleWide()" x-data="{
+  wide: false, side: 340,
+  init() {
+    try {
+      this.wide = localStorage.getItem('tg-wide') === '1';
+      this.side = Math.min(560, Math.max(240, +localStorage.getItem('tg-side') || 340));
+    } catch (e) {}
+  },
+  remember(key, value) { try { localStorage.setItem(key, value); } catch (e) {} },
+  toggleWide() { this.wide = !this.wide; this.remember('tg-wide', this.wide ? '1' : '0'); },
+  resize(down) {
+    const startX = down.clientX, startW = this.side;
+    const move = (e) => { this.side = Math.min(560, Math.max(240, startW + e.clientX - startX)); };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      document.body.style.userSelect = '';
+      this.remember('tg-side', this.side);
+    };
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  },
   q: '', tab: 'all', settings: false, newChat: false, find: '', findOpen: false,
   reply: null, edit: null, text: '', file: '', away: false, changedOnly: false,
   shows(el) {

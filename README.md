@@ -187,6 +187,7 @@ Xabarlar bazadan o'chirilmaydi: Telegram'da o'chsa «o'chirilgan» belgisi bilan
 qoladi (chat tepasidagi soat tugmasi faqat shularni ko'rsatadi). Userbot to'xtagan paytdagi o'zgarishlar har 15 daqiqada
 Telegram bilan solishtirib topiladi (oxirgi 7 kun, 20 suhbat, har birida 50 xabar). Bir marta ko'riladigan media saqlanmaydi.
 
+Chat tepasidagi tugma bo'limni butun ekranga yoyadi (Esc qaytaradi), ro'yxat kengligi chegarasini surib o'zgartiriladi.
 Menyuda Telegram yonida o'qilmagan xabarlar soni ko'rinadi va 10 soniyada yangilanadi.
 Suhbatlar ro'yxatidagi ko'z tugmasi o'qilmagan xabarlarni chatni ochmasdan ko'rsatadi; chat ochilsa, odatdagidek o'qilgan
 bo'ladi. Online, «yozmoqda» va o'qilganlikni soxtalashtiradigan ghost mode qo'shilmaydi: Telegram API qoidalari 1.4 taqiqlaydi.

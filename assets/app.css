@@ -348,6 +348,9 @@
 @keyframes vt-out { to { opacity: 0; transform: translateY(-4px); } }
 @keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
 #main { view-transition-name: main; }
+/* view-transition alohida qatlam yaratadi: usiz Telegram keng rejimi chap menyu ostida qolib ketadi */
+#main:has(.tg-shell.is-wide) { view-transition-name: none; }
+html:has(.tg-shell.is-wide) { scrollbar-gutter: auto; }
 
 .htmx-indicator { display: none; }
 .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { display: inline-block; }
@@ -428,7 +431,7 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
     --tg-radius: 16px;
     position: relative;
     display: grid;
-    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    grid-template-columns: var(--tg-side-w, 340px) minmax(0, 1fr);
     height: calc(100dvh - 8.5rem);
     min-height: 420px;
     overflow: hidden;
@@ -436,6 +439,12 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
     border-radius: 18px;
     background: var(--color-surface);
   }
+  .tg-shell.is-wide { position: fixed; inset: 0; z-index: 45; height: 100dvh; border: 0; border-radius: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  html:has(.tg-shell.is-wide) { overflow: hidden; }
+  .tg-shell.is-wide #tg-thread { max-width: 1180px; }
+  .tg-shell.is-wide .tg-bubble { max-width: min(70%, 680px); }
+  .tg-resizer { position: absolute; top: 0; right: -4px; bottom: 0; z-index: 6; width: 8px; cursor: col-resize; touch-action: none; }
+  .tg-resizer:hover, .tg-resizer:active { background: linear-gradient(90deg, transparent 3px, var(--color-brand-500) 3px, var(--color-brand-500) 5px, transparent 5px); }
   .tg-side { position: relative; display: flex; min-height: 0; min-width: 0; flex-direction: column; border-right: 1px solid var(--color-line); }
   .tg-main { position: relative; display: flex; min-height: 0; min-width: 0; flex-direction: column; }
   .tg-side-head { display: flex; align-items: center; gap: 0.25rem; padding: 0.625rem; }
@@ -530,6 +539,7 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
 
   @media (max-width: 1023px) {
     .tg-shell { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 12.5rem); }
+    .tg-resizer { display: none; }
     .tg-shell.tg-has-chat .tg-side { display: none; }
     .tg-shell:not(.tg-has-chat) .tg-main { display: none; }
     .tg-side { border-right: 0; }

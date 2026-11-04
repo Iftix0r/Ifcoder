@@ -1,8 +1,10 @@
 <aside class="tg-side">
+  <div class="tg-resizer" @pointerdown.prevent="resize($event)" @dblclick="side = 340; remember('tg-side', 340)" title="Surib kengligini o'zgartiring, ikki marta bossangiz asl holatga qaytadi"></div>
   <div class="tg-side-head">
     <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="settings = true" aria-label="Sozlamalar">{% icon "settings" "size-5" %}</button>
     <label class="tg-search">{% icon "search" "size-4" %}<input type="search" x-model="q" placeholder="Qidirish" aria-label="Suhbatlarni qidirish" autocomplete="off"></label>
     <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="newChat = !newChat" aria-label="Yangi suhbat">{% icon "message-circle-plus" "size-5" %}</button>
+    {% if not dialog %}{% include "userbot/partials/wide_button.html" %}{% endif %}
   </div>
   <form x-cloak x-show="newChat" class="tg-new" method="post" action="{% url 'telegram_open' %}" hx-post="{% url 'telegram_open' %}" hx-swap="none" @htmx:after-request="if ($event.detail.successful) { newChat = false; $el.reset(); }">
     {% csrf_token %}

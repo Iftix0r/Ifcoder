@@ -8,6 +8,7 @@
   <input x-cloak x-show="findOpen" x-model="find" x-ref="find" class="input tg-find" placeholder="Chatdan qidirish" aria-label="Chatdan qidirish">
   <button type="button" class="btn btn-ghost btn-icon btn-sm" :class="changedOnly && 'text-brand-500'" @click="changedOnly = !changedOnly" title="Faqat o'chirilgan va tahrirlanganlar" aria-label="Faqat o'chirilgan va tahrirlanganlar">{% icon "history" "size-5" %}</button>
   <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="findOpen = !findOpen; find = ''; $nextTick(() => findOpen && $refs.find.focus())" aria-label="Chatdan qidirish">{% icon "search" "size-5" %}</button>
+  {% include "userbot/partials/wide_button.html" %}
   {% if dialog.contact %}
     <a href="{{ dialog.contact.get_absolute_url }}" class="btn btn-secondary btn-sm shrink-0" title="Mijoz kartasi">{% icon "user-round" "size-4" %}<span class="hidden sm:inline">Mijoz</span></a>
   {% else %}
