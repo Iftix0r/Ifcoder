@@ -1,0 +1,41 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Takroriy to'lovlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Takroriy to'lovlar</h1>
+    <p class="mt-1 text-sm text-ink-2">Maosh, ijara, obunalar: vaqti kelganda eslatiladi, siz tasdiqlaganingizdan keyin yoziladi.</p>
+  </div>
+  <button type="button" class="btn btn-primary self-start sm:self-auto" hx-get="{% url 'recurring_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Qo'shish</button>
+</div>
+
+<div id="recurring-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#recurring-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="mb-4 grid grid-cols-2 gap-3 sm:gap-4">
+  <div class="card stat animate-fade-up"><span class="stat-glow tone-emerald"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Oyiga kirim</p><span class="icon-chip tone-emerald size-9 shrink-0">{% icon "trending-up" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">{{ monthly_income|totals }}</p><p class="stat-hint relative">o'rtacha, doimiy</p></div>
+  <div class="card stat animate-fade-up" style="animation-delay: 40ms"><span class="stat-glow tone-rose"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Oyiga chiqim</p><span class="icon-chip tone-rose size-9 shrink-0">{% icon "trending-down" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold tracking-tight sm:text-xl">{{ monthly_expense|totals }}</p><p class="stat-hint relative">o'rtacha, doimiy</p></div>
+</div>
+
+{% if due or upcoming or paused %}
+  {% if due %}
+  <div class="card mb-4 overflow-hidden animate-fade-up">
+    <div class="card-header"><p class="card-title">Vaqti keldi</p><span class="badge badge-warning">{{ due|length }}</span></div>
+    <ul class="divide-y divide-line">{% for r in due %}{% include "finance/partials/recurring_row.html" %}{% endfor %}</ul>
+  </div>
+  {% endif %}
+  {% if upcoming %}
+  <div class="card mb-4 overflow-hidden animate-fade-up">
+    <div class="card-header"><p class="card-title">Keyingilari</p><span class="badge badge-neutral">{{ upcoming|length }}</span></div>
+    <ul class="divide-y divide-line">{% for r in upcoming %}{% include "finance/partials/recurring_row.html" %}{% endfor %}</ul>
+  </div>
+  {% endif %}
+  {% if paused %}
+  <div class="card overflow-hidden animate-fade-up">
+    <div class="card-header"><p class="card-title">To'xtatilganlar</p></div>
+    <ul class="divide-y divide-line">{% for r in paused %}{% include "finance/partials/recurring_row.html" %}{% endfor %}</ul>
+  </div>
+  {% endif %}
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="calendar-clock" title="Takroriy to'lov yo'q" text="Har oy qaytariladigan kirim yoki chiqimni bir marta yozing." %}</div>
+{% endif %}
+</div>
+{% endblock %}

@@ -15,6 +15,8 @@ HX = {"HTTP_HX_REQUEST": "true"}
 
 PAGES = [
     "dashboard",
+    "calendar",
+    "recurring_list",
     "task_board",
     "time_report",
     "contact_list",
@@ -46,6 +48,8 @@ MODALS = [
     "transaction_create",
     "invoice_create",
     "debt_create",
+    "recurring_create",
+    "budget_create",
     "wish_create",
     "goal_create",
     "intention_create",

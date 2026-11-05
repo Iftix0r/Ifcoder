@@ -1,11 +1,13 @@
 import math
 from decimal import Decimal
 
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Sum
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.core import dates
+from apps.core.dates import add_months
 from apps.core.models import TONE_CHOICES, Currency, TimeStamped
 
 
@@ -213,15 +215,6 @@ class Debt(TimeStamped):
     @property
     def remaining(self):
         return max(Decimal(0), self.amount - self.paid_amount)
-
-
-def add_months(day, months):
-    """31-yanvar + 1 oy → 28/29-fevral (oy oxiridan oshib ketmaydi)."""
-    import calendar
-
-    m = day.month - 1 + months
-    year, month = day.year + m // 12, m % 12 + 1
-    return day.replace(year=year, month=month, day=min(day.day, calendar.monthrange(year, month)[1]))
 
 
 class Credit(TimeStamped):
@@ -473,3 +466,103 @@ class WishDeposit(models.Model):
 
     def __str__(self):
         return f"{self.wish}: +{self.amount}"
+
+
+class Recurring(TimeStamped):
+    """Doimiy kirim yoki chiqim (maosh, ijara, obuna): vaqti kelganda bir tugma bilan yoziladi."""
+
+    class Frequency(models.TextChoices):
+        WEEKLY = dates.WEEKLY, "Har hafta"
+        MONTHLY = dates.MONTHLY, "Har oy"
+        YEARLY = dates.YEARLY, "Har yil"
+
+    PER_MONTH = {"weekly": Decimal(52) / 12, "monthly": Decimal(1), "yearly": Decimal(1) / 12}
+
+    title = models.CharField("Nomi", max_length=200, help_text="Masalan: ofis ijarasi, maosh, Netflix")
+    kind = models.CharField("Turi", max_length=7, choices=Kind.choices, default=Kind.EXPENSE)
+    amount = models.DecimalField("Summa", max_digits=14, decimal_places=2)
+    currency = models.CharField("Valyuta", max_length=3, choices=Currency.choices, default=Currency.UZS)
+    category = models.ForeignKey(Category, verbose_name="Toifa", null=True, blank=True, on_delete=models.SET_NULL)
+    method = models.CharField(
+        "To'lov usuli", max_length=7, choices=Transaction.Method.choices, default=Transaction.Method.CARD
+    )
+    frequency = models.CharField("Qanchalik tez", max_length=7, choices=Frequency.choices, default=Frequency.MONTHLY)
+    next_date = models.DateField("Keyingi sana", default=timezone.localdate)
+    anchor_day = models.PositiveSmallIntegerField(null=True, blank=True, editable=False)
+    contact = models.ForeignKey(
+        "crm.Contact", verbose_name="Mijoz", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    project = models.ForeignKey(
+        "projects.Project", verbose_name="Loyiha", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    is_active = models.BooleanField("Faol", default=True)
+
+    class Meta:
+        ordering = ["-is_active", "next_date", "title"]
+        verbose_name = "Takroriy to'lov"
+        verbose_name_plural = "Takroriy to'lovlar"
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def is_due(self):
+        return self.is_active and self.next_date <= timezone.localdate()
+
+    @property
+    def monthly_amount(self):
+        return self.amount * self.PER_MONTH[self.frequency]
+
+    def following(self, day=None):
+        return dates.next_occurrence(self.frequency, day or self.next_date, anchor_day=self.anchor_day)
+
+    def occurrences(self, start, end):
+        """[start, end] oralig'idagi rejalashtirilgan sanalar (kalendar uchun)."""
+        day = self.next_date
+        while day <= end:
+            if day >= start:
+                yield day
+            day = self.following(day)
+
+    def _advance(self, period):
+        """Faqat `period` hali navbatda bo'lsa suradi: ikki marta bosilganda ikkinchisi hech narsa qilmaydi."""
+        return bool(Recurring.objects.filter(pk=self.pk, next_date=period).update(next_date=self.following(period)))
+
+    def post(self, period):
+        """Shu davrni kirim-chiqimga yozadi. Kechikkan davr o'z sanasi bilan, oldindan to'lov bugungi sana bilan."""
+        with transaction.atomic():
+            if not self._advance(period):
+                return None
+            return Transaction.objects.create(
+                kind=self.kind,
+                amount=self.amount,
+                currency=self.currency,
+                category=self.category,
+                method=self.method,
+                date=min(period, timezone.localdate()),
+                description=self.title,
+                contact=self.contact,
+                project=self.project,
+            )
+
+    def skip(self, period):
+        return self._advance(period)
+
+
+class Budget(TimeStamped):
+    """Toifa bo'yicha oylik chiqim limiti: har oy yangidan hisoblanadi."""
+
+    WARN_AT = 80
+
+    category = models.ForeignKey(Category, verbose_name="Toifa", on_delete=models.CASCADE, related_name="budgets")
+    amount = models.DecimalField("Oylik limit", max_digits=14, decimal_places=2)
+    currency = models.CharField("Valyuta", max_length=3, choices=Currency.choices, default=Currency.UZS)
+
+    class Meta:
+        ordering = ["category__name", "currency"]
+        verbose_name = "Byudjet"
+        verbose_name_plural = "Byudjetlar"
+        constraints = [models.UniqueConstraint(fields=["category", "currency"], name="uniq_budget_category_currency")]
+
+    def __str__(self):
+        return f"{self.category}: {self.amount} {self.currency}"

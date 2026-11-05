@@ -25,6 +25,7 @@ NAV_SECTIONS: list[tuple[str, list[NavItem]]] = [
         "Ish",
         [
             NavItem("tasks", "Vazifalar", "list-todo", "task_board", mobile=True, short="Vazifalar"),
+            NavItem("calendar", "Kalendar", "calendar-days", "calendar"),
             NavItem("projects", "Loyihalar", "folder-kanban", "project_list"),
             NavItem("time", "Vaqt hisobi", "timer", "time_report"),
         ],
@@ -41,6 +42,7 @@ NAV_SECTIONS: list[tuple[str, list[NavItem]]] = [
         "Moliya",
         [
             NavItem("finance", "Kirim-chiqim", "wallet", "finance_overview", mobile=True, short="Moliya"),
+            NavItem("recurring", "Takroriy to'lovlar", "calendar-clock", "recurring_list"),
             NavItem("invoices", "Hisob-fakturalar", "receipt-text", "invoice_list"),
             NavItem("debts", "Qarz va kreditlar", "hand-coins", "debt_list"),
             NavItem("wishes", "Orzular", "sparkles", "wish_list"),

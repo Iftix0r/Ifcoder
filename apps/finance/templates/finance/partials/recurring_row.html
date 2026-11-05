@@ -1,0 +1,17 @@
+<li class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition hover:bg-surface-2/50 {% if not r.is_active %}opacity-60{% endif %}">
+  <span class="icon-chip {% if r.kind == 'income' %}tone-emerald{% else %}tone-rose{% endif %} size-9 shrink-0">{% if r.kind == 'income' %}{% icon "trending-up" "size-[18px]" %}{% else %}{% icon "trending-down" "size-[18px]" %}{% endif %}</span>
+  <div class="min-w-0 flex-1 cursor-pointer" hx-get="{% url 'recurring_edit' r.pk %}" hx-target="#modal-content">
+    <p class="truncate text-sm font-medium">{{ r.title }}</p>
+    <p class="truncate text-xs text-ink-3">{{ r.get_frequency_display }}{% if r.category %} · {{ r.category.name }}{% endif %}{% if r.contact %} · {{ r.contact.name }}{% endif %}</p>
+  </div>
+  <div class="text-right">
+    <p class="text-sm font-bold whitespace-nowrap {% if r.kind == 'income' %}text-emerald-600 dark:text-emerald-400{% endif %}">{% if r.kind == 'income' %}+{% else %}−{% endif %}{{ r.amount|money:r.currency }}</p>
+    {% if r.is_active %}<span class="badge {{ r.next_date|due_badge }}">{{ r.next_date|due_label }}</span>{% else %}<span class="badge badge-neutral">To'xtatilgan</span>{% endif %}
+  </div>
+  {% if r.is_active %}
+  <div class="flex w-full items-center justify-end gap-1 sm:w-auto">
+    <button type="button" hx-post="{% url 'recurring_skip' r.pk %}" hx-vals='{"period": "{{ r.next_date|date:"Y-m-d" }}"}' hx-confirm="{{ r.next_date|date:'j E' }} dagi davr o'tkazib yuborilsinmi? Hech narsa yozilmaydi." class="btn btn-ghost btn-sm" title="Bu davrni o'tkazib yuborish">{% icon "skip-forward" "size-3.5" %}<span class="sm:hidden">O'tkazish</span></button>
+    <button type="button" hx-post="{% url 'recurring_post' r.pk %}" hx-vals='{"period": "{{ r.next_date|date:"Y-m-d" }}"}' hx-confirm="{{ r.next_date|date:'j E' }} uchun {{ r.amount|money:r.currency }} kirim-chiqimga yozilsinmi?" class="btn {% if r.is_due %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">{% icon "check" "size-3.5" %}Yozish</button>
+  </div>
+  {% endif %}
+</li>

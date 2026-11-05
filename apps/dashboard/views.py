@@ -1,15 +1,18 @@
+import calendar
 from datetime import timedelta
 
 from django.db.models import Count, Q
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 
 from apps.crm.models import Contact, Deal
-from apps.finance.models import Credit, Debt, Invoice, Kind, Transaction, totals_by_currency
-from apps.finance.views import month_series
+from apps.finance.models import Credit, Debt, Invoice, Kind, Recurring, Transaction, totals_by_currency
+from apps.finance.views import MONTHS, _month, _shift, budget_rows, month_series
 from apps.growth.models import Goal, Habit, JournalEntry, LearningItem
 from apps.planner.models import Task, TimeEntry
 from apps.projects.models import Project
+from apps.resources.models import Resource
 from apps.resources.views import expiring
 
 
@@ -95,6 +98,26 @@ def _alerts(today):
                 "url": "/credits/",
             }
         )
+    for r in Recurring.objects.filter(is_active=True, next_date__lte=today)[:5]:
+        items.append(
+            {
+                "icon": "calendar-clock",
+                "tone": "tone-emerald" if r.kind == Kind.INCOME else "tone-rose",
+                "title": f"{r.title}: {'kirimni' if r.kind == Kind.INCOME else 'chiqimni'} yozish",
+                "hint": r.next_date,
+                "url": reverse("recurring_list"),
+            }
+        )
+    for row in budget_rows(today.replace(day=1)):
+        if row["over"]:
+            items.append(
+                {
+                    "icon": "gauge",
+                    "tone": "tone-rose",
+                    "title": f"«{row['budget'].category}» limiti oshdi ({row['pct']}%)",
+                    "url": reverse("finance_overview"),
+                }
+            )
     for deal in Deal.objects.filter(stage__in=Deal.OPEN_STAGES, expected_close__lt=today).select_related("contact")[:5]:
         items.append(
             {
@@ -191,6 +214,90 @@ def home(request):
             "learning": LearningItem.objects.filter(status=LearningItem.Status.ACTIVE)[:4],
             "journal_today": JournalEntry.objects.filter(date=today).first(),
             "is_empty": not (Task.objects.exists() or Project.objects.exists() or Contact.objects.exists()),
+        },
+    )
+
+
+WEEKDAYS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"]
+
+
+def calendar_events(start, end):
+    """[start, end] dagi barcha muddatlar: {sana: [hodisa, ...]}.
+
+    Hodisada ``url`` (sahifaga o'tish) yoki ``modal`` (tahrir oynasi) bo'ladi; ``tone`` — nuqta rangi.
+    """
+    events = {}
+
+    def add(day, label, tone, kind, url="", modal="", done=False):
+        if day and start <= day <= end:
+            events.setdefault(day, []).append(
+                {"label": label, "tone": tone, "kind": kind, "url": url, "modal": modal, "done": done}
+            )
+
+    tasks = Task.objects.filter(Q(planned_for__range=(start, end)) | Q(due_date__range=(start, end)))
+    for t in tasks:
+        modal = reverse("task_edit", args=[t.pk])
+        add(t.planned_for or t.due_date, t.title, "brand", "Vazifa", modal=modal, done=t.is_done)
+        if t.planned_for and t.due_date and t.planned_for != t.due_date and not t.is_done:
+            add(t.due_date, t.title, "rose", "Vazifa muddati", modal=modal)
+    for p in Project.objects.exclude(status=Project.Status.DONE).filter(deadline__range=(start, end)):
+        add(p.deadline, p.name, "violet", "Loyiha muddati", url=p.get_absolute_url())
+    for inv in Invoice.objects.filter(status=Invoice.Status.SENT, due_date__range=(start, end)).select_related(
+        "contact"
+    ):
+        add(inv.due_date, f"{inv.number} — {inv.contact}", "amber", "Hisob-faktura", url=inv.get_absolute_url())
+    for d in Debt.objects.filter(is_closed=False, due_date__range=(start, end)):
+        add(d.due_date, d.person, "amber", d.get_direction_display(), url=reverse("debt_list"))
+    for c in Credit.objects.filter(is_closed=False).prefetch_related("payments"):
+        for row in c.schedule():
+            if not row["payment"]:
+                add(row["date"], c.title, "rose", "Kredit to'lovi", url=reverse("credit_list"))
+    for r in Recurring.objects.filter(is_active=True, next_date__lte=end):
+        tone = "emerald" if r.kind == Kind.INCOME else "rose"
+        for day in r.occurrences(start, end):
+            add(day, r.title, tone, "Takroriy to'lov", url=reverse("recurring_list"))
+    for res in Resource.objects.filter(is_active=True, renews_on__range=(start, end)):
+        add(res.renews_on, res.name, "violet", "Resurs tugaydi", url=reverse("resource_list"))
+    for c in Contact.objects.filter(next_contact__range=(start, end)):
+        add(c.next_contact, c.name, "cyan", "Bog'lanish", url=c.get_absolute_url())
+    for deal in Deal.objects.filter(stage__in=Deal.OPEN_STAGES, expected_close__range=(start, end)):
+        add(deal.expected_close, deal.title, "cyan", "Bitim", url=reverse("deal_board"))
+    for g in Goal.objects.filter(status=Goal.Status.ACTIVE, target_date__range=(start, end)):
+        add(g.target_date, g.title, "emerald", "Maqsad", url=reverse("goal_list"))
+    return events
+
+
+def calendar_view(request):
+    today = timezone.localdate()
+    month = _month(request)
+    if abs(month.year - today.year) > 10:
+        month = today.replace(day=1)
+    weeks = calendar.Calendar().monthdatescalendar(month.year, month.month)
+    events = calendar_events(weeks[0][0], weeks[-1][-1])
+    in_month = month.year == today.year and month.month == today.month
+    return render(
+        request,
+        "dashboard/calendar.html",
+        {
+            "nav_active": "calendar",
+            "weekdays": WEEKDAYS,
+            "month_label": f"{MONTHS[month.month]} {month.year}",
+            "prev": _shift(month, -1),
+            "next": _shift(month, 1),
+            "is_current": in_month,
+            "selected": today if in_month else month,
+            "weeks": [
+                [
+                    {
+                        "date": d,
+                        "events": events.get(d, []),
+                        "is_today": d == today,
+                        "other": d.month != month.month,
+                    }
+                    for d in week
+                ]
+                for week in weeks
+            ],
         },
     )
 

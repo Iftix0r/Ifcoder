@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+from apps.core import dates
 from apps.core.models import TimeStamped
 
 
@@ -15,6 +16,13 @@ class Task(TimeStamped):
         MEDIUM = 2, "O'rta"
         HIGH = 3, "Yuqori"
         URGENT = 4, "Shoshilinch"
+
+    class Repeat(models.TextChoices):
+        NONE = "", "Takrorlanmaydi"
+        DAILY = dates.DAILY, "Har kuni"
+        WORKDAYS = dates.WORKDAYS, "Ish kunlari (Du–Ju)"
+        WEEKLY = dates.WEEKLY, "Har hafta"
+        MONTHLY = dates.MONTHLY, "Har oy"
 
     PRIORITY_STYLE = {1: "text-ink-3", 2: "text-cyan-500", 3: "text-amber-500", 4: "text-rose-500"}
 
@@ -36,6 +44,16 @@ class Task(TimeStamped):
     planned_for = models.DateField("Qaysi kuni bajaraman", null=True, blank=True)
     due_date = models.DateField("Muddat (deadline)", null=True, blank=True)
     estimate = models.PositiveIntegerField("Taxminiy vaqt (daqiqa)", null=True, blank=True)
+    repeat = models.CharField(
+        "Takrorlanish",
+        max_length=8,
+        choices=Repeat.choices,
+        blank=True,
+        default=Repeat.NONE,
+        help_text="Bajarilganda keyingisi o'zi yaratiladi",
+    )
+    repeat_day = models.PositiveSmallIntegerField(null=True, blank=True, editable=False)
+    repeat_spawned = models.BooleanField(default=False, editable=False)
     position = models.PositiveIntegerField(default=0)
     completed_at = models.DateTimeField(null=True, blank=True)
 

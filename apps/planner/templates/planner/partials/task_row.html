@@ -9,6 +9,7 @@
       {% if t.project %}<span class="inline-flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 font-medium text-ink-2"><span class="size-1.5 rounded-full {{ t.project.tone|dot }}"></span>{{ t.project.name }}</span>{% endif %}
       {% if t.contact %}<span class="inline-flex items-center gap-1">{% icon "user" "size-3" %}{{ t.contact.name }}</span>{% endif %}
       {% if t.due_date and not t.is_done %}<span class="badge {{ t.due_date|due_badge }}">{% icon "calendar-clock" "size-3" %}{{ t.due_date|due_label }}</span>{% endif %}
+      {% if t.repeat %}<span class="inline-flex items-center gap-0.5" title="{{ t.get_repeat_display }}">{% icon "repeat" "size-3" %}{{ t.get_repeat_display }}</span>{% endif %}
       {% if t.status == "doing" %}<span class="badge badge-warning">Jarayonda</span>{% endif %}
       {% if t.estimate %}<span class="inline-flex items-center gap-0.5">{% icon "clock" "size-3" %}{{ t.estimate }} daq</span>{% endif %}
     </div>

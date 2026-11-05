@@ -147,6 +147,7 @@ def task_create(request):
         task = form.save(commit=False)
         task.set_status(task.status)
         task.save()
+        services.spawn_next(task)
         return task
 
     return form_modal(
@@ -169,6 +170,7 @@ def task_edit(request, pk):
         if obj.status != old_status:
             obj.set_status(obj.status)
         obj.save()
+        services.spawn_next(obj)
         return obj
 
     spent = sum(e.minutes for e in task.time_entries.all())
@@ -200,7 +202,11 @@ def task_toggle(request, pk):
         running = services.running_entry()
         if running and running.task_id == task.pk:
             services.stop_timer()
-    response = done("Bajarildi! 🎉" if task.is_done else "Qayta ochildi.", close=False)
+    following = services.spawn_next(task)
+    message = "Bajarildi! 🎉" if task.is_done else "Qayta ochildi."
+    if following:
+        message = f"Bajarildi! 🎉 Keyingisi: {(following.planned_for or following.due_date):%d.%m}"
+    response = done(message, close=False)
     return add_triggers(response, {"timer:changed": True})
 
 
@@ -248,6 +254,7 @@ def task_move(request, pk):
             running = services.running_entry()
             if running and running.task_id == task.pk:
                 services.stop_timer()
+            services.spawn_next(task)
     services.reorder(Task, order)
     return JsonResponse(
         {"ok": True, "toast": "Bajarildi! 🎉" if status == Task.Status.DONE and task.status == status else ""}

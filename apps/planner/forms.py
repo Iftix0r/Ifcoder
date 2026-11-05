@@ -10,7 +10,18 @@ class TaskForm(StyledModelForm):
 
     class Meta:
         model = Task
-        fields = ["title", "status", "priority", "planned_for", "due_date", "project", "contact", "estimate", "notes"]
+        fields = [
+            "title",
+            "status",
+            "priority",
+            "planned_for",
+            "due_date",
+            "repeat",
+            "project",
+            "contact",
+            "estimate",
+            "notes",
+        ]
         widgets = {"planned_for": DateInput(), "due_date": DateInput()}
 
     def __init__(self, *args, **kwargs):

@@ -1,0 +1,66 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Kalendar{% endblock %}
+{% block content %}
+<div x-data="{ sel: '{{ selected|date:'Y-m-d' }}' }">
+<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Kalendar</h1>
+    <div class="mt-2 flex items-center gap-2">
+      <a href="?m={{ prev|date:'Y-m' }}" class="btn btn-secondary btn-sm btn-icon" aria-label="Oldingi oy">{% icon "chevron-left" "size-4" %}</a>
+      <span class="min-w-32 text-center text-sm font-semibold">{{ month_label }}</span>
+      <a href="?m={{ next|date:'Y-m' }}" class="btn btn-secondary btn-sm btn-icon" aria-label="Keyingi oy">{% icon "chevron-right" "size-4" %}</a>
+      {% if not is_current %}<a href="?" class="btn btn-ghost btn-sm">Joriy oy</a>{% endif %}
+    </div>
+  </div>
+  <p class="text-sm text-ink-2">Vazifa, to'lov, muddat va uchrashuvlar bitta joyda.</p>
+</div>
+
+<div id="calendar-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#calendar-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*" class="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+  <div class="card overflow-hidden animate-fade-up">
+    <div class="grid grid-cols-7 border-b border-line bg-surface-2/40">
+      {% for w in weekdays %}<p class="py-2 text-center text-xs font-semibold text-ink-3">{{ w }}</p>{% endfor %}
+    </div>
+    <div class="grid grid-cols-7">
+      {% for week in weeks %}{% for d in week %}
+        <button type="button" @click="sel = '{{ d.date|date:'Y-m-d' }}'" :class="sel === '{{ d.date|date:'Y-m-d' }}' && 'bg-brand-500/10'" aria-label="{{ d.date|date:'j E' }}, {{ d.events|length }} ta hodisa"
+                class="flex min-h-16 min-w-0 flex-col gap-1 border-r border-b border-line p-1.5 text-left transition last:border-r-0 hover:bg-surface-2/60 sm:min-h-24 {% if d.other %}opacity-40{% endif %}">
+          <span class="flex size-6 items-center justify-center rounded-full text-xs font-semibold {% if d.is_today %}bg-brand-500 text-white{% else %}text-ink-2{% endif %}">{{ d.date.day }}</span>
+          {% if d.events %}
+            <span class="flex flex-wrap gap-1 lg:hidden">{% for e in d.events|slice:":4" %}<span class="size-1.5 rounded-full {{ e.tone|dot }}"></span>{% endfor %}</span>
+            <span class="hidden min-w-0 flex-col gap-0.5 lg:flex">
+              {% for e in d.events|slice:":3" %}<span class="flex min-w-0 items-center gap-1 text-[11px] leading-tight text-ink-2"><span class="size-1.5 shrink-0 rounded-full {{ e.tone|dot }}"></span><span class="truncate {% if e.done %}line-through{% endif %}">{{ e.label }}</span></span>{% endfor %}
+              {% if d.events|length > 3 %}<span class="text-[11px] font-medium text-ink-3">yana {{ d.events|length|add:"-3" }} ta</span>{% endif %}
+            </span>
+          {% endif %}
+        </button>
+      {% endfor %}{% endfor %}
+    </div>
+  </div>
+
+  <div class="card overflow-hidden animate-fade-up xl:sticky xl:top-20">
+    {% for week in weeks %}{% for d in week %}
+      <section x-cloak x-show="sel === '{{ d.date|date:'Y-m-d' }}'">
+        <div class="card-header">
+          <div><p class="card-title">{{ d.date|date:"j E" }}</p><p class="text-xs text-ink-3">{{ d.date|date:"l" }}</p></div>
+          <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'task_create' %}?planned_for={{ d.date|date:'Y-m-d' }}" hx-target="#modal-content">{% icon "plus" "size-3.5" %}Vazifa</button>
+        </div>
+        {% if d.events %}
+          <ul class="divide-y divide-line">
+            {% for e in d.events %}
+              <li>
+                {% if e.modal %}<button type="button" hx-get="{{ e.modal }}" hx-target="#modal-content" class="flex w-full items-start gap-2.5 px-4 py-2.5 text-left transition hover:bg-surface-2/60">{% else %}<a href="{{ e.url }}" class="flex items-start gap-2.5 px-4 py-2.5 transition hover:bg-surface-2/60">{% endif %}
+                  <span class="mt-1.5 size-2 shrink-0 rounded-full {{ e.tone|dot }}"></span>
+                  <span class="min-w-0 flex-1"><span class="block text-sm font-medium break-words {% if e.done %}text-ink-3 line-through{% endif %}">{{ e.label }}</span><span class="block text-xs text-ink-3">{{ e.kind }}</span></span>
+                {% if e.modal %}</button>{% else %}</a>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="px-4 py-8 text-center text-sm text-ink-3">Bu kunga hech narsa rejalashtirilmagan.</p>
+        {% endif %}
+      </section>
+    {% endfor %}{% endfor %}
+  </div>
+</div>
+</div>
+{% endblock %}

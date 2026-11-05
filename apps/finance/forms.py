@@ -2,16 +2,23 @@ from django import forms
 
 from apps.core.forms import DateInput, MoneyInput, StyledModelForm
 
-from .models import Category, Credit, Debt, Invoice, InvoiceLine, Transaction, Wish, WishDeposit
+from .models import (
+    Budget,
+    Category,
+    Credit,
+    Debt,
+    Invoice,
+    InvoiceLine,
+    Kind,
+    Recurring,
+    Transaction,
+    Wish,
+    WishDeposit,
+)
 
 
-class TransactionForm(StyledModelForm):
-    wide_fields = ("description",)
-
-    class Meta:
-        model = Transaction
-        fields = ["kind", "amount", "currency", "category", "date", "method", "contact", "project", "description"]
-        widgets = {"date": DateInput(), "amount": MoneyInput()}
+class KindCategoryForm(StyledModelForm):
+    """Kirim/chiqim turi va toifasi bir-biriga mos bo'lishi shart."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -23,6 +30,64 @@ class TransactionForm(StyledModelForm):
         if category and data.get("kind") and category.kind != data["kind"]:
             self.add_error("category", f"Bu toifa «{category.get_kind_display()}» uchun.")
         return data
+
+
+class TransactionForm(KindCategoryForm):
+    wide_fields = ("description",)
+
+    class Meta:
+        model = Transaction
+        fields = ["kind", "amount", "currency", "category", "date", "method", "contact", "project", "description"]
+        widgets = {"date": DateInput(), "amount": MoneyInput()}
+
+
+class RecurringForm(KindCategoryForm):
+    wide_fields = ("title",)
+
+    class Meta:
+        model = Recurring
+        fields = [
+            "title",
+            "kind",
+            "amount",
+            "currency",
+            "frequency",
+            "next_date",
+            "category",
+            "method",
+            "contact",
+            "project",
+            "is_active",
+        ]
+        widgets = {"next_date": DateInput(), "amount": MoneyInput()}
+
+    def clean_amount(self):
+        amount = self.cleaned_data["amount"]
+        if amount <= 0:
+            raise forms.ValidationError("Summa 0 dan katta bo'lsin.")
+        return amount
+
+    def save(self, commit=True):
+        if "next_date" in self.changed_data or not self.instance.pk:
+            self.instance.anchor_day = self.instance.next_date.day
+        return super().save(commit)
+
+
+class BudgetForm(StyledModelForm):
+    class Meta:
+        model = Budget
+        fields = ["category", "amount", "currency"]
+        widgets = {"amount": MoneyInput()}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["category"].queryset = Category.objects.filter(kind=Kind.EXPENSE)
+
+    def clean_amount(self):
+        amount = self.cleaned_data["amount"]
+        if amount <= 0:
+            raise forms.ValidationError("Limit 0 dan katta bo'lsin.")
+        return amount
 
 
 class CategoryForm(StyledModelForm):

@@ -11,13 +11,15 @@ Dizayn tizimi AIMarkaz bilan bir xil (indigo → violet, yorug'/qorong'i rejim, 
 | Bo'lim | Manzil | Nima |
 |---|---|---|
 | Bugun | `/dashboard/` | Kunlik reja, odatlar, «E'tibor talab qiladi», moliya grafigi, maqsad va loyihalar |
-| Vazifalar | `/tasks/` | Kanban (drag & drop), Bugun, Hafta, Ro'yxat; tezkor qo'shish; vazifa taymeri |
+| Vazifalar | `/tasks/` | Kanban (drag & drop), Bugun, Hafta, Ro'yxat; tezkor qo'shish; vazifa taymeri; takrorlanish (bajarilganda keyingisi o'zi yaratiladi) |
+| Kalendar | `/calendar/` | Vazifa, loyiha, faktura, qarz, kredit, takroriy to'lov, resurs, aloqa, bitim va maqsad muddatlari bitta oyda |
 | Loyihalar | `/projects/` | Progress, vazifalar, vaqt, tushum/xarajat, eslatmalar, resurs va kalitlar |
 | Vaqt hisobi | `/time/` | Taymer yozuvlari, 14 kunlik grafik, loyihalar bo'yicha vaqt |
 | Mijozlar | `/contacts/` | Mijoz kartasi, aloqalar tarixi (qo'ng'iroq/uchrashuv/xabar), keyingi aloqa eslatmasi |
 | Bitimlar | `/deals/` | Voronka kanbani: Yangi → Aloqa → Taklif → Muzokara → Yutildi/Yo'qotildi |
 | Telegram | `/telegram/` | Akkauntni ulash, messenjer: suhbatlar, javob, tahrir, o'chirish, fayl yuborish, media, o'qildi, online, CRM, buyruqlar |
-| Kirim-chiqim | `/finance/` | Oylik hisob, 6 oylik grafik, xarajatlar tarkibi, toifalar (so'm va $) |
+| Kirim-chiqim | `/finance/` | Oylik hisob, 6 oylik grafik, xarajatlar tarkibi, toifalar (so'm va $), oylik limitlar, CSV eksport |
+| Takroriy to'lovlar | `/finance/recurring/` | Maosh, ijara, obuna: vaqti kelganda eslatiladi, tasdiqlangach kirim-chiqimga yoziladi |
 | Hisob-fakturalar | `/invoices/` | Xizmat qatorlari, holatlar, chop etish/PDF; «To'landi» → kirim avtomatik yoziladi |
 | Qarzlar | `/debts/` | Menga qarzdor / men qarzdorman, qisman qaytarish, muddatlar |
 | Maqsadlar | `/goals/` | Bosqichlar (checklist) bilan progress |
@@ -31,6 +33,10 @@ Dizayn tizimi AIMarkaz bilan bir xil (indigo → violet, yorug'/qorong'i rejim, 
 | Sozlamalar | `/accounts/settings/` | Profil, parol, 2FA (TOTP + zaxira kodlar), backup |
 
 Tezkor tugmalar: `Ctrl+K` yoki `/` — qidiruv, `N` — yangi vazifa.
+
+Takroriy to'lovlar o'zidan-o'zi yozilmaydi: pul haqiqatan o'tganini faqat siz bilasiz. O'tkazib yuborilgan har bir davr
+alohida turadi va o'z sanasi bilan yoziladi. Oylik limit 80% da sariq, oshganda qizil bo'ladi va «E'tibor talab qiladi»
+hamda ertalabki xulosaga tushadi. Cron kerak emas.
 
 ## Lokal ishga tushirish
 

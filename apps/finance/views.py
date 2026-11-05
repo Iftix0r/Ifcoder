@@ -1,3 +1,4 @@
+import csv
 from datetime import date
 
 from django.db.models import Sum
@@ -11,16 +12,19 @@ from django.views.decorators.http import require_POST
 from apps.core.crud import delete_done, done, form_modal
 
 from .forms import (
+    BudgetForm,
     CategoryForm,
     CreditForm,
     DebtForm,
     InvoiceForm,
     InvoiceLineForm,
+    RecurringForm,
     TransactionForm,
     WishDepositForm,
     WishForm,
 )
 from .models import (
+    Budget,
     Category,
     Credit,
     CreditPayment,
@@ -28,6 +32,7 @@ from .models import (
     Invoice,
     InvoiceLine,
     Kind,
+    Recurring,
     Transaction,
     Wish,
     totals_by_currency,
@@ -95,17 +100,54 @@ def month_series(months=6, currency="UZS"):
     return series
 
 
-def overview(request):
-    month = _month(request)
-    nxt = _shift(month, 1)
+def budget_rows(month):
+    """Oy bo'yicha byudjetlar: sarflangan, qolgan, foiz va rang (limitga yaqinlashganda sariq, oshganda qizil)."""
+    spent = {
+        (r["category_id"], r["currency"]): r["s"]
+        for r in Transaction.objects.filter(kind=Kind.EXPENSE, date__gte=month, date__lt=_shift(month, 1))
+        .values("category_id", "currency")
+        .annotate(s=Sum("amount"))
+    }
+    rows = []
+    for budget in Budget.objects.select_related("category"):
+        used = spent.get((budget.category_id, budget.currency), 0)
+        pct = round(float(used) * 100 / float(budget.amount)) if budget.amount else 100
+        rows.append(
+            {
+                "budget": budget,
+                "spent": used,
+                "left": budget.amount - used,
+                "pct": pct,
+                "width": min(pct, 100),
+                "over": used > budget.amount,
+                "bar": "bg-rose-500"
+                if used > budget.amount
+                else "bg-amber-500"
+                if pct >= Budget.WARN_AT
+                else "bg-emerald-500",
+            }
+        )
+    return sorted(rows, key=lambda r: -r["pct"])
+
+
+def _month_transactions(request, month):
+    """Oydagi operatsiyalar sahifadagi filtrlar bilan: ro'yxat va CSV bir xil natija beradi."""
     kind = request.GET.get("kind", "")
     category = request.GET.get("category", "")
-    month_qs = Transaction.objects.filter(date__gte=month, date__lt=nxt)
-    txs = month_qs.select_related("category", "contact", "project")
+    txs = Transaction.objects.filter(date__gte=month, date__lt=_shift(month, 1))
+    txs = txs.select_related("category", "contact", "project")
     if kind in Kind.values:
         txs = txs.filter(kind=kind)
     if category.isdigit():
         txs = txs.filter(category_id=category)
+    return txs, kind, category
+
+
+def overview(request):
+    month = _month(request)
+    nxt = _shift(month, 1)
+    month_qs = Transaction.objects.filter(date__gte=month, date__lt=nxt)
+    txs, kind, category = _month_transactions(request, month)
     income = totals_by_currency(month_qs.filter(kind=Kind.INCOME))
     expense = totals_by_currency(month_qs.filter(kind=Kind.EXPENSE))
     net = {c: income.get(c, 0) - expense.get(c, 0) for c in set(income) | set(expense)}
@@ -135,6 +177,8 @@ def overview(request):
             "net": {k: v for k, v in net.items() if v},
             "series": month_series(6),
             "breakdown": breakdown,
+            "budgets": budget_rows(month),
+            "due_recurring": Recurring.objects.filter(is_active=True, next_date__lte=timezone.localdate()).count(),
             "categories": Category.objects.all(),
             "kind": kind,
             "category": category,
@@ -185,6 +229,153 @@ def transaction_edit(request, pk):
 @require_POST
 def transaction_delete(request, pk):
     return delete_done(get_object_or_404(Transaction, pk=pk))
+
+
+def _csv_text(value):
+    """Mijoz ismi landing formadan keladi: Excel «=...» ni formula sifatida ishga tushirmasin."""
+    text = str(value or "")
+    return f"'{text}" if text.startswith(("=", "+", "-", "@", "\t", "\r")) else text
+
+
+def _csv_amount(value):
+    text = f"{value:f}"
+    return text.rstrip("0").rstrip(".") if "." in text else text
+
+
+def transaction_export(request):
+    """Excel uchun CSV: BOM kirill/o'zbek harflarini, «;» esa ustunlarni to'g'ri ochadi."""
+    month = _month(request)
+    txs, _, _ = _month_transactions(request, month)
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="kirim-chiqim-{month:%Y-%m}.csv"'
+    response.write("\ufeff")
+    writer = csv.writer(response, delimiter=";")
+    writer.writerow(["Sana", "Turi", "Summa", "Valyuta", "Toifa", "To'lov usuli", "Mijoz", "Loyiha", "Izoh"])
+    for tx in txs:
+        writer.writerow(
+            [
+                tx.date.isoformat(),
+                tx.get_kind_display(),
+                _csv_amount(tx.amount),
+                tx.currency,
+                _csv_text(tx.category),
+                tx.get_method_display(),
+                _csv_text(tx.contact),
+                _csv_text(tx.project),
+                _csv_text(tx.description),
+            ]
+        )
+    return response
+
+
+# --- Byudjet ------------------------------------------------------------------------------
+
+
+def budget_create(request):
+    return form_modal(
+        request,
+        BudgetForm,
+        title="Oylik limit",
+        icon="gauge",
+        tone="tone-amber",
+        subtitle="Toifaga oyiga qancha sarflashni belgilang",
+    )
+
+
+def budget_edit(request, pk):
+    budget = get_object_or_404(Budget, pk=pk)
+    return form_modal(
+        request,
+        BudgetForm,
+        instance=budget,
+        title=budget.category.name,
+        icon="gauge",
+        tone="tone-amber",
+        delete_url=reverse("budget_delete", args=[pk]),
+    )
+
+
+@require_POST
+def budget_delete(request, pk):
+    return delete_done(get_object_or_404(Budget, pk=pk), "Limit o'chirildi.")
+
+
+# --- Takroriy to'lovlar -------------------------------------------------------------------
+
+
+def recurring_list(request):
+    items = list(Recurring.objects.select_related("category", "contact", "project"))
+    active = [r for r in items if r.is_active]
+    monthly = {Kind.INCOME: {}, Kind.EXPENSE: {}}
+    for r in active:
+        bucket = monthly[r.kind]
+        bucket[r.currency] = bucket.get(r.currency, 0) + r.monthly_amount
+    return render(
+        request,
+        "finance/recurring_list.html",
+        {
+            "nav_active": "recurring",
+            "due": [r for r in active if r.is_due],
+            "upcoming": [r for r in active if not r.is_due],
+            "paused": [r for r in items if not r.is_active],
+            "monthly_income": monthly[Kind.INCOME],
+            "monthly_expense": monthly[Kind.EXPENSE],
+        },
+    )
+
+
+def recurring_create(request):
+    kind = request.GET.get("kind", Kind.EXPENSE)
+    return form_modal(
+        request,
+        RecurringForm,
+        initial={"kind": kind if kind in Kind.values else Kind.EXPENSE},
+        title="Takroriy to'lov",
+        icon="calendar-clock",
+        size="xl",
+        subtitle="Vaqti kelganda eslatiladi, bir tugma bilan kirim-chiqimga yoziladi",
+    )
+
+
+def recurring_edit(request, pk):
+    item = get_object_or_404(Recurring, pk=pk)
+    return form_modal(
+        request,
+        RecurringForm,
+        instance=item,
+        title=item.title,
+        icon="calendar-clock",
+        size="xl",
+        delete_url=reverse("recurring_delete", args=[pk]),
+    )
+
+
+@require_POST
+def recurring_delete(request, pk):
+    return delete_done(get_object_or_404(Recurring, pk=pk), "O'chirildi. Yozilgan operatsiyalar saqlanib qoladi.")
+
+
+def _period(request, item):
+    """Tugma qaysi davr uchun bosilgan: sahifa eskirgan bo'lsa, boshqa davrga yozib yubormaymiz."""
+    return item.next_date if request.POST.get("period") == item.next_date.isoformat() else None
+
+
+@require_POST
+def recurring_post(request, pk):
+    item = get_object_or_404(Recurring.objects.select_related("category", "contact", "project"), pk=pk)
+    period = _period(request, item)
+    if period and item.post(period):
+        return done(f"«{item.title}» kirim-chiqimga yozildi.", close=False)
+    return done("Bu davr allaqachon belgilangan.", close=False)
+
+
+@require_POST
+def recurring_skip(request, pk):
+    item = get_object_or_404(Recurring, pk=pk)
+    period = _period(request, item)
+    if period and item.skip(period):
+        return done("Bu davr o'tkazib yuborildi.", close=False)
+    return done("Bu davr allaqachon belgilangan.", close=False)
 
 
 def category_list(request):

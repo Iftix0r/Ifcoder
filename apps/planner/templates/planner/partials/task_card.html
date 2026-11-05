@@ -3,6 +3,7 @@
          class="group cursor-grab rounded-xl border border-line bg-surface p-3 shadow-soft transition duration-200 select-none hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift active:cursor-grabbing">
   <div class="flex items-start gap-2">
     <p class="min-w-0 flex-1 text-[13.5px] leading-snug font-semibold text-ink {% if t.is_done %}text-ink-3 line-through{% endif %}">{{ t.title }}</p>
+    {% if t.repeat %}<span class="text-ink-3" title="{{ t.get_repeat_display }}">{% icon "repeat" "size-3.5" %}</span>{% endif %}
     {% if t.priority >= 3 %}<span class="{{ t.priority_color }}" title="{{ t.get_priority_display }}">{% icon "flag" "size-3.5" "2.5" %}</span>{% endif %}
   </div>
   {% if t.project or t.contact %}

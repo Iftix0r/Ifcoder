@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Category, Credit, Debt, Invoice, InvoiceLine, Transaction, Wish
+from .models import Budget, Category, Credit, Debt, Invoice, InvoiceLine, Recurring, Transaction, Wish
 
 for model in (
     Category,
@@ -10,5 +10,7 @@ for model in (
     Debt,
     Credit,
     Wish,
+    Recurring,
+    Budget,
 ):
     admin.site.register(model)

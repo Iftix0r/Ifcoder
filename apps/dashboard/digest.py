@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from apps.core.telegram import h
 from apps.crm.models import Contact, Deal
-from apps.finance.models import Debt, Invoice, Kind, Transaction, totals_by_currency
+from apps.finance.models import Debt, Invoice, Kind, Recurring, Transaction, totals_by_currency
 from apps.growth.models import Habit
 from apps.planner.models import Task
 from apps.resources.views import expiring
@@ -79,6 +79,20 @@ def build_digest(today=None) -> str:
         for c in credits:
             late = " — <i>kechikkan</i>" if c.next_due < today else ""
             lines.append(f"• {h(c.title)}: {money(c.next_amount, c.currency)} — {c.next_due:%d.%m}{late}")
+
+    recurring = list(Recurring.objects.filter(is_active=True, next_date__lte=today)[:5])
+    if recurring:
+        lines += ["", "🔄 <b>Takroriy to'lovlar</b>"]
+        for r in recurring:
+            sign = "+" if r.kind == Kind.INCOME else "−"
+            lines.append(f"• {h(r.title)}: {sign}{money(r.amount, r.currency)} — {r.next_date:%d.%m}")
+
+    from apps.finance.views import budget_rows
+
+    over = [r for r in budget_rows(today.replace(day=1)) if r["over"]]
+    if over:
+        lines += ["", "📊 <b>Limit oshdi</b>"]
+        lines += [f"• {h(r['budget'].category)}: {r['pct']}%" for r in over]
 
     stale = Deal.objects.filter(stage__in=Deal.OPEN_STAGES, expected_close__lt=today).count()
     if stale:
