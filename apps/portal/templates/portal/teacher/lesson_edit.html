@@ -1,0 +1,28 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Davomat{% endblock %}
+{% block content %}
+<a href="{% url 'group_detail' group.pk %}" class="mb-3 inline-flex items-center gap-1.5 text-sm text-ink-2 hover:text-ink">{% icon "arrow-left" "size-4" %}{{ group.name }}</a>
+<h1 class="mb-5 text-2xl font-bold tracking-tight">{{ day|date:"j E, l" }}</h1>
+<form method="post" hx-boost="false" class="card max-w-3xl">
+  {% csrf_token %}
+  <div class="border-b border-line p-5"><label for="topic" class="label">Dars mavzusi <span class="font-normal text-ink-3">(ixtiyoriy)</span></label><input id="topic" name="topic" value="{{ lesson.topic|default:'' }}" maxlength="200" class="input"></div>
+  {% if students %}
+    <div class="divide-y divide-line">
+      {% for s in students %}
+        <fieldset class="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center">
+          <legend class="sr-only">{{ s.full_name }}</legend>
+          <span class="flex min-w-0 flex-1 items-center gap-3"><span class="avatar size-8 text-xs">{{ s.full_name|initials }}</span><span class="truncate text-sm font-semibold">{{ s.full_name }}</span></span>
+          <span class="inline-flex gap-1">
+            {% for value, label in statuses %}
+              <label class="cursor-pointer"><input type="radio" name="s{{ s.pk }}" value="{{ value }}" class="peer sr-only" {% if s.mark == value %}checked{% endif %}><span class="att-choice att-{{ value }}">{{ label }}</span></label>
+            {% endfor %}
+          </span>
+        </fieldset>
+      {% endfor %}
+    </div>
+    <div class="flex justify-end border-t border-line bg-surface-2/50 px-5 py-3"><button class="btn btn-primary">Saqlash</button></div>
+  {% else %}
+    {% include "components/empty_state.html" with icon="school" title="Guruhda o'quvchi yo'q" text="Avval o'quvchilarni shu guruhga qo'shing." %}
+  {% endif %}
+</form>
+{% endblock %}

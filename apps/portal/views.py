@@ -10,12 +10,11 @@ from django.contrib.auth.decorators import login_not_required, login_required
 from django.core.cache import cache
 from django.db import transaction
 from django.http import Http404, JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 
-from apps.accounts.forms import StyledPasswordChangeForm
 from apps.accounts.views import LoginView
 from apps.core import telegram
 from apps.core.roles import is_student
@@ -23,9 +22,9 @@ from apps.security.services import client_ip
 
 from . import services
 from .engine import MAX_CODE, World
-from .forms import ProfileForm, RegisterForm, StudentLoginForm
+from .forms import PortalPasswordForm, ProfileForm, RegisterForm, StudentLoginForm, SubmissionForm
 from .levels import ALL_LEVELS, CHAPTER_OF, LEVELS, MAX_XP, XP_PER_STAR, attempt
-from .models import Post, Student
+from .models import Post, Student, Submission
 
 REGISTER_LIMIT = 15  # Bir sinf bitta IP'dan ro'yxatdan o'tadi
 RUNS_PER_MINUTE = 40
@@ -95,8 +94,10 @@ def home(request):
             "next_level": services.next_level(progress),
             "total_levels": len(ALL_LEVELS),
             "max_xp": MAX_XP,
-            "posts": Post.objects.filter(is_published=True)[:4],
+            "posts": services.with_submissions(services.visible_posts(student)[:4], student),
             "leaders": services.leaderboard(5),
+            "visits": services.attendance_stats(student),
+            "pending": services.pending_homework(student),
         },
     )
 
@@ -188,13 +189,15 @@ def run(request, slug):
     before = progress[slug].stars if slug in progress else 0
     # Kod chegaradan uzun bo'lsa saqlanmaydi: baza to'lib ketmasin
     row = services.save_attempt(student, level, code[:MAX_CODE], result)
-    return JsonResponse({**result, "best_stars": row.stars, "gained": (row.stars - before) * XP_PER_STAR})
+    gained = (row.stars - before) * XP_PER_STAR
+    return JsonResponse({**result, "best_stars": row.stars, "gained": gained, "xp": student.xp + gained})
 
 
 @student_page
 def materials(request):
     kind = request.GET.get("kind", "")
-    posts = Post.objects.filter(is_published=True)
+    student = current_student(request)
+    posts = services.visible_posts(student)
     if kind in Post.Kind.values:
         posts = posts.filter(kind=kind)
     return render(
@@ -202,10 +205,42 @@ def materials(request):
         "portal/materials.html",
         {
             "nav": "materials",
-            "student": current_student(request),
-            "posts": posts,
+            "student": student,
+            "preview": student is None,
+            "posts": services.with_submissions(posts, student),
             "kind": kind,
             "kinds": Post.Kind.choices,
+        },
+    )
+
+
+@student_page
+def homework(request, pk):
+    student = current_student(request)
+    if student is None:
+        return redirect("review_list")
+    # Boshqa guruh vazifasi 404: borligi ham bilinmasin
+    post = get_object_or_404(services.visible_posts(student), pk=pk, kind=Post.Kind.HOMEWORK)
+    submission = student.submissions.filter(post=post).first()
+    locked = bool(submission and submission.status == Submission.Status.ACCEPTED)
+    form = SubmissionForm(request.POST or None, instance=submission)
+    if request.method == "POST" and not locked and form.is_valid():
+        answer = form.save(commit=False)
+        answer.post, answer.student = post, student
+        answer.status, answer.grade, answer.reviewed_at = Submission.Status.SUBMITTED, None, None
+        answer.save()
+        messages.success(request, "Javob topshirildi. O'qituvchi tekshiradi.")
+        return redirect("portal_homework", pk=pk)
+    return render(
+        request,
+        "portal/homework.html",
+        {
+            "nav": "materials",
+            "student": student,
+            "post": post,
+            "submission": submission,
+            "form": form,
+            "locked": locked,
         },
     )
 
@@ -226,7 +261,7 @@ def profile(request):
     if student is None:
         return redirect("settings")
     profile_form = ProfileForm(instance=student, prefix="p")
-    password_form = StyledPasswordChangeForm(request.user, prefix="pw")
+    password_form = PortalPasswordForm(request.user, prefix="pw")
     if request.method == "POST":
         if "profile" in request.POST:
             profile_form = ProfileForm(request.POST, instance=student, prefix="p")
@@ -235,7 +270,7 @@ def profile(request):
                 messages.success(request, "Profil saqlandi.")
                 return redirect("portal_profile")
         elif "password" in request.POST:
-            password_form = StyledPasswordChangeForm(request.user, request.POST, prefix="pw")
+            password_form = PortalPasswordForm(request.user, request.POST, prefix="pw")
             if password_form.is_valid():
                 update_session_auth_hash(request, password_form.save())
                 messages.success(request, "Parol o'zgartirildi.")
@@ -247,6 +282,7 @@ def profile(request):
             "nav": "profile",
             "student": student,
             "rank": services.rank_for(student.xp),
+            "achievements": services.achievements(student, services.progress_of(student)),
             "profile_form": profile_form,
             "password_form": password_form,
         },

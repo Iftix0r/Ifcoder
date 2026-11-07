@@ -1,0 +1,25 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Guruhlar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Guruhlar va davomat</h1>
+    <p class="mt-1 text-sm text-ink-2">{% if ungrouped %}{{ ungrouped }} ta o'quvchi hali guruhga qo'shilmagan: ularni o'quvchi kartasidan biriktiring.{% else %}Guruhni oching va bugungi davomatni belgilang.{% endif %}</p>
+  </div>
+  <button type="button" class="btn btn-primary" hx-get="{% url 'group_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Guruh</button>
+</div>
+<div id="groups-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#groups-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if groups %}
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {% for g in groups %}
+      <a href="{% url 'group_detail' g.pk %}" class="card card-hover p-5 {% if not g.is_active %}opacity-60{% endif %}">
+        <div class="flex items-start gap-3"><span class="icon-chip tone-brand shrink-0">{% icon "users-round" "size-5" %}</span><div class="min-w-0 flex-1"><p class="truncate text-[15px] font-semibold">{{ g.name }}</p><p class="truncate text-xs text-ink-3">{{ g.schedule|default:"Vaqti yozilmagan" }}</p></div>{% if not g.is_active %}<span class="badge badge-neutral">Yopilgan</span>{% endif %}</div>
+        <div class="mt-4 flex items-center justify-between text-sm text-ink-2"><span>{{ g.student_count }} o'quvchi · {{ g.lesson_count }} dars</span><span class="font-semibold text-ink">{% if g.monthly_fee %}{{ g.monthly_fee|money }}{% else %}Bepul{% endif %}</span></div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="users-round" title="Hali guruh yo'q" text="Birinchi guruhni yarating: davomat, oylik to'lov va guruh e'lonlari shunga bog'lanadi." %}</div>
+{% endif %}
+</div>
+{% endblock %}

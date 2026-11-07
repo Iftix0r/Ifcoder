@@ -1,0 +1,28 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Uy vazifalari{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Uy vazifalari</h1>
+    <p class="mt-1 text-sm text-ink-2">Vazifa berish uchun «E'lon va materiallar»da «Uy vazifasi» turini tanlang.</p>
+  </div>
+  <a href="{% url 'post_list' %}" class="btn btn-secondary">{% icon "megaphone" "size-4" %}Vazifa berish</a>
+</div>
+<nav class="segmented mb-4 w-max"><a href="?" class="{% if not show_all %}is-active{% endif %}">Tekshirilmagan · {{ waiting }}</a><a href="?show=all" class="{% if show_all %}is-active{% endif %}">Hammasi</a></nav>
+<div id="reviews-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#reviews-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if rows %}
+  <div class="card divide-y divide-line">
+    {% for row in rows %}
+      <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-surface-2/60" hx-get="{% url 'review_edit' row.pk %}" hx-target="#modal-content">
+        <span class="avatar size-9 text-xs">{{ row.student.full_name|initials }}</span>
+        <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ row.student.full_name }}</p><p class="truncate text-xs text-ink-3">{{ row.post.title }} · {{ row.updated_at|date:"j E, H:i" }}</p></div>
+        {% if row.grade %}<span class="badge badge-success shrink-0">{{ row.grade }}</span>{% endif %}
+        <span class="badge {{ row.badge }} shrink-0">{{ row.get_status_display }}</span>
+      </button>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="clipboard-check" title="Tekshiradigan javob yo'q" text="O'quvchi javob topshirganda shu yerda chiqadi." %}</div>
+{% endif %}
+</div>
+{% endblock %}

@@ -41,6 +41,9 @@ PAGES = [
     "2fa_setup",
     "student_list",
     "post_list",
+    "group_list",
+    "review_list",
+    "payment_list",
 ]
 MODALS = [
     "task_create",

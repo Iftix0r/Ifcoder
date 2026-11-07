@@ -5,6 +5,19 @@
   <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Profil</h1>
   <p class="mt-1 text-sm text-ink-2">Login: @{{ user.username }} · {{ rank.title }}</p>
 </div>
+<section class="mb-6 max-w-4xl">
+  <h2 class="mb-3 text-base font-bold">Yutuqlar</h2>
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    {% for a in achievements %}
+      <div class="card flex flex-col items-center p-3.5 text-center {% if not a.earned %}opacity-70 grayscale{% endif %}" title="{{ a.text }}">
+        <span class="icon-chip {% if a.earned %}tone-amber{% else %}tone-brand{% endif %}">{% icon a.icon "size-5" %}</span>
+        <p class="mt-2 text-sm font-semibold">{{ a.title }}</p>
+        <p class="mt-0.5 text-xs text-ink-3">{{ a.text }}</p>
+        <span class="sr-only">{% if a.earned %}Olingan{% else %}Hali olinmagan{% endif %}</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
 <div class="grid max-w-4xl items-start gap-4 md:grid-cols-2">
   <form method="post" class="card space-y-4 p-5" novalidate>
     {% csrf_token %}

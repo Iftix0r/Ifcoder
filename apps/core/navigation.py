@@ -42,6 +42,9 @@ NAV_SECTIONS: list[tuple[str, list[NavItem]]] = [
         "O'quv markazi",
         [
             NavItem("students", "O'quvchilar", "school", "student_list"),
+            NavItem("groups", "Guruhlar va davomat", "users-round", "group_list"),
+            NavItem("reviews", "Uy vazifalari", "clipboard-check", "review_list"),
+            NavItem("payments", "O'quv to'lovlari", "banknote", "payment_list"),
             NavItem("posts", "E'lon va materiallar", "megaphone", "post_list"),
         ],
     ),

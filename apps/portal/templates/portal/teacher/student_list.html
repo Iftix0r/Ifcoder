@@ -20,8 +20,10 @@
   <button type="button" class="btn btn-secondary btn-sm shrink-0" @click="navigator.clipboard.writeText('{{ register_url|escapejs }}'); copied = true; setTimeout(() => copied = false, 1500)">{% icon "copy" "size-3.5" %}<span x-text="copied ? 'Nusxalandi' : 'Nusxa olish'">Nusxa olish</span></button>
 </div>
 
-<form method="get" class="mb-4 animate-fade-up">
-  <label class="relative flex h-10 items-center sm:max-w-80"><span class="pointer-events-none absolute left-3 text-ink-3">{% icon "search" "size-4" %}</span><input type="search" name="q" value="{{ q }}" placeholder="Ism, login yoki telefon…" autocomplete="off" class="input h-10 pl-9"></label>
+<form method="get" class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center animate-fade-up">
+  {% if group %}<input type="hidden" name="group" value="{{ group }}">{% endif %}
+  <label class="relative flex h-10 flex-1 items-center sm:max-w-80"><span class="pointer-events-none absolute left-3 text-ink-3">{% icon "search" "size-4" %}</span><input type="search" name="q" value="{{ q }}" placeholder="Ism, login yoki telefon…" autocomplete="off" class="input h-10 pl-9"></label>
+  {% if groups %}<nav class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0"><div class="segmented w-max"><a href="?{% if q %}q={{ q|urlencode }}{% endif %}" class="{% if not group %}is-active{% endif %}">Hammasi</a>{% for g in groups %}<a href="?group={{ g.pk }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="whitespace-nowrap {% if group == g.pk|stringformat:'d' %}is-active{% endif %}">{{ g.name }}</a>{% endfor %}</div></nav>{% endif %}
 </form>
 
 <div id="students-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#students-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
@@ -30,7 +32,7 @@
     {% for s in page.object_list %}
       <a href="{% url 'student_detail' s.pk %}" class="flex items-center gap-3 px-4 py-3 transition hover:bg-surface-2/60 {% if not s.user.is_active %}opacity-60{% endif %}">
         <span class="avatar size-9 text-xs">{{ s.full_name|initials }}</span>
-        <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ s.full_name }}</p><p class="truncate text-xs text-ink-3">@{{ s.user.username }}{% if s.phone %} · {{ s.phone }}{% endif %}</p></div>
+        <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ s.full_name }}</p><p class="truncate text-xs text-ink-3">@{{ s.user.username }}{% if s.group %} · {{ s.group.name }}{% endif %}{% if s.phone %} · {{ s.phone }}{% endif %}</p></div>
         {% if not s.user.is_active %}<span class="badge badge-danger shrink-0">Bloklangan</span>{% endif %}
         <div class="hidden w-40 shrink-0 sm:block"><p class="mb-1 text-right text-xs text-ink-3">{{ s.solved }} / {{ total_levels }}</p><div class="progress"><span style="width: {{ s.percent }}%"></span></div></div>
         <span class="w-16 shrink-0 text-right text-sm font-bold">{{ s.xp }} XP</span>

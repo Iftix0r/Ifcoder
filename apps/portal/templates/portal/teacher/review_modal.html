@@ -1,0 +1,9 @@
+{% extends "components/form_modal.html" %}
+{% block body %}
+<div class="rounded-xl border border-line bg-surface-2/50 p-4">
+  <p class="stat-label mb-1.5">O'quvchi javobi</p>
+  {% if row.text %}<div class="max-h-64 overflow-y-auto font-mono text-[13px] leading-relaxed whitespace-pre-wrap text-ink">{{ row.text }}</div>{% endif %}
+  {% if row.url %}<a href="{{ row.url }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-sm font-medium break-all text-brand-600 hover:underline dark:text-brand-300">{{ row.url }}</a>{% endif %}
+</div>
+{{ block.super }}
+{% endblock %}

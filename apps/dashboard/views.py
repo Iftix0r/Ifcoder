@@ -11,6 +11,7 @@ from apps.finance.models import Credit, Debt, Invoice, Kind, Recurring, Transact
 from apps.finance.views import MONTHS, _month, _shift, budget_rows, month_series
 from apps.growth.models import Goal, Habit, JournalEntry, LearningItem
 from apps.planner.models import Task, TimeEntry
+from apps.portal.services import teacher_alerts
 from apps.projects.models import Project
 from apps.resources.models import Resource
 from apps.resources.views import expiring
@@ -98,6 +99,7 @@ def _alerts(today):
                 "url": "/credits/",
             }
         )
+    items += teacher_alerts(today)
     for r in Recurring.objects.filter(is_active=True, next_date__lte=today)[:5]:
         items.append(
             {

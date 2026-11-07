@@ -19,6 +19,9 @@ Dizayn tizimi AIMarkaz bilan bir xil (indigo → violet, yorug'/qorong'i rejim, 
 | Bitimlar | `/deals/` | Voronka kanbani: Yangi → Aloqa → Taklif → Muzokara → Yutildi/Yo'qotildi |
 | Telegram | `/telegram/` | Akkauntni ulash, messenjer: suhbatlar, javob, tahrir, o'chirish, fayl yuborish, media, o'qildi, online, CRM, buyruqlar |
 | O'quvchilar | `/students/` | Natijalar, yozgan kodi, izoh, bloklash, yangi parol, ro'yxatdan o'tish havolasi |
+| Guruhlar va davomat | `/students/groups/` | Dars vaqti, oylik to'lov, har dars uchun keldi/kechikdi/kelmadi |
+| Uy vazifalari | `/students/reviews/` | Topshirilgan javoblarni o'qish, baholash yoki qaytarish |
+| O'quv to'lovlari | `/students/payments/` | Oy bo'yicha kim to'ladi va qancha qoldi; to'lov «Kirim-chiqim»ga ham yoziladi |
 | E'lon va materiallar | `/students/posts/` | O'quvchilar kabinetida chiqadigan e'lon, material va uy vazifalari |
 | Kirim-chiqim | `/finance/` | Oylik hisob, 6 oylik grafik, xarajatlar tarkibi, toifalar (so'm va $), oylik limitlar, CSV eksport |
 | Takroriy to'lovlar | `/finance/recurring/` | Maosh, ijara, obuna: vaqti kelganda eslatiladi, tasdiqlangach kirim-chiqimga yoziladi |
@@ -48,6 +51,9 @@ reyting va profil. Parolni unutgan o'quvchiga yangisini o'qituvchi `/students/<i
 **Panel bitta egaga mo'ljallangan, ma'lumotlarda `user` ustuni yo'q.** O'quvchini faqat `StudentGateMiddleware` to'sadi: `Student`
 yozuvi bor foydalanuvchiga `/portal/` va `/static/` dan boshqa hamma manzil yopiq. Shu middleware'ni olib tashlamang va
 o'quvchiga ochiladigan sahifalarni faqat `/portal/` ostiga qo'shing. O'quvchi kirishlari xavfsizlik jurnaliga yozilmaydi.
+
+**O'quv to'lovi:** summa `Payment` da saqlanmaydi, u moliyadagi `Transaction` ning o'zi. Kirim tahrirlansa to'lov ham o'zgaradi, kirim
+o'chirilsa to'lov ham o'chadi. O'quvchi o'chirilganda kirim qoladi. To'lamaganlar oyning 10-kunidan «E'tibor talab qiladi»ga chiqadi.
 
 **O'yin:** o'quvchi haqiqiy Python yozadi, 6 bob va 25 bosqich. Kod `apps/portal/engine.py` da bajariladi: `eval`/`exec` yo'q, `ast`
 daraxti faqat ruxsat etilgan tugunlar bo'yicha yuriladi, qadamlar soni cheklangan. Yulduz serverda hisoblanadi. Yangi bosqich

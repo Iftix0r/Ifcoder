@@ -8,7 +8,7 @@
     <span class="avatar size-12 text-sm">{{ student.full_name|initials }}</span>
     <div class="min-w-0">
       <h1 class="truncate text-2xl font-bold tracking-tight">{{ student.full_name }}</h1>
-      <p class="truncate text-sm text-ink-2">@{{ student.user.username }}{% if student.phone %} · {{ student.phone }}{% endif %} · {{ student.created_at|date:"j E Y" }} dan beri</p>
+      <p class="truncate text-sm text-ink-2">@{{ student.user.username }}{% if student.group %} · <a href="{% url 'group_detail' student.group_id %}" class="hover:underline">{{ student.group.name }}</a>{% endif %}{% if student.phone %} · {{ student.phone }}{% endif %} · {{ student.created_at|date:"j E Y" }} dan beri</p>
     </div>
     {% if not student.user.is_active %}<span class="badge badge-danger shrink-0">Bloklangan</span>{% endif %}
   </div>
@@ -18,11 +18,12 @@
   </div>
 </div>
 
-<div class="mb-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+<div class="mb-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
   <div class="card p-4"><p class="stat-label">Yechilgan</p><p class="mt-2 text-xl font-bold">{{ student.solved }} / {{ total_levels }}</p></div>
   <div class="card p-4"><p class="stat-label">Ball</p><p class="mt-2 text-xl font-bold">{{ student.xp }} XP</p></div>
   <div class="card p-4"><p class="stat-label">Unvon</p><p class="mt-2 text-lg font-bold">{{ rank.title }}</p></div>
   <div class="card p-4"><p class="stat-label">Urinishlar</p><p class="mt-2 text-xl font-bold">{{ attempts }} ta</p></div>
+  <div class="card col-span-2 p-4 lg:col-span-1"><p class="stat-label">Davomat</p><p class="mt-2 text-xl font-bold">{% if visits.total %}{{ visits.percent }}% <span class="text-sm font-medium text-ink-3">· {{ visits.absent }} ta qoldirgan</span>{% else %}—{% endif %}</p></div>
 </div>
 {% if student.note %}<div class="card mb-5 p-4"><p class="stat-label">Izoh</p><p class="mt-1.5 text-sm text-ink-2">{{ student.note|linebreaksbr }}</p></div>{% endif %}
 
@@ -52,5 +53,15 @@
     {% endif %}
   </section>
 </div>
+{% if submissions %}
+  <section class="card mt-5">
+    <h2 class="px-5 pt-5 pb-3 text-base font-bold">Uy vazifalari</h2>
+    <div class="divide-y divide-line">
+      {% for row in submissions %}
+        <button type="button" class="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-surface-2/60" hx-get="{% url 'review_edit' row.pk %}" hx-target="#modal-content"><span class="min-w-0 flex-1 truncate text-sm font-semibold">{{ row.post.title }}</span>{% if row.grade %}<span class="badge badge-success shrink-0">{{ row.grade }}</span>{% endif %}<span class="badge {{ row.badge }} shrink-0">{{ row.get_status_display }}</span></button>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,35 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ post.title }}{% endblock %}
+{% block content %}
+<a href="{% url 'portal_materials' %}?kind=homework" class="btn btn-ghost btn-sm -ml-2 mb-3">{% icon "arrow-left" "size-4" %}Uy vazifalari</a>
+<div class="max-w-3xl space-y-4">
+  <section class="card p-5 animate-fade-up">
+    <div class="flex flex-wrap items-center gap-2">
+      <h1 class="text-xl font-bold tracking-tight">{{ post.title }}</h1>
+      {% if post.due_date %}<span class="badge {{ post.due_date|due_badge }}">{{ post.due_date|due_label }}</span>{% endif %}
+    </div>
+    {% if post.body %}<div class="mt-3 text-sm leading-relaxed text-ink-2">{{ post.body|linebreaksbr }}</div>{% endif %}
+    {% if post.url %}<a href="{{ post.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm mt-3">{% icon "external-link" "size-3.5" %}Ochish</a>{% endif %}
+  </section>
+
+  {% if submission %}
+    <section class="card p-5">
+      <div class="flex flex-wrap items-center gap-2"><h2 class="text-base font-bold">O'qituvchi javobi</h2><span class="badge {{ submission.badge }}">{{ submission.get_status_display }}</span>{% if submission.grade %}<span class="badge badge-success">Baho: {{ submission.grade }}</span>{% endif %}</div>
+      {% if submission.feedback and submission.status != "submitted" %}<p class="mt-2 text-sm leading-relaxed text-ink-2">{{ submission.feedback|linebreaksbr }}</p>{% elif submission.status == "submitted" %}<p class="mt-2 text-sm text-ink-3">Javobingiz tekshirilmoqda. Xohlasangiz, hali o'zgartirishingiz mumkin.</p>{% endif %}
+    </section>
+  {% endif %}
+
+  {% if locked %}
+    <section class="card p-5"><h2 class="mb-2 text-base font-bold">Sizning javobingiz</h2>{% if submission.text %}<div class="text-sm leading-relaxed whitespace-pre-wrap text-ink-2">{{ submission.text }}</div>{% endif %}{% if submission.url %}<a href="{{ submission.url }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-sm font-medium break-all text-brand-600 hover:underline dark:text-brand-300">{{ submission.url }}</a>{% endif %}</section>
+  {% else %}
+    <form method="post" class="card space-y-4 p-5" novalidate>
+      {% csrf_token %}
+      <h2 class="text-base font-bold">{% if submission %}Javobni yangilash{% else %}Javob yuborish{% endif %}</h2>
+      {% include "components/form_errors.html" %}
+      {% include "components/field.html" with field=form.text %}
+      {% include "components/field.html" with field=form.url hint="Masalan, kodingiz yoki loyihangizga havola" %}
+      <button class="btn btn-primary">{% icon "send" "size-4" %}Topshirish</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

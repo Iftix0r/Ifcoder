@@ -14,7 +14,7 @@ from apps.core.crud import delete_done, form_modal
 from . import services
 from .forms import PostForm, StudentForm, StudentPasswordForm, generate_password
 from .levels import ALL_LEVELS, LEVELS
-from .models import Post, Student
+from .models import Group, Post, Student
 
 
 def student_list(request):
@@ -27,6 +27,9 @@ def student_list(request):
             | Q(user__username__icontains=q)
             | Q(phone__icontains=q)
         )
+    group = request.GET.get("group", "")
+    if group.isdigit():
+        students = students.filter(group_id=group)
     week = timezone.now() - timedelta(days=7)
     return render(
         request,
@@ -35,6 +38,8 @@ def student_list(request):
             "nav_active": "students",
             "page": Paginator(students, 30).get_page(request.GET.get("page")),
             "q": q,
+            "group": group,
+            "groups": Group.objects.filter(is_active=True),
             "total": Student.objects.count(),
             "active_week": Student.objects.filter(progress__updated_at__gte=week).distinct().count(),
             "finished": sum(s.solved >= len(ALL_LEVELS) for s in Student.objects.with_stats()),
@@ -57,6 +62,8 @@ def student_detail(request, pk):
             "chapters": services.chapter_cards(progress),
             "rows": sorted(progress.values(), key=lambda row: row.updated_at, reverse=True),
             "attempts": sum(row.attempts for row in progress.values()),
+            "visits": services.attendance_stats(student),
+            "submissions": student.submissions.select_related("post")[:10],
             "total_levels": len(ALL_LEVELS),
         },
     )
@@ -105,7 +112,9 @@ def student_code(request, pk, level):
 
 
 def post_list(request):
-    return render(request, "portal/teacher/post_list.html", {"nav_active": "posts", "posts": Post.objects.all()})
+    return render(
+        request, "portal/teacher/post_list.html", {"nav_active": "posts", "posts": Post.objects.select_related("group")}
+    )
 
 
 def post_create(request):

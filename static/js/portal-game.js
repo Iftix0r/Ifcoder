@@ -339,6 +339,7 @@
     if (!finished) return;
     setRunning(false);
     if (data.best_stars !== undefined) renderBestStars(data.best_stars);
+    if (data.xp !== undefined && $("xp-value")) $("xp-value").textContent = data.xp;
     if (data.ok) {
       mark(null);
       showResult(data);

@@ -14,7 +14,7 @@
     {% for post in posts %}
       <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-surface-2/60" hx-get="{% url 'post_edit' post.pk %}" hx-target="#modal-content">
         <span class="icon-chip {{ post.tone }} size-9 shrink-0">{% icon post.icon "size-[18px]" %}</span>
-        <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ post.title }}</p><p class="truncate text-xs text-ink-3">{{ post.get_kind_display }} · {{ post.created_at|date:"j E" }}</p></div>
+        <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ post.title }}</p><p class="truncate text-xs text-ink-3">{{ post.get_kind_display }} · {{ post.group.name|default:"Hamma uchun" }} · {{ post.created_at|date:"j E" }}</p></div>
         {% if post.pinned %}<span class="text-ink-3">{% icon "pin" "size-4" %}</span>{% endif %}
         {% if not post.is_published %}<span class="badge badge-neutral shrink-0">Yashirin</span>{% endif %}
       </button>

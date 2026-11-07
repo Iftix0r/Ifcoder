@@ -1,0 +1,38 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}O'quv to'lovlari{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">O'quv to'lovlari</h1>
+    <p class="mt-1 text-sm text-ink-2">Oylik to'lov guruhdan olinadi. Yozilgan to'lov «Kirim-chiqim»ga ham tushadi.</p>
+  </div>
+  <div class="flex items-center gap-1">
+    <a href="?month={{ previous|date:'Y-m' }}" class="btn btn-secondary btn-icon" aria-label="Oldingi oy">{% icon "chevron-left" "size-4" %}</a>
+    <span class="min-w-32 text-center text-sm font-semibold">{{ month|date:"F Y" }}</span>
+    <a href="?month={{ following|date:'Y-m' }}" class="btn btn-secondary btn-icon" aria-label="Keyingi oy">{% icon "chevron-right" "size-4" %}</a>
+  </div>
+</div>
+<div id="payments-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#payments-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<div class="mb-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+  <div class="card p-4"><p class="stat-label">Kutilmoqda</p><p class="mt-2 text-lg font-bold">{{ expected|money }}</p></div>
+  <div class="card p-4"><p class="stat-label">Yig'ildi</p><p class="mt-2 text-lg font-bold text-emerald-600 dark:text-emerald-400">{{ collected|money }}</p></div>
+  <div class="card col-span-2 p-4 lg:col-span-1"><p class="stat-label">Qoldi · {{ unpaid }} o'quvchi</p><p class="mt-2 text-lg font-bold">{{ left|money }}</p></div>
+</div>
+{% if rows %}
+  <div class="card divide-y divide-line">
+    {% for row in rows %}
+      <div class="flex flex-wrap items-center gap-3 px-4 py-3">
+        <a href="{% url 'student_detail' row.student.pk %}" class="flex min-w-0 flex-1 basis-48 items-center gap-3"><span class="avatar size-9 text-xs">{{ row.student.full_name|initials }}</span><span class="min-w-0"><span class="block truncate text-sm font-semibold">{{ row.student.full_name }}</span><span class="block truncate text-xs text-ink-3">{{ row.student.group.name|default:"Guruhsiz" }}</span></span></a>
+        <div class="flex flex-wrap items-center justify-end gap-1.5">
+          {% for p in row.payments %}<button type="button" class="badge badge-success gap-1" hx-post="{% url 'payment_delete' p.pk %}" hx-confirm="Bu to'lov va kirim yozuvi o'chirilsinmi?" title="O'chirish">{{ p.transaction.amount|money }} {% icon "x" "size-3" %}</button>{% endfor %}
+          {% if row.left %}<span class="badge badge-warning">Qoldi {{ row.left|money }}</span>{% elif row.due %}<span class="badge badge-success">To'langan</span>{% endif %}
+          <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'payment_create' row.student.pk %}?month={{ month|date:'Y-m' }}" hx-target="#modal-content">{% icon "plus" "size-3.5" %}To'lov</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="banknote" title="Bu oy kutiladigan to'lov yo'q" text="Guruhga oylik to'lov belgilang va o'quvchilarni guruhga qo'shing." %}</div>
+{% endif %}
+</div>
+{% endblock %}

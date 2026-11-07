@@ -1,0 +1,43 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}{{ group.name }}{% endblock %}
+{% block content %}
+<div id="group-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#group-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<a href="{% url 'group_list' %}" class="mb-3 inline-flex items-center gap-1.5 text-sm text-ink-2 hover:text-ink">{% icon "arrow-left" "size-4" %}Guruhlar</a>
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-up">
+  <div class="min-w-0">
+    <h1 class="truncate text-2xl font-bold tracking-tight">{{ group.name }}</h1>
+    <p class="mt-0.5 text-sm text-ink-2">{{ group.schedule|default:"Vaqti yozilmagan" }} · {% if group.monthly_fee %}{{ group.monthly_fee|money }} / oy{% else %}Bepul{% endif %}</p>
+  </div>
+  <div class="flex shrink-0 gap-2">
+    <button type="button" class="btn btn-secondary" hx-get="{% url 'group_edit' group.pk %}" hx-target="#modal-content">{% icon "pencil" "size-4" %}Tahrirlash</button>
+    <a href="{% url 'lesson_edit' group.pk today %}" class="btn btn-primary">{% icon "calendar-check" "size-4" %}Bugungi davomat</a>
+  </div>
+</div>
+<div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+  <section class="card">
+    <h2 class="px-5 pt-5 pb-3 text-base font-bold">O'quvchilar</h2>
+    {% if students %}
+      <div class="divide-y divide-line">
+        {% for s in students %}
+          <a href="{% url 'student_detail' s.pk %}" class="flex items-center gap-3 px-5 py-3 transition hover:bg-surface-2/60 {% if not s.user.is_active %}opacity-60{% endif %}"><span class="avatar size-8 text-xs">{{ s.full_name|initials }}</span><span class="min-w-0 flex-1 truncate text-sm font-semibold">{{ s.full_name }}</span><span class="text-sm font-bold">{{ s.xp }} XP</span></a>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% include "components/empty_state.html" with icon="school" title="Guruh bo'sh" text="O'quvchi kartasida «Tahrirlash» orqali shu guruhni tanlang." %}
+    {% endif %}
+  </section>
+  <section class="card">
+    <h2 class="px-5 pt-5 pb-3 text-base font-bold">Darslar</h2>
+    {% if lessons %}
+      <div class="divide-y divide-line">
+        {% for lesson in lessons %}
+          <a href="{% url 'lesson_edit' group.pk lesson.date.isoformat %}" class="flex items-center gap-3 px-5 py-3 transition hover:bg-surface-2/60"><div class="min-w-0 flex-1"><p class="text-sm font-semibold">{{ lesson.date|date:"j E, l" }}</p>{% if lesson.topic %}<p class="truncate text-xs text-ink-3">{{ lesson.topic }}</p>{% endif %}</div><span class="badge badge-neutral shrink-0">{{ lesson.came }} / {{ lesson.total }}</span></a>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% include "components/empty_state.html" with icon="calendar-check" title="Hali dars yozilmagan" text="«Bugungi davomat» tugmasidan boshlang." %}
+    {% endif %}
+  </section>
+</div>
+</div>
+{% endblock %}

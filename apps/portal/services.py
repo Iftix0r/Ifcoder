@@ -1,12 +1,22 @@
-"""O'quvchi natijalari: xarita holati, unvon, reyting."""
+"""O'quvchi natijalari, yutuqlar, davomat va o'quv to'lovlari."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import date
+from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Q
+from django.urls import reverse
 from django.utils import timezone
 
+from apps.core.dates import add_months
+from apps.finance.models import Category, Kind, Transaction
+
 from .levels import ALL_LEVELS, CHAPTERS, MAX_XP, Level
-from .models import LevelProgress, Student
+from .models import Attendance, LevelProgress, Payment, Post, Student, Submission
+
+TUITION_CATEGORY = "O'quv to'lovi"
+PAYMENT_ALERT_DAY = 10  # Oy boshida hamma «to'lamagan»: ogohlantirish shu kundan keyin ma'noli
 
 RANKS = (
     (0, "Yangi boshlovchi", "sprout"),
@@ -114,3 +124,142 @@ def leaderboard(limit: int = 20):
         .filter(user__is_active=True, stars__gt=0)
         .order_by("-stars", "-solved", "created_at")[:limit]
     )
+
+
+def visible_posts(student: Student | None):
+    """O'quvchi umumiy va o'z guruhiga yozilganni ko'radi. O'qituvchi ko'rinishida hammasi."""
+    posts = Post.objects.filter(is_published=True).select_related("group")
+    if student is None:
+        return posts
+    return posts.filter(Q(group__isnull=True) | Q(group_id=student.group_id))
+
+
+def with_submissions(posts, student: Student | None) -> list[Post]:
+    posts = list(posts)
+    mine = {}
+    if student is not None:
+        mine = {row.post_id: row for row in student.submissions.filter(post__in=posts)}
+    for post in posts:
+        post.submission = mine.get(post.pk)
+    return posts
+
+
+def pending_homework(student: Student) -> int:
+    """Hali topshirilmagan yoki qaytarilgan vazifalar."""
+    done = student.submissions.exclude(status=Submission.Status.RETURNED).values("post")
+    return visible_posts(student).filter(kind=Post.Kind.HOMEWORK).exclude(pk__in=done).count()
+
+
+def attendance_stats(student: Student) -> dict:
+    marks = list(student.attendance.values_list("status", flat=True))
+    came = sum(status != Attendance.Status.ABSENT for status in marks)
+    return {
+        "total": len(marks),
+        "came": came,
+        "absent": len(marks) - came,
+        "percent": round(came * 100 / len(marks)) if marks else None,
+    }
+
+
+def achievements(student: Student, progress: dict[str, LevelProgress]) -> list[dict]:
+    """Yutuqlar saqlanmaydi, natijadan hisoblanadi: bosqich qo'shilsa yoki natija o'chirilsa o'zi to'g'rilanadi."""
+    solved = {slug for slug, row in progress.items() if row.stars}
+    perfect = sum(row.stars == 3 for row in progress.values())
+    top_grades = student.submissions.filter(status=Submission.Status.ACCEPTED, grade=5).count()
+    visits = attendance_stats(student)
+    items = [("Birinchi qadam", "Birinchi bosqichni yechdi", "footprints", bool(solved))]
+    for chapter in CHAPTERS:
+        finished = all(level.slug in solved for level in chapter.levels)
+        items.append((chapter.title, f"«{chapter.title}» bobini tugatdi", "award", finished))
+    items += [
+        ("Uch yulduz", "10 ta bosqichda 3 yulduz oldi", "star", perfect >= 10),
+        ("Mukammal", "Hamma bosqichda 3 yulduz oldi", "crown", perfect == len(ALL_LEVELS)),
+        ("A'lochi", "3 ta uy vazifasidan 5 oldi", "medal", top_grades >= 3),
+        ("Intizomli", "10 ta darsdan keyin davomati 90% dan yuqori", "calendar-check", _disciplined(visits)),
+    ]
+    return [{"title": t, "text": text, "icon": icon, "earned": earned} for t, text, icon, earned in items]
+
+
+def _disciplined(visits: dict) -> bool:
+    return visits["total"] >= 10 and visits["percent"] >= 90
+
+
+def month_start(day: date) -> date:
+    return day.replace(day=1)
+
+
+def parse_month(value: str | None) -> date:
+    try:
+        return date.fromisoformat(f"{value}-01")
+    except (TypeError, ValueError):
+        return month_start(timezone.localdate())
+
+
+@dataclass
+class PaymentRow:
+    student: Student
+    due: Decimal
+    payments: list[Payment] = field(default_factory=list)
+
+    @property
+    def paid(self) -> Decimal:
+        return sum((p.transaction.amount for p in self.payments), Decimal(0))
+
+    @property
+    def left(self) -> Decimal:
+        return max(self.due - self.paid, Decimal(0))
+
+
+def payment_rows(month: date) -> list[PaymentRow]:
+    """Oy tugagach qo'shilgan va bloklangan o'quvchidan to'lov kutilmaydi, lekin to'lagani doim ko'rinadi."""
+    payments: dict[int, list[Payment]] = {}
+    for payment in Payment.objects.filter(month=month).select_related("transaction"):
+        payments.setdefault(payment.student_id, []).append(payment)
+    billable = Q(user__is_active=True, group__monthly_fee__gt=0, created_at__date__lt=add_months(month, 1))
+    students = Student.objects.filter(billable | Q(pk__in=payments)).select_related("user", "group")
+    rows = [
+        PaymentRow(student, student.group.monthly_fee if student.group else Decimal(0), payments.get(student.pk, []))
+        for student in students
+    ]
+    return sorted(rows, key=lambda row: (row.left == 0, row.student.full_name))
+
+
+@transaction.atomic
+def record_payment(student: Student, month: date, *, amount, method, day) -> Payment:
+    category, _ = Category.objects.get_or_create(name=TUITION_CATEGORY, kind=Kind.INCOME)
+    entry = Transaction.objects.create(
+        kind=Kind.INCOME,
+        amount=amount,
+        category=category,
+        method=method,
+        date=day,
+        description=f"{student.full_name}: {month:%Y-%m} o'quv to'lovi"[:250],
+    )
+    return Payment.objects.create(student=student, month=month, transaction=entry)
+
+
+def teacher_alerts(today: date) -> list[dict]:
+    """Bosh sahifadagi «E'tibor talab qiladi» uchun."""
+    items = []
+    waiting = Submission.objects.filter(status=Submission.Status.SUBMITTED).count()
+    if waiting:
+        items.append(
+            {
+                "icon": "clipboard-check",
+                "tone": "tone-violet",
+                "title": f"{waiting} ta uy vazifasi tekshirilmagan",
+                "url": reverse("review_list"),
+            }
+        )
+    if today.day >= PAYMENT_ALERT_DAY:
+        unpaid = sum(row.left > 0 for row in payment_rows(month_start(today)))
+        if unpaid:
+            items.append(
+                {
+                    "icon": "banknote",
+                    "tone": "tone-amber",
+                    "title": f"{unpaid} ta o'quvchi bu oy to'lamagan",
+                    "url": reverse("payment_list"),
+                }
+            )
+    return items

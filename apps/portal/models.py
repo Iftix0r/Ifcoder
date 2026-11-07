@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
@@ -10,16 +11,34 @@ from .levels import ALL_LEVELS, LEVELS, XP_PER_STAR
 
 class StudentQuerySet(models.QuerySet):
     def with_stats(self):
-        return self.select_related("user").annotate(
+        return self.select_related("user", "group").annotate(
             stars=Coalesce(Sum("progress__stars"), 0),
             solved=Count("progress", filter=Q(progress__stars__gt=0)),
         )
+
+
+class Group(TimeStamped):
+    name = models.CharField("Nomi", max_length=100)
+    schedule = models.CharField("Dars vaqti", max_length=100, blank=True, help_text="Masalan: Du, Cho, Ju · 16:00")
+    monthly_fee = models.DecimalField("Oylik to'lov (so'm)", max_digits=14, decimal_places=2, default=0)
+    is_active = models.BooleanField("Faol", default=True)
+
+    class Meta:
+        verbose_name = "Guruh"
+        verbose_name_plural = "Guruhlar"
+        ordering = ["-is_active", "name"]
+
+    def __str__(self):
+        return self.name
 
 
 class Student(TimeStamped):
     """Bu yozuvi bor foydalanuvchi faqat /portal/ ni ko'radi. Yozuv foydalanuvchi bilan birga o'chiriladi."""
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="student")
+    group = models.ForeignKey(
+        Group, verbose_name="Guruh", null=True, blank=True, on_delete=models.SET_NULL, related_name="students"
+    )
     phone = models.CharField("Telefon", max_length=30, blank=True)
     note = models.TextField("O'qituvchi izohi", blank=True)
 
@@ -88,6 +107,16 @@ class Post(TimeStamped):
 
     title = models.CharField("Sarlavha", max_length=200)
     kind = models.CharField("Turi", max_length=20, choices=Kind.choices, default=Kind.NEWS)
+    # Guruh o'chsa yozuv ham o'chadi: SET_NULL uni hamma o'quvchiga ochib yuborardi
+    group = models.ForeignKey(
+        Group,
+        verbose_name="Guruh",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="posts",
+        help_text="Bo'sh qolsa, hamma o'quvchiga ko'rinadi",
+    )
     body = models.TextField("Matn", blank=True)
     url = models.URLField("Havola", blank=True)
     due_date = models.DateField("Muddat", null=True, blank=True)
@@ -109,3 +138,90 @@ class Post(TimeStamped):
     @property
     def tone(self) -> str:
         return {"news": "tone-brand", "material": "tone-cyan", "homework": "tone-amber"}[self.kind]
+
+
+class Submission(TimeStamped):
+    """O'quvchining uy vazifasi javobi. Qaytarilgan javob qayta topshiriladi, qabul qilingani yopiladi."""
+
+    class Status(models.TextChoices):
+        SUBMITTED = "submitted", "Tekshirilmoqda"
+        ACCEPTED = "accepted", "Qabul qilindi"
+        RETURNED = "returned", "Qaytarildi"
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="submissions")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="submissions")
+    text = models.TextField("Javob", max_length=5000, blank=True)
+    url = models.URLField("Havola", blank=True)
+    status = models.CharField("Holati", max_length=20, choices=Status.choices, default=Status.SUBMITTED)
+    grade = models.PositiveSmallIntegerField(
+        "Baho", null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    feedback = models.TextField("O'qituvchi izohi", blank=True)
+    reviewed_at = models.DateTimeField("Tekshirilgan", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Uy vazifasi javobi"
+        verbose_name_plural = "Uy vazifasi javoblari"
+        ordering = ["-updated_at"]
+        constraints = [models.UniqueConstraint(fields=["post", "student"], name="portal_submission_unique")]
+
+    def __str__(self):
+        return f"{self.student}: {self.post}"
+
+    @property
+    def badge(self) -> str:
+        return {"submitted": "badge-brand", "accepted": "badge-success", "returned": "badge-warning"}[self.status]
+
+
+class Lesson(TimeStamped):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="lessons")
+    date = models.DateField("Sana")
+    topic = models.CharField("Mavzu", max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "Dars"
+        verbose_name_plural = "Darslar"
+        ordering = ["-date"]
+        constraints = [models.UniqueConstraint(fields=["group", "date"], name="portal_lesson_unique")]
+
+    def __str__(self):
+        return f"{self.group} {self.date}"
+
+
+class Attendance(models.Model):
+    class Status(models.TextChoices):
+        PRESENT = "present", "Keldi"
+        LATE = "late", "Kechikdi"
+        ABSENT = "absent", "Kelmadi"
+
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="marks")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="attendance")
+    status = models.CharField("Holati", max_length=10, choices=Status.choices, default=Status.PRESENT)
+
+    class Meta:
+        verbose_name = "Davomat"
+        verbose_name_plural = "Davomat"
+        constraints = [models.UniqueConstraint(fields=["lesson", "student"], name="portal_attendance_unique")]
+
+    def __str__(self):
+        return f"{self.student}: {self.get_status_display()}"
+
+
+class Payment(models.Model):
+    """O'quv to'lovi. Summa bu yerda saqlanmaydi: u moliyadagi kirim yozuvining o'zi.
+
+    Kirim-chiqimda summa tahrirlansa shu yerda ham o'zgaradi, kirim o'chirilsa to'lov ham o'chadi. O'quvchi
+    o'chirilganda kirim qoladi: pul haqiqatan olingan.
+    """
+
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="payments")
+    month = models.DateField("Oy")
+    transaction = models.OneToOneField("finance.Transaction", on_delete=models.CASCADE, related_name="tuition")
+
+    class Meta:
+        verbose_name = "O'quv to'lovi"
+        verbose_name_plural = "O'quv to'lovlari"
+        ordering = ["-month"]
+
+    def __str__(self):
+        return f"{self.student}: {self.month:%Y-%m}"

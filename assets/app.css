@@ -577,6 +577,14 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .rank-place { @apply w-6 shrink-0 text-center text-sm font-bold text-ink-3; }
   .rank-place.is-top { @apply text-amber-500; }
 
+  .att-choice {
+    @apply inline-flex h-8 items-center rounded-lg border border-line bg-surface px-2.5 text-[13px] font-medium text-ink-2 transition
+      peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500/40;
+  }
+  .peer:checked + .att-present { @apply border-emerald-500 bg-emerald-500 text-white; }
+  .peer:checked + .att-late { @apply border-amber-500 bg-amber-500 text-white; }
+  .peer:checked + .att-absent { @apply border-rose-500 bg-rose-500 text-white; }
+
   .game-board { @apply flex justify-center overflow-x-auto bg-surface-2/50 p-3 sm:p-4; }
   .game-board svg { @apply h-auto max-h-[460px] w-full; }
   .tile-floor { fill: var(--color-surface); stroke: var(--color-line); }

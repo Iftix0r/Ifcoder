@@ -1,16 +1,32 @@
 """O'quvchi portali: panelga kira olmaslik, ro'yxatdan o'tish, o'yin va o'qituvchi bo'limi."""
 
 import json
+from datetime import date
 from unittest import mock
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.test import Client
 from django.urls import get_resolver, reverse
+from django.utils import timezone
 
+from apps.finance.models import Transaction
 from apps.portal.levels import ALL_LEVELS, LEVELS, MAX_XP
-from apps.portal.models import LevelProgress, Post, Student
-from apps.portal.services import RANKS, leaderboard, rank_for
+from apps.portal.models import Attendance, Group, Lesson, LevelProgress, Payment, Post, Student, Submission
+from apps.portal.services import (
+    PAYMENT_ALERT_DAY,
+    RANKS,
+    achievements,
+    attendance_stats,
+    leaderboard,
+    parse_month,
+    payment_rows,
+    pending_homework,
+    progress_of,
+    rank_for,
+    teacher_alerts,
+)
 from apps.security.models import Event, SessionRecord
 from tests.test_pages import MODALS, PAGES
 from tests.test_portal_levels import SOLUTIONS
@@ -324,8 +340,6 @@ def test_unknown_level_is_404(student_client):
 
 
 def test_csrf_is_enforced_on_run(student):
-    from django.test import Client
-
     client = Client(enforce_csrf_checks=True)
     client.force_login(student.user)
     assert run_code(client, "salom-robot", "yur()").status_code == 403
@@ -471,8 +485,6 @@ def test_teacher_resets_password(client_in, student):
 
 
 def test_password_reset_ends_student_sessions(client, client_in, student):
-    from django.test import Client
-
     child = Client()
     child.force_login(student.user)
     assert child.get(reverse("portal_home")).status_code == 200
@@ -521,3 +533,365 @@ def test_post_link_must_be_web_address(client_in):
 def test_teacher_nav_has_students(client_in):
     html = client_in.get(reverse("dashboard")).content.decode()
     assert reverse("student_list") in html and reverse("post_list") in html
+
+
+# --- Guruhlar ---
+
+
+@pytest.fixture
+def group(db):
+    return Group.objects.create(name="Python 1", schedule="Du, Cho 16:00", monthly_fee=300_000)
+
+
+@pytest.fixture
+def member(student, group):
+    student.group = group
+    student.save()
+    return student
+
+
+def test_group_crud(client_in):
+    form = {"name": "Boshlovchilar", "schedule": "Sesh", "monthly_fee": "250 000", "is_active": "on"}
+    assert client_in.post(reverse("group_create"), form, **HX).status_code == 204
+    group = Group.objects.get()
+    assert group.monthly_fee == 250_000
+    assert client_in.get(reverse("group_detail", args=[group.pk])).status_code == 200
+    assert client_in.get(reverse("group_edit", args=[group.pk]), **HX).status_code == 200
+    assert client_in.post(reverse("group_delete", args=[group.pk]), **HX).status_code == 204
+    assert not Group.objects.exists()
+
+
+def test_deleting_group_keeps_students(client_in, member, group):
+    client_in.post(reverse("group_delete", args=[group.pk]), **HX)
+    member.refresh_from_db()
+    assert member.group is None
+
+
+def test_deleting_group_never_opens_its_posts_to_everyone(client_in, group):
+    Post.objects.create(title="Maxsus", group=group)
+    client_in.post(reverse("group_delete", args=[group.pk]), **HX)
+    assert not Post.objects.exists()
+
+
+def test_teacher_assigns_group_and_filters(client_in, student, group):
+    form = {"first_name": "Ali", "last_name": "Valiyev", "group": group.pk, "phone": "", "note": "", "is_active": "on"}
+    assert client_in.post(reverse("student_edit", args=[student.pk]), form, **HX).status_code == 204
+    student.refresh_from_db()
+    assert student.group == group
+    make_student("boshqa", "Sardor", "Karimov")
+    html = client_in.get(reverse("student_list"), {"group": group.pk}).content.decode()
+    assert "Valiyev" in html and "Karimov" not in html
+
+
+def test_group_post_is_visible_only_inside_group(student_client, member, group):
+    other = Group.objects.create(name="Boshqa")
+    Post.objects.create(title="Hammaga")
+    Post.objects.create(title="Bizning guruh", group=group)
+    Post.objects.create(title="Begona guruh", group=other)
+    for name in ("portal_materials", "portal_home"):
+        html = student_client.get(reverse(name)).content.decode()
+        assert "Hammaga" in html and "Bizning guruh" in html and "Begona guruh" not in html
+
+
+def test_student_without_group_sees_only_common_posts(student_client, group):
+    Post.objects.create(title="Hammaga")
+    Post.objects.create(title="Guruhniki", group=group)
+    html = student_client.get(reverse("portal_materials")).content.decode()
+    assert "Hammaga" in html and "Guruhniki" not in html
+
+
+# --- Davomat ---
+
+
+def test_attendance_is_saved_and_shown_to_student(client_in, member, group):
+    url = reverse("lesson_edit", args=[group.pk, "2026-11-02"])
+    assert f'name="s{member.pk}"' in client_in.get(url).content.decode()
+    response = client_in.post(url, {"topic": "Sikllar", f"s{member.pk}": "absent"})
+    assert response.status_code == 302
+    mark = Attendance.objects.get()
+    assert mark.status == "absent" and mark.lesson.topic == "Sikllar"
+    assert client_in.post(url, {"topic": "Sikllar", f"s{member.pk}": "late"}).status_code == 302
+    assert Attendance.objects.get().status == "late"
+    assert attendance_stats(member) == {"total": 1, "came": 1, "absent": 0, "percent": 100}
+
+
+def test_attendance_bad_input(client_in, member, group):
+    assert client_in.get(reverse("lesson_edit", args=[group.pk, "emas"])).status_code == 404
+    client_in.post(reverse("lesson_edit", args=[group.pk, "2026-11-02"]), {f"s{member.pk}": "hack"})
+    assert not Attendance.objects.exists()
+
+
+def test_attendance_cannot_touch_other_groups(client_in, member, group):
+    outsider = make_student("tashqi")
+    client_in.post(reverse("lesson_edit", args=[group.pk, "2026-11-02"]), {f"s{outsider.pk}": "present"})
+    assert not Attendance.objects.filter(student=outsider).exists()
+
+
+def test_attendance_stats_without_lessons(student):
+    assert attendance_stats(student)["percent"] is None
+
+
+# --- Uy vazifalari ---
+
+
+@pytest.fixture
+def homework(db):
+    return Post.objects.create(title="Sikl mashqi", kind="homework")
+
+
+def submit(client, post, **form):
+    return client.post(reverse("portal_homework", args=[post.pk]), form)
+
+
+def test_student_submits_and_teacher_accepts(student_client, user, student, homework):
+    client_in = Client()
+    client_in.force_login(user)
+    assert student_client.get(reverse("portal_homework", args=[homework.pk])).status_code == 200
+    assert submit(student_client, homework, text="for i in range(3)").status_code == 302
+    row = student.submissions.get()
+    assert row.status == "submitted"
+    assert "Sikl mashqi" in client_in.get(reverse("review_list")).content.decode()
+    assert "for i in range(3)" in client_in.get(reverse("review_edit", args=[row.pk]), **HX).content.decode()
+
+    form = {"status": "accepted", "grade": "5", "feedback": "Zo'r"}
+    assert client_in.post(reverse("review_edit", args=[row.pk]), form, **HX).status_code == 204
+    row.refresh_from_db()
+    assert row.grade == 5 and row.reviewed_at
+    assert "Zo&#x27;r" in student_client.get(reverse("portal_homework", args=[homework.pk])).content.decode()
+
+
+def test_accepted_answer_is_locked(student_client, student, homework):
+    Submission.objects.create(post=homework, student=student, text="eski", status="accepted", grade=5)
+    submit(student_client, homework, text="yangi")
+    row = student.submissions.get()
+    assert row.text == "eski" and row.grade == 5
+
+
+def test_returned_answer_can_be_resubmitted(student_client, student, homework):
+    Submission.objects.create(post=homework, student=student, text="eski", status="returned", feedback="Qayta")
+    assert pending_homework(student) == 1
+    submit(student_client, homework, text="yangi")
+    row = student.submissions.get()
+    assert row.text == "yangi" and row.status == "submitted"
+    assert pending_homework(student) == 0
+
+
+def test_empty_answer_is_refused(student_client, student, homework):
+    assert submit(student_client, homework, text="  ").status_code == 200
+    assert not student.submissions.exists()
+
+
+def test_answer_link_must_be_web_address(student_client, student, homework):
+    assert submit(student_client, homework, url="javascript:alert(1)").status_code == 200
+    assert not student.submissions.exists()
+
+
+def test_accept_needs_grade_and_return_clears_it(client_in, student, homework):
+    row = Submission.objects.create(post=homework, student=student, text="a", grade=4)
+    url = reverse("review_edit", args=[row.pk])
+    assert client_in.post(url, {"status": "accepted", "grade": ""}, **HX).status_code == 200
+    assert client_in.post(url, {"status": "returned", "feedback": "Qayta"}, **HX).status_code == 204
+    row.refresh_from_db()
+    assert row.status == "returned" and row.grade is None
+
+
+@pytest.mark.parametrize("grade", ["0", "6", "x"])
+def test_bad_grade_is_refused(client_in, student, homework, grade):
+    row = Submission.objects.create(post=homework, student=student, text="a")
+    form = {"status": "accepted", "grade": grade}
+    assert client_in.post(reverse("review_edit", args=[row.pk]), form, **HX).status_code == 200
+
+
+def test_other_groups_homework_is_404(student_client, group):
+    post = Post.objects.create(title="Begona", kind="homework", group=group)
+    assert student_client.get(reverse("portal_homework", args=[post.pk])).status_code == 404
+    assert submit(student_client, post, text="x").status_code == 404
+    assert not Submission.objects.exists()
+
+
+@pytest.mark.parametrize("field", [{"kind": "news"}, {"kind": "homework", "is_published": False}])
+def test_only_published_homework_accepts_answers(student_client, field):
+    post = Post.objects.create(title="X", **field)
+    assert student_client.get(reverse("portal_homework", args=[post.pk])).status_code == 404
+
+
+def test_student_answer_is_escaped_for_teacher(client_in, student, homework):
+    row = Submission.objects.create(post=homework, student=student, text="<script>alert(1)</script>")
+    html = client_in.get(reverse("review_edit", args=[row.pk]), **HX).content.decode()
+    assert "<script>alert(1)" not in html
+
+
+# --- To'lovlar ---
+
+NOV = date(2026, 11, 1)
+
+
+def pay(client, student, amount="300 000", month="2026-11"):
+    form = {"amount": amount, "method": "cash", "date": "2026-11-05"}
+    return client.post(reverse("payment_create", args=[student.pk]) + f"?month={month}", form, **HX)
+
+
+def test_payment_goes_to_finance(client_in, member):
+    assert pay(client_in, member).status_code == 204
+    entry = Transaction.objects.get()
+    assert entry.kind == "income" and entry.amount == 300_000
+    assert entry.category.name == "O'quv to'lovi"
+    assert "Ali Valiyev" in entry.description
+    assert member.payments.get().month == NOV
+
+
+def test_partial_payments_add_up(client_in, member):
+    pay(client_in, member, "100 000")
+    assert payment_rows(NOV)[0].left == 200_000
+    pay(client_in, member, "200 000")
+    row = payment_rows(NOV)[0]
+    assert row.paid == 300_000 and row.left == 0
+
+
+def test_payment_page_totals(client_in, member):
+    pay(client_in, member, "100 000")
+    response = client_in.get(reverse("payment_list"), {"month": "2026-11"})
+    assert response.context["expected"] == 300_000
+    assert response.context["collected"] == 100_000
+    assert response.context["left"] == 200_000
+
+
+def test_finance_edit_changes_tuition(client_in, member):
+    """Summa bitta joyda: moliyada tuzatilsa, o'quv to'lovi ham o'zgaradi."""
+    pay(client_in, member)
+    Transaction.objects.update(amount=150_000)
+    assert payment_rows(NOV)[0].paid == 150_000
+
+
+def test_deleting_finance_entry_removes_payment(client_in, member):
+    pay(client_in, member)
+    Transaction.objects.get().delete()
+    assert not Payment.objects.exists()
+
+
+def test_deleting_payment_removes_finance_entry(client_in, member):
+    pay(client_in, member)
+    response = client_in.post(reverse("payment_delete", args=[Payment.objects.get().pk]), **HX)
+    assert response.status_code == 204
+    assert not Transaction.objects.exists()
+
+
+def test_deleting_student_keeps_income(client_in, member):
+    pay(client_in, member)
+    client_in.post(reverse("student_delete", args=[member.pk]), **HX)
+    assert Transaction.objects.count() == 1
+    assert not Payment.objects.exists()
+
+
+def test_who_owes(member, group):
+    blocked = make_student("blok")
+    Student.objects.filter(pk=blocked.pk).update(group=group)
+    User.objects.filter(pk=blocked.user_id).update(is_active=False)
+    free = Group.objects.create(name="Bepul")
+    Student.objects.filter(pk=make_student("bepul").pk).update(group=free)
+    make_student("guruhsiz")
+    assert [row.student.pk for row in payment_rows(services_month())] == [member.pk]
+
+
+def services_month():
+    return timezone.localdate().replace(day=1)
+
+
+def test_student_who_joined_later_owes_nothing_for_old_months(member):
+    assert payment_rows(date(2020, 1, 1)) == []
+
+
+def test_former_member_payment_stays_visible(client_in, member):
+    pay(client_in, member)
+    Student.objects.filter(pk=member.pk).update(group=None)
+    row = payment_rows(NOV)[0]
+    assert row.paid == 300_000 and row.left == 0
+
+
+@pytest.mark.parametrize("amount", ["0", "-5", "abc", ""])
+def test_bad_payment_amount(client_in, member, amount):
+    assert pay(client_in, member, amount).status_code == 200
+    assert not Transaction.objects.exists()
+
+
+@pytest.mark.parametrize("value", ["2026-13", "x", "", None, "2026-11-05"])
+def test_bad_month_falls_back_to_current(value):
+    assert parse_month(value) == services_month()
+
+
+def test_money_is_invisible_to_student(student_client, member):
+    assert student_client.get(reverse("payment_list")).status_code == 302
+    assert student_client.get(reverse("payment_create", args=[member.pk])).status_code == 302
+    assert "so'm" not in student_client.get(reverse("portal_home")).content.decode()
+
+
+# --- Yutuqlar va ogohlantirishlar ---
+
+
+def earned(student):
+    return {a["title"] for a in achievements(student, progress_of(student)) if a["earned"]}
+
+
+def test_achievements(student):
+    assert earned(student) == set()
+    solve_up_to(student, 4)
+    assert earned(student) == {"Birinchi qadam", "Birinchi qadamlar"}
+    LevelProgress.objects.all().delete()
+    solve_up_to(student, len(ALL_LEVELS))
+    assert {"Uch yulduz", "Mukammal", "O'zgaruvchilar"} <= earned(student)
+
+
+def test_attendance_and_grade_achievements(student, group):
+    for day in range(1, 11):
+        lesson = Lesson.objects.create(group=group, date=date(2026, 11, day))
+        Attendance.objects.create(lesson=lesson, student=student)
+    for n in range(3):
+        post = Post.objects.create(title=str(n), kind="homework")
+        Submission.objects.create(post=post, student=student, status="accepted", grade=5)
+    assert {"Intizomli", "A'lochi"} <= earned(student)
+
+
+def test_achievements_show_on_profile(student_client):
+    assert "Yutuqlar" in student_client.get(reverse("portal_profile")).content.decode()
+
+
+def test_run_returns_new_xp_total(student_client):
+    assert run_code(student_client, "salom-robot", SOLUTIONS["salom-robot"]).json()["xp"] == 30
+
+
+def test_teacher_alerts(member, homework):
+    Submission.objects.create(post=homework, student=member, text="a")
+    assert "uy vazifasi" in teacher_alerts(date(2026, 11, 2))[0]["title"]
+    assert len(teacher_alerts(date(2026, 11, 2))) == 1, "oy boshida to'lov haqida gapirilmaydi"
+    late = timezone.localdate().replace(day=PAYMENT_ALERT_DAY)
+    assert "to'lamagan" in teacher_alerts(late)[1]["title"]
+
+
+def test_dashboard_shows_portal_alerts(client_in, member, homework):
+    Submission.objects.create(post=homework, student=member, text="a")
+    assert "uy vazifasi tekshirilmagan" in client_in.get(reverse("dashboard")).content.decode()
+
+
+# --- O'zbekcha xabarlar ---
+
+
+@pytest.mark.parametrize(
+    ("change", "field", "fragment"),
+    [
+        ({"username": "ali 2012!"}, "username", "Loginda faqat"),
+        ({"username": "ALI"}, "username", "band"),
+        ({"password1": "123", "password2": "123"}, "password2", "juda qisqa"),
+        ({"password1": "password", "password2": "password"}, "password2", "juda oddiy"),
+    ],
+)
+def test_register_errors_are_in_uzbek(client, student, change, field, fragment):
+    response = client.post(reverse("portal_register"), {**FORM, **change})
+    errors = response.context["form"].errors[field]
+    assert any(fragment in error for error in errors)
+    assert not any("password" in error.lower() or "username" in error.lower() for error in errors)
+
+
+def test_profile_password_help_is_short_and_uzbek(student_client):
+    html = student_client.get(reverse("portal_profile")).content.decode()
+    assert "Your password" not in html
+    assert "Kamida 8 ta belgi" in html

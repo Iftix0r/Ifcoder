@@ -92,8 +92,8 @@ DATABASES = {"default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / '
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "apps.accounts.validators.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "apps.accounts.validators.CommonPasswordValidator"},
 ]
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
