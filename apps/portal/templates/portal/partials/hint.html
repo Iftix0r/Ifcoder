@@ -1,6 +1,14 @@
 {% if level.hint %}
-<details class="card p-4">
+<details class="card p-4" id="hint-box">
   <summary class="cursor-pointer text-sm font-semibold">{% icon "lightbulb" "mr-1 inline size-4 text-amber-500" %}Maslahat kerakmi?</summary>
   <p class="mt-2 text-sm leading-relaxed text-ink-2">{{ level.hint }}</p>
 </details>
+{% endif %}
+{% if config.helpUrl %}
+<button type="button" id="ask-help" class="btn btn-secondary w-full" hidden>{% icon "life-buoy" "size-4" %}Qiynaldimmi? Yechimni ko'rsat (bu bosqichda 1 yulduz)</button>
+<section class="card p-4" id="solution-box" hidden>
+  <p class="text-sm font-semibold">Yechim</p>
+  <p class="mt-1 text-sm text-ink-2">Ko'chirmang. Har qatorni o'qing, nima uchun kerakligini tushuning, keyin o'zingiz yozing.</p>
+  <pre class="code-sample" id="solution"></pre>
+</section>
 {% endif %}

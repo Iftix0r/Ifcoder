@@ -5,6 +5,7 @@
   </div>
   <div class="space-y-4 px-6 py-5">
     {% if level %}<p class="text-sm text-ink-2">{{ level.goal }}</p>{% endif %}
+    {% if row.helped %}<span class="badge badge-warning">Yechimni ko'rib o'tgan</span>{% endif %}
     {% if row.best_code %}
       <div><p class="mb-1.5 flex items-center gap-2 text-sm font-semibold">Eng yaxshi yechim {% include "portal/partials/stars.html" with n=row.stars size="size-3.5" %}</p><pre class="code-sample">{{ row.best_code }}</pre></div>
     {% endif %}

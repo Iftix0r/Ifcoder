@@ -1,0 +1,13 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="mx-auto max-w-3xl space-y-3">
+  <div class="flex items-center justify-between gap-3"><p class="text-sm font-semibold">{{ level.goal }}</p><p class="shrink-0 text-sm text-ink-2"><span id="found">0</span> juft · <span id="misses">0</span> xato</p></div>
+  <div id="cards" class="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3"></div>
+  <div id="status" class="game-status" aria-live="polite" hidden></div>
+  {% include "portal/partials/lesson.html" %}
+</div>
+{% include "portal/partials/result.html" %}
+{% endblock %}

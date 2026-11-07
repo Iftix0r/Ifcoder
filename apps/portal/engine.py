@@ -341,6 +341,8 @@ class Interpreter:
         raise CodeError(self._unknown(node.id), node.lineno)
 
     def _unknown(self, name: str) -> str:
+        if set(name) == {"_"}:
+            return "Bo'sh joyni (___) to'ldiring."
         known = [*self.commands, *self.scopes[-1], *self.globals]
         close = difflib.get_close_matches(name, known, n=1)
         return f"«{name}» degan nom yo'q." + (f" Balki «{close[0]}»?" if close else "")

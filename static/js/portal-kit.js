@@ -137,10 +137,10 @@ window.Kit = (() => {
     box.hidden = !lines.length;
   }
 
-  async function post(body) {
+  async function post(body, url = config.runUrl) {
     const token = document.querySelector("meta[name=csrf-token]")?.content;
     try {
-      const response = await fetch(config.runUrl, {
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-CSRFToken": token },
         body: JSON.stringify(body),
@@ -150,6 +150,59 @@ window.Kit = (() => {
     } catch {
       return { failed: true, message: "Serverdan javob kelmadi. Sahifani yangilab, qayta urinib ko'ring." };
     }
+  }
+
+  /* --- Yordam zinapoyasi: 2-xatoda maslahat, 3-xatoda yechim --- */
+
+  let attempts = config.attempts ?? 0;
+
+  function offerHelp() {
+    if ($("hint-box") && attempts >= 2) $("hint-box").open = true;
+    if ($("ask-help") && !config.solved && attempts >= config.helpAfter && $("solution-box").hidden) {
+      $("ask-help").hidden = false;
+    }
+  }
+
+  function failed(data) {
+    attempts = data.attempts ?? attempts + 1;
+    offerHelp();
+  }
+
+  $("ask-help")?.addEventListener("click", async () => {
+    const data = await post({}, config.helpUrl);
+    if (data.failed) return status(data.message);
+    $("solution").innerHTML = data.solution.split("\n").map(colorize).join("\n");
+    $("solution-box").hidden = false;
+    $("ask-help").hidden = true;
+    $("solution-box").scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  /* --- Yangi mavzu oldidan qisqa dars --- */
+
+  function startIntro() {
+    const intro = $("intro");
+    if (!intro) return;
+    const slides = [...intro.querySelectorAll("[data-slide]")];
+    const dots = [...$("intro-dots").children];
+    let index = 0;
+    const show = () => {
+      slides.forEach((slide, i) => {
+        slide.hidden = i !== index;
+      });
+      dots.forEach((dot, i) => dot.classList.toggle("is-on", i <= index));
+      $("intro-next").textContent = index === slides.length - 1 ? "Boshladik!" : "Keyingisi";
+    };
+    const close = () => {
+      intro.hidden = true;
+    };
+    $("intro-next").addEventListener("click", () => {
+      if (index === slides.length - 1) return close();
+      index += 1;
+      show();
+    });
+    $("intro-skip").addEventListener("click", close);
+    show();
+    $("intro-next").focus();
   }
 
   function saveProgress(data) {
@@ -292,7 +345,7 @@ window.Kit = (() => {
         }
       }
     });
-    $("tools").addEventListener("click", (event) => {
+    $("tools")?.addEventListener("click", (event) => {
       const tool = event.target.closest("[data-tool]")?.dataset.tool;
       if (tool && !isBusy()) insertTool(tool);
     });
@@ -342,5 +395,8 @@ window.Kit = (() => {
 
   const wait = (ms) => new Promise((done) => setTimeout(done, ms));
 
-  return { $, config, sound, status, printLines, post, saveProgress, win, statementsNote, colorize, editor, speedControl, wait };
+  startIntro();
+  offerHelp();
+
+  return { $, config, sound, status, printLines, post, failed, saveProgress, win, statementsNote, colorize, editor, speedControl, wait };
 })();

@@ -1,0 +1,16 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}Darslik{% endblock %}
+{% block content %}
+<div class="mb-6 animate-fade-up">
+  <h1 class="text-3xl font-extrabold tracking-tight">Darslik</h1>
+  <p class="mt-1 max-w-xl text-sm text-ink-2">Dasturlash bosqichma-bosqich, hayotiy misollar bilan. Har mavzuda kodni o'zingiz ishga tushirib ko'rasiz. Tartib bilan o'qing.</p>
+</div>
+<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  {% for concept in concepts %}
+    <a href="{% url 'portal_lesson' concept.slug %}" class="card card-hover flex items-start gap-3.5 p-4 animate-fade-up">
+      <span class="icon-chip {{ concept.tone }} size-11 shrink-0">{% icon concept.icon "size-5" %}</span>
+      <span class="min-w-0"><span class="block text-xs font-semibold text-ink-3">{{ forloop.counter }}-dars</span><span class="block text-[15px] font-bold">{{ concept.title }}</span><span class="mt-0.5 block text-[13px] leading-snug text-ink-2">{{ concept.tagline }}</span></span>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

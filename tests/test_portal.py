@@ -28,9 +28,9 @@ from apps.portal.services import (
     rank_for,
     teacher_alerts,
 )
+from apps.portal.solutions import SOLUTIONS
 from apps.security.models import Event, SessionRecord
 from tests.test_pages import MODALS, PAGES
-from tests.test_portal_levels import SOLUTIONS
 
 User = get_user_model()
 HX = {"HTTP_HX_REQUEST": "true"}

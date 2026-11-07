@@ -585,10 +585,110 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .peer:checked + .att-late { @apply border-amber-500 bg-amber-500 text-white; }
   .peer:checked + .att-absent { @apply border-rose-500 bg-rose-500 text-white; }
 
-  .game-card {
-    @apply flex flex-col rounded-3xl border border-line bg-surface p-5 shadow-soft transition duration-200
-      hover:-translate-y-1 hover:border-brand-500/40 hover:shadow-lift;
+  /* O'yin sahifalari doim to'q: <div class="dark arcade"> tokenlarni shu yerda almashtiradi */
+  .arcade {
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh !important; /* Tailwind min-h-full uni bosib ketadi */
+    color: var(--color-ink);
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgb(99 102 241 / 0.32), transparent 65%),
+      radial-gradient(700px 480px at 0% 25%, rgb(6 182 212 / 0.16), transparent 65%),
+      radial-gradient(800px 500px at 60% 110%, rgb(168 85 247 / 0.2), transparent 65%),
+      #070716;
+    --color-surface: #11132a;
+    --color-surface-2: #181b38;
+    --color-surface-3: #23274b;
+    --color-line: #2a2e57;
+    --color-line-strong: #3a3f74;
+    --color-canvas: #070716;
   }
+  .arcade::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.55;
+    background-image:
+      radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 90px 140px, #c7d2fe, transparent),
+      radial-gradient(1px 1px at 170px 70px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 230px 190px, #a5f3fc, transparent);
+    background-size: 280px 240px;
+    animation: stars-drift 90s linear infinite;
+  }
+  .arcade .theme-toggle { display: none; }
+  /* Qisqa sahifa va scrollbar joyida och fon ko'rinmasin */
+  html:has(.arcade), body:has(.arcade) { background: #070716; }
+  .arcade .card { @apply border-line; background: rgb(17 19 42 / 0.82); backdrop-filter: blur(10px); }
+  .arcade .btn-primary { box-shadow: 0 0 22px -4px rgb(99 102 241 / 0.85); }
+  .arcade-hero {
+    @apply flex items-center justify-between gap-6 overflow-hidden rounded-3xl border p-6 sm:p-8;
+    border-color: rgb(129 140 248 / 0.35);
+    background: linear-gradient(120deg, rgb(79 70 229 / 0.42), rgb(6 182 212 / 0.14) 60%, rgb(168 85 247 / 0.28));
+  }
+  .game-card {
+    @apply flex flex-col overflow-hidden rounded-3xl border border-line transition duration-200 hover:-translate-y-1.5;
+    background: rgb(17 19 42 / 0.86);
+  }
+  .game-card:hover { box-shadow: 0 16px 40px -14px var(--glow, rgb(99 102 241 / 0.75)); border-color: var(--glow); }
+  .game-art { @apply h-32 overflow-hidden; background: var(--art); }
+  .art-robot { --art: linear-gradient(135deg, #312e81, #4f46e5); --glow: rgb(129 140 248 / 0.8); }
+  .art-kosmos { --art: linear-gradient(135deg, #020617, #164e63); --glow: rgb(34 211 238 / 0.75); }
+  .art-juftlik { --art: linear-gradient(135deg, #3b0764, #7e22ce); --glow: rgb(192 132 252 / 0.75); }
+  .art-jumboq { --art: linear-gradient(135deg, #083344, #0e7490); --glow: rgb(34 211 238 / 0.7); }
+  .art-detektiv { --art: linear-gradient(135deg, #1c1917, #78350f); --glow: rgb(251 191 36 / 0.7); }
+  .art-rassom { --art: linear-gradient(135deg, #831843, #6d28d9); --glow: rgb(244 114 182 / 0.7); }
+  .art-mashina { --art: linear-gradient(135deg, #022c22, #047857); --glow: rgb(52 211 153 / 0.7); }
+  .art-xato { --art: linear-gradient(135deg, #1f0a12, #881337); --glow: rgb(251 113 133 / 0.7); }
+  .level-tag { @apply shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold; }
+  .level-tag.is-oson { @apply bg-emerald-500/15 text-emerald-300; }
+  .level-tag.is-orta { @apply bg-amber-500/15 text-amber-300; }
+  .level-tag.is-qiyin { @apply bg-rose-500/15 text-rose-300; }
+
+  .chapter-banner { @apply mb-5 flex items-center gap-3 rounded-2xl px-4 py-3 ring-1; }
+  .path-step { @apply flex w-36 flex-col items-center gap-1 pb-5 text-center transition-transform; }
+  .path-o-2 { transform: translateX(-7rem); }
+  .path-o-1 { transform: translateX(-3.5rem); }
+  .path-o1 { transform: translateX(3.5rem); }
+  .path-o2 { transform: translateX(7rem); }
+  @media (max-width: 480px) {
+    .path-o-2 { transform: translateX(-4.5rem); }
+    .path-o-1 { transform: translateX(-2.25rem); }
+    .path-o1 { transform: translateX(2.25rem); }
+    .path-o2 { transform: translateX(4.5rem); }
+  }
+  .path-node {
+    @apply flex size-[68px] items-center justify-center rounded-full border-b-[6px] text-xl font-extrabold transition active:translate-y-1 active:border-b-2;
+  }
+  .path-node.is-done { background: #4f46e5; border-color: #312e81; color: #fff; }
+  .path-node.is-open { background: #22d3ee; border-color: #0e7490; color: #042f2e; animation: node-pulse 1.8s ease-in-out infinite; }
+  .path-node.is-locked { @apply bg-surface-3 text-ink-3; border-color: var(--color-line); }
+  .path-title { @apply max-w-full truncate text-[13px] font-semibold; }
+  .intro-dot { @apply size-2 rounded-full bg-surface-3 transition; }
+  .intro-dot.is-on { @apply bg-brand-400; }
+
+  .block-chip { @apply rounded-lg px-2.5 py-1.5 font-mono text-xs font-bold text-white transition active:scale-95; }
+  .block-cmd { background: #4f46e5; }
+  .block-repeat { background: #0891b2; }
+  .block-if { background: #d97706; }
+  .block-while { background: #059669; }
+  .block { @apply my-1 rounded-lg text-[13px] font-semibold text-white; }
+  .block-head { @apply flex flex-wrap items-center gap-1.5 px-2 py-1.5; }
+  .block-body { @apply mx-2 mb-2 min-h-8 rounded-md bg-black/25 p-1 ring-inset; }
+  .block-body.is-target, .block-root.is-target { box-shadow: inset 0 0 0 2px #fff; }
+  .block select { @apply rounded bg-black/30 px-1 py-0.5 text-xs text-white; }
+  .block-x { @apply ml-auto flex size-6 items-center justify-center rounded text-white/70 hover:bg-black/25 hover:text-white; }
+
+  .memory-card { perspective: 800px; @apply aspect-[4/3] w-full sm:aspect-[5/4]; }
+  .memory-inner { @apply relative block size-full transition-transform duration-300; transform-style: preserve-3d; }
+  .memory-card.is-up .memory-inner { transform: rotateY(180deg); }
+  .memory-face { @apply absolute inset-0 flex items-center justify-center overflow-hidden rounded-2xl border-2 p-1.5; backface-visibility: hidden; }
+  .memory-back { background: linear-gradient(135deg, #4338ca, #7e22ce); border-color: #818cf8; color: #e0e7ff; }
+  .memory-front { @apply border-line-strong bg-surface-2 font-mono text-[12px] leading-snug whitespace-pre text-ink sm:text-[13px]; transform: rotateY(180deg); }
+  .memory-card.is-found .memory-front { border-color: #34d399; background: rgb(16 185 129 / 0.16); }
+  .memory-card.is-miss .memory-front { border-color: #fb7185; }
   .confetti { @apply pointer-events-none fixed inset-0 z-[60]; }
 
   .draw-paper { @apply aspect-square w-full max-w-[440px] overflow-hidden rounded-2xl border border-line-strong bg-white shadow-soft; }
@@ -628,14 +728,20 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .heart-on { @apply text-rose-500 [&_svg]:fill-rose-500; }
   .heart-off { @apply text-line-strong; }
 
-  .game-board { @apply flex justify-center overflow-x-auto bg-surface-2/50 p-3 sm:p-4; }
+  .game-board { @apply flex justify-center overflow-x-auto p-3 sm:p-4; background: rgb(7 7 22 / 0.55); }
   .game-board svg { @apply h-auto max-h-[460px] w-full; }
-  .tile-floor { fill: var(--color-surface); stroke: var(--color-line); }
-  .tile-wall { fill: var(--color-surface-3); stroke: var(--color-line-strong); }
+  .tile-floor { fill: #171a35; stroke: #2c3163; }
+  .tile-wall { fill: #3b3f8f; stroke: #6366f1; }
   .robot { transition: transform var(--step, 300ms) ease-in-out; }
   .robot-body { transition: transform var(--step, 300ms) ease-in-out; }
   .robot.is-crashed .robot-body { animation: robot-shake 0.35s linear; }
-  .crystal { transition: transform 0.25s ease, opacity 0.25s ease; transform-box: fill-box; transform-origin: center; }
+  .crystal {
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+    filter: drop-shadow(0 0 7px rgb(34 211 238 / 0.9));
+  }
+  .robot { filter: drop-shadow(0 0 8px rgb(129 140 248 / 0.8)); }
   .crystal.is-taken { transform: scale(1.6); opacity: 0; }
 
   .code-sample {
@@ -676,6 +782,15 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .game-status.is-error { @apply border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300; }
   .game-status.is-info { @apply border-line bg-surface-2 text-ink-2; }
   .game-console { @apply rounded-2xl border border-line bg-surface p-3 font-mono text-[13px]; }
+}
+
+@keyframes stars-drift {
+  to { background-position: 280px 480px; }
+}
+
+@keyframes node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(34 211 238 / 0.55); }
+  50% { box-shadow: 0 0 0 14px rgb(34 211 238 / 0); }
 }
 
 @keyframes gear-spin {

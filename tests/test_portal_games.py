@@ -10,24 +10,19 @@ from django.utils.html import escape
 
 from apps.portal import catalog, engine
 from apps.portal.catalog import BY_SLUG, EVERY_LEVEL, GAME_BY_SLUG, GAMES
-from apps.portal.games import BadPayload, bugs, draw, machine, puzzle, quiz
+from apps.portal.concepts import BY_SLUG as CONCEPTS
+from apps.portal.concepts import FOR_CHAPTER
+from apps.portal.games import BadPayload, bugs, draw, machine, pairs, puzzle, quiz
 from apps.portal.levels import ALL_LEVELS
 from apps.portal.models import LevelProgress, Student
+from apps.portal.services import HELP_AFTER
+from apps.portal.solutions import FIXES
 
 DRAW = GAME_BY_SLUG["rassom"].levels
 MACHINE = GAME_BY_SLUG["mashina"].levels
 PUZZLE = GAME_BY_SLUG["jumboq"].levels
 QUIZ = GAME_BY_SLUG["detektiv"].levels
 BUGS = GAME_BY_SLUG["xato"].levels
-
-FIXES = {
-    "xato-son": "for i in range(4):\n    yur()\n",
-    "xato-surilish": "for i in range(6):\n    yur()\n    ol()\nyur()\n",
-    "xato-tomon": "yur()\nyur()\nongga()\nyur()\nyur()\nchapga()\nyur()\n",
-    "xato-shart": "for i in range(6):\n    yur()\n    if kristall_bor():\n        ol()\n",
-    "xato-chaqiruv": "def yetkaz():\n    for i in range(4):\n        yur()\nyetkaz()\n",
-    "xato-cheksiz": "n = 0\nwhile n < 3:\n    yur()\n    n = n + 1\n",
-}
 
 
 @pytest.fixture(autouse=True)
@@ -70,9 +65,13 @@ def wrong_index(question):
 # --- Katalog ---
 
 
-def test_there_are_six_different_games():
-    assert len(GAMES) == 6
-    assert len({game.template for game in GAMES}) == 5  # Xato ovchisi robot taxtasidan foydalanadi
+def test_there_are_eight_games_with_seven_screens():
+    assert len(GAMES) == 8
+    assert len({game.template for game in GAMES}) == 7  # Xato ovchisi robot taxtasidan foydalanadi
+
+
+def test_games_start_with_easy_ones():
+    assert [game.difficulty for game in GAMES[:4]] == ["Oson"] * 4
 
 
 def test_slugs_are_unique_across_games():
@@ -440,7 +439,7 @@ def test_quiz_finished_round_is_saved(child):
     assert child.student.progress.get().stars == 3
 
 
-@pytest.mark.parametrize("answers", [[], [9], [-1], ["0"], [True], [0, 0, 0, 0, 0, 0], "x", None])
+@pytest.mark.parametrize("answers", [[], [9], [-2], ["0"], [True], [0, 0, 0, 0, 0, 0], "x", None])
 def test_quiz_rejects_forged_requests(answers):
     with pytest.raises(BadPayload):
         quiz.attempt(QUIZ[0], {"answers": answers}, 0)
@@ -504,3 +503,250 @@ def test_plain_interpreter_has_no_robot_commands():
 def test_break_cannot_escape_a_function():
     outcome = engine.capture(engine.Interpreter(), engine.parse("def f():\n    break\nfor i in range(3):\n    f()"))
     assert "sikl ichida" in outcome.error
+
+
+# --- O'rgatish: Darslik, kirish darsi, yordam ---
+
+
+def help_for(client, slug):
+    return client.post(reverse("portal_help", args=[slug]))
+
+
+def fail(client, slug, times=HELP_AFTER):
+    for _ in range(times):
+        send(client, slug, {"code": "chapga()"})
+
+
+def test_every_concept_is_taught_with_runnable_examples():
+    for concept in CONCEPTS.values():
+        assert len(concept.slides) >= 3
+        assert not engine.capture(engine.Interpreter(), engine.parse(concept.sandbox)).error, concept.slug
+
+
+def test_every_chapter_concept_exists():
+    assert set(FOR_CHAPTER.values()) <= set(CONCEPTS)
+
+
+def test_every_lesson_opens(child):
+    assert child.get(reverse("portal_lessons")).status_code == 200
+    for slug in CONCEPTS:
+        assert child.get(reverse("portal_lesson", args=[slug])).status_code == 200
+    assert child.get(reverse("portal_lesson", args=["yoq"])).status_code == 404
+
+
+def run_sandbox(client, code):
+    return client.post(reverse("portal_sandbox"), json.dumps({"code": code}), content_type="application/json")
+
+
+def test_sandbox_runs_code_and_saves_nothing(child):
+    data = run_sandbox(child, "for i in range(2):\n    print(i)").json()
+    assert data["output"] == ["0", "1"] and not data["error"]
+    assert not LevelProgress.objects.exists()
+
+
+@pytest.mark.parametrize(
+    ("code", "fragment"), [("import os", "import"), ("while True:\n    pass", "cheksiz"), ("print(", "Qavs")]
+)
+def test_sandbox_is_as_safe_as_the_games(child, code, fragment):
+    assert fragment in run_sandbox(child, code).json()["error"]
+
+
+def test_sandbox_needs_post_and_valid_body(child):
+    assert child.get(reverse("portal_sandbox")).status_code == 405
+    bad = child.post(reverse("portal_sandbox"), "[]", content_type="application/json")
+    assert bad.status_code == 400
+
+
+def test_new_chapter_starts_with_a_lesson(child):
+    assert 'id="intro"' in child.get(reverse("portal_play", args=["salom-robot"])).content.decode()
+
+
+def test_lesson_is_not_repeated_after_first_try(child):
+    send(child, "salom-robot", {"code": "yur()"})
+    assert 'id="intro"' not in child.get(reverse("portal_play", args=["salom-robot"])).content.decode()
+
+
+def test_solution_is_hidden_until_student_tried(child):
+    assert help_for(child, "salom-robot").status_code == 403
+    fail(child, "salom-robot", HELP_AFTER - 1)
+    assert help_for(child, "salom-robot").status_code == 403
+    assert not child.student.progress.get().helped
+
+
+def test_solution_is_given_after_three_tries(child):
+    fail(child, "salom-robot")
+    data = help_for(child, "salom-robot").json()
+    assert data["solution"].count("yur()") == 4
+    assert child.student.progress.get().helped
+
+
+def test_seen_solution_is_worth_one_star(child):
+    fail(child, "salom-robot")
+    help_for(child, "salom-robot")
+    data = send(child, "salom-robot", {"code": "yur()\n" * 4}).json()
+    assert data["ok"] and data["stars"] == 1 and data["gained"] == 10
+    assert child.student.progress.get().stars == 1
+
+
+def test_student_who_struggled_without_solution_keeps_full_stars(child):
+    fail(child, "salom-robot")
+    assert send(child, "salom-robot", {"code": "yur()\n" * 4}).json()["stars"] == 3
+
+
+def test_looking_at_solution_later_costs_nothing(child):
+    fail(child, "salom-robot")
+    send(child, "salom-robot", {"code": "yur()\n" * 4})
+    help_for(child, "salom-robot")
+    row = child.student.progress.get()
+    assert row.stars == 3 and not row.helped
+
+
+def test_locked_level_solution_cannot_be_requested(child):
+    assert help_for(child, ALL_LEVELS[-1].slug).status_code == 403
+
+
+def test_help_needs_post(child):
+    assert child.get(reverse("portal_help", args=["salom-robot"])).status_code == 405
+
+
+@pytest.mark.parametrize("game", [g for g in GAMES if g.solution], ids=lambda game: game.slug)
+def test_every_solution_is_available_and_passes(game):
+    for level in game.levels:
+        assert game.solution(level).strip()
+
+
+def test_games_without_solution_have_no_help(child):
+    assert help_for(child, QUIZ[0].slug).status_code == 404
+    assert child.get(reverse("portal_play", args=[QUIZ[0].slug])).context["config"]["helpUrl"] is None
+
+
+def test_solutions_never_reach_the_page(child):
+    html = child.get(reverse("portal_play", args=["salom-robot"])).content.decode()
+    assert "yur()\\nyur()\\nyur()\\nyur()" not in html
+
+
+def test_gap_in_template_is_explained():
+    level = BY_SLUG["uzun-yol"]
+    config = catalog._robot_config(level, None)
+    assert "___" in config["code"]
+    result = catalog._robot_attempt(level, {"code": config["code"]}, 0)
+    assert "to'ldiring" in result["message"]
+
+
+def test_blocks_are_offered_to_beginners_only():
+    assert catalog._robot_config(BY_SLUG["salom-robot"], None)["blocks"] == ["yur", "chapga", "ongga", "ol"]
+    assert "repeat" in catalog._robot_config(BY_SLUG["uzun-yol"], None)["blocks"]
+    assert "while" in catalog._robot_config(BY_SLUG["devorgacha"], None)["blocks"]
+    assert catalog._robot_config(BY_SLUG["orqaga-qayt"], None)["blocks"] is None
+    assert catalog._robot_config(BY_SLUG["yarim-yol"], None)["blocks"] is None
+
+
+def test_block_editor_loads_only_when_useful(child):
+    assert "portal-blocks.js" in child.get(reverse("portal_play", args=["salom-robot"])).content.decode()
+    assert "portal-blocks.js" not in child.get(reverse("portal_play", args=[BUGS[0].slug])).content.decode()
+
+
+def test_every_quiz_answer_is_explained():
+    for game in (QUIZ, GAME_BY_SLUG["kosmos"].levels):
+        for level in game:
+            assert all(question.why for question in level.questions), level.slug
+
+
+def test_explanation_comes_back_with_the_answer():
+    level = QUIZ[0]
+    assert quiz.attempt(level, {"answers": [0]}, 0)["why"] == level.questions[0].why
+
+
+# --- Kod kosmosi ---
+
+SPACE = GAME_BY_SLUG["kosmos"].levels
+
+
+@pytest.mark.parametrize("level", SPACE, ids=lambda level: level.slug)
+def test_space_questions_are_sound(level):
+    for question in level.questions:
+        assert quiz.answer_of(question) not in question.wrong, question.code
+        assert len(set(quiz.options_of(question))) == 4
+        assert all(len(text) <= 10 for text in quiz.options_of(question)), "asteroidga sig'sin"
+
+
+def test_space_timeout_counts_as_miss_never_as_last_option():
+    level = SPACE[0]
+    result = quiz.attempt(level, {"answers": [-1]}, 0)
+    assert not result["correct"] and result["lives"] == 2
+
+
+def test_space_round_is_graded_on_server(child):
+    level = SPACE[0]
+    data = send(child, level.slug, {"answers": right_answers(level)}).json()
+    assert data["ok"] and data["stars"] == 3
+    assert child.student.progress.get().stars == 3
+
+
+def test_space_page_has_no_answers(child):
+    level = SPACE[0]
+    config = child.get(reverse("portal_play", args=[level.slug])).context["config"]
+    assert set(config["questions"][0]) == {"code", "options"}
+
+
+# --- Kod juftligi ---
+
+PAIRS = GAME_BY_SLUG["juftlik"].levels
+
+
+def right_picks(level):
+    deck = pairs.deck_of(level)
+    groups = {}
+    for index, (_, pair) in enumerate(deck):
+        groups.setdefault(pair, []).append(index)
+    return list(groups.values())
+
+
+def wrong_pick(level):
+    deck = pairs.deck_of(level)
+    return [0, next(i for i, card in enumerate(deck) if i and card[1] != deck[0][1])]
+
+
+@pytest.mark.parametrize("level", PAIRS, ids=lambda level: level.slug)
+def test_pair_results_are_unique(level):
+    results = [pairs.result_of(code) for code in level.codes]
+    assert len(set(results)) == len(results)
+    assert all(results)
+
+
+@pytest.mark.parametrize("level", PAIRS, ids=lambda level: level.slug)
+def test_pair_round_can_be_finished(level):
+    result = pairs.attempt(level, {"picks": right_picks(level)}, 0)
+    assert result["ok"] and result["stars"] == 3
+
+
+def test_pairs_page_does_not_reveal_matches(child):
+    config = child.get(reverse("portal_play", args=[PAIRS[0].slug])).context["config"]
+    assert set(config["cards"][0]) == {"text", "code"}
+
+
+def test_pairs_mismatch_costs_stars():
+    level = PAIRS[0]
+    picks = [wrong_pick(level)] * 8 + right_picks(level)
+    result = pairs.attempt(level, {"picks": picks}, 0)
+    assert result["ok"] and result["stars"] == 2
+
+
+def test_pairs_partial_is_not_saved(child):
+    level = PAIRS[0]
+    data = send(child, level.slug, {"picks": right_picks(level)[:1]}).json()
+    assert data["match"] and not data["ok"]
+    assert not child.student.progress.exists()
+
+
+def test_pairs_repeating_one_match_does_not_finish():
+    level = PAIRS[0]
+    assert not pairs.attempt(level, {"picks": right_picks(level)[:1] * 6}, 0)["ok"]
+
+
+@pytest.mark.parametrize(
+    "picks", [[], [[0, 0]], [[0, 99]], [[-1, 0]], [[0]], [["a", 1]], [[True, 1]], "x", [[0, 1]] * 101]
+)
+def test_pairs_rejects_forged_requests(picks):
+    with pytest.raises(BadPayload):
+        pairs.attempt(PAIRS[0], {"picks": picks}, 0)

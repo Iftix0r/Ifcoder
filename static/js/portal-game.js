@@ -85,7 +85,7 @@
 
   function setRunning(value) {
     running = value;
-    editor.readOnly = value;
+    editor.readOnly = value || Kit.blockMode === true;
     runLabel.textContent = value ? "To'xtatish" : "Ishga tushirish";
   }
 
@@ -169,6 +169,7 @@
       sound.bad();
       editor.mark(null, data.line);
       Kit.status(data.line ? `${data.line}-qator: ${data.message}` : data.message);
+      Kit.failed(data);
     }
   }
 
@@ -179,4 +180,5 @@
     editor.value = config.starter;
   });
   drawWorld(config.world);
+  Kit.code = editor;
 })();

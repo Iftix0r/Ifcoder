@@ -1,0 +1,32 @@
+{% extends "portal/layout.html" %}
+{% load static %}
+{% block page_title %}{{ concept.title }}{% endblock %}
+{% block head %}<script defer src="{% static 'js/portal-kit.js' %}"></script><script defer src="{% static 'js/portal-lesson.js' %}"></script>{% endblock %}
+{% block content %}
+<a href="{% url 'portal_lessons' %}" class="btn btn-ghost btn-sm -ml-2 mb-3">{% icon "arrow-left" "size-4" %}Darslik</a>
+<div class="mb-5 flex items-center gap-3.5 animate-fade-up">
+  <span class="icon-chip {{ concept.tone }} size-12 shrink-0 rounded-2xl">{% icon concept.icon "size-6" %}</span>
+  <div class="min-w-0"><h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{{ concept.title }}</h1><p class="text-sm text-ink-2">{{ concept.tagline }}</p></div>
+</div>
+<div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+  <div class="space-y-3">
+    {% for slide in concept.slides %}
+      <section class="card p-5 animate-fade-up">
+        <h2 class="text-lg font-bold">{{ forloop.counter }}. {{ slide.title }}</h2>
+        <p class="mt-2 text-sm leading-relaxed text-ink-2">{{ slide.text }}</p>
+        {% if slide.code %}
+          <pre class="code-sample" data-sample>{{ slide.code }}</pre>
+          <button type="button" class="btn btn-secondary btn-sm mt-2" data-try>{% icon "play" "size-3.5" %}Sinab ko'rish</button>
+        {% endif %}
+      </section>
+    {% endfor %}
+  </div>
+  <div class="space-y-3 lg:sticky lg:top-20">
+    <p class="text-sm font-semibold">Kod maydoni: o'zgartiring va ishga tushiring</p>
+    {% include "portal/partials/editor.html" %}
+    <section class="card p-4"><p class="text-sm font-semibold">Mustaqil mashq</p><ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-2">{% for task in concept.tasks %}<li>{{ task }}</li>{% endfor %}</ul></section>
+    <a href="{% url 'portal_map' %}" class="btn btn-primary w-full">{% icon "gamepad-2" "size-4" %}O'yinda mashq qilish</a>
+  </div>
+</div>
+{{ config|json_script:"game-data" }}
+{% endblock %}

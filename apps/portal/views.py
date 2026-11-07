@@ -20,15 +20,17 @@ from apps.core import telegram
 from apps.core.roles import is_student
 from apps.security.services import client_ip
 
-from . import services
-from .catalog import BY_SLUG, CHAPTER_OF, GAME_BY_SLUG, GAME_OF, MAX_XP, TOTAL_LEVELS, BadPayload
+from . import engine, services
+from .catalog import BY_SLUG, CHAPTER_OF, GAME_BY_SLUG, GAME_OF, MAX_XP, TOTAL_LEVELS, BadPayload, code_from
+from .concepts import BY_SLUG as CONCEPT_BY_SLUG
+from .concepts import CONCEPTS, FOR_CHAPTER
 from .engine import MAX_CODE
 from .forms import PortalPasswordForm, ProfileForm, RegisterForm, StudentLoginForm, SubmissionForm
 from .levels import XP_PER_STAR
 from .models import Post, Student, Submission
 
 REGISTER_LIMIT = 15  # Bir sinf bitta IP'dan ro'yxatdan o'tadi
-RUNS_PER_MINUTE = 40
+RUNS_PER_MINUTE = 90  # Kosmos va juftlikda har javob alohida so'rov
 
 student_page = login_required(login_url="portal_login")
 
@@ -107,6 +109,7 @@ def home(request):
 @student_page
 def hub(request):
     student = current_student(request)
+    progress = services.progress_of(student)
     return render(
         request,
         "portal/hub.html",
@@ -114,7 +117,8 @@ def hub(request):
             "nav": "game",
             "student": student,
             "preview": student is None,
-            "cards": services.game_cards(services.progress_of(student)),
+            "cards": services.game_cards(progress),
+            "next_level": services.next_level(progress) if student else None,
         },
     )
 
@@ -158,6 +162,8 @@ def play(request, slug):
     row = progress.get(slug)
     following = services.following(level)
     map_url = reverse("portal_game", args=[game.slug])
+    chapter = CHAPTER_OF[slug]
+    concept = CONCEPT_BY_SLUG.get(FOR_CHAPTER.get(chapter.slug))
     return render(
         request,
         game.template,
@@ -167,7 +173,10 @@ def play(request, slug):
             "preview": student is None,
             "level": level,
             "game": game,
-            "chapter": CHAPTER_OF[slug],
+            "chapter": chapter,
+            "concept": concept,
+            # Yangi mavzu avval tushuntiriladi, keyin so'raladi
+            "show_intro": concept is not None and level == chapter.levels[0] and row is None,
             "number": game.levels.index(level) + 1,
             "total_levels": len(game.levels),
             "best_stars": row.stars if row else 0,
@@ -176,6 +185,10 @@ def play(request, slug):
                 "runUrl": reverse("portal_run", args=[slug]),
                 "nextUrl": reverse("portal_play", args=[following.slug]) if following else map_url,
                 "isLast": following is None,
+                "helpUrl": reverse("portal_help", args=[slug]) if game.solution else None,
+                "helpAfter": services.HELP_AFTER,
+                "attempts": row.attempts if row else 0,
+                "solved": bool(row and row.stars),
             },
         },
     )
@@ -214,7 +227,68 @@ def run(request, slug):
     # Kod chegaradan uzun bo'lsa saqlanmaydi: baza to'lib ketmasin
     saved = services.save_attempt(student, level, stored[:MAX_CODE], result)
     gained = (saved.stars - before) * XP_PER_STAR
-    return JsonResponse({**result, "best_stars": saved.stars, "gained": gained, "xp": student.xp + gained})
+    answer = {**result, "best_stars": saved.stars, "gained": gained, "xp": student.xp + gained}
+    return JsonResponse({**answer, "attempts": saved.attempts})
+
+
+@student_page
+@require_POST
+def level_help(request, slug):
+    level = _level_or_404(slug)
+    game = GAME_OF[slug]
+    if game.solution is None:
+        raise Http404
+    solution = services.reveal_solution(current_student(request), level, game)
+    if solution is None:
+        return JsonResponse({"message": "Avval yana bir urinib ko'ring."}, status=403)
+    return JsonResponse({"solution": solution.strip()})
+
+
+@student_page
+def lessons(request):
+    return render(
+        request,
+        "portal/lessons.html",
+        {"nav": "lessons", "student": current_student(request), "concepts": CONCEPTS},
+    )
+
+
+@student_page
+def lesson(request, slug):
+    concept = CONCEPT_BY_SLUG.get(slug)
+    if concept is None:
+        raise Http404
+    student = current_student(request)
+    return render(
+        request,
+        "portal/lesson.html",
+        {
+            "nav": "lessons",
+            "student": student,
+            "preview": student is None,
+            "concept": concept,
+            "config": {"code": concept.sandbox, "runUrl": reverse("portal_sandbox")},
+        },
+    )
+
+
+@student_page
+@require_POST
+def sandbox(request):
+    """Darslikdagi kod maydoni: natija chiqaradi, ball bermaydi va hech narsa saqlamaydi."""
+    if _too_many_runs(request.user):
+        return JsonResponse({"message": "Juda tez! Bir daqiqa kutib turing."}, status=429)
+    try:
+        payload = json.loads(request.body)
+        if not isinstance(payload, dict):
+            raise BadPayload
+        tree = engine.parse(code_from(payload))
+    except (ValueError, BadPayload):
+        return JsonResponse({"message": "So'rov noto'g'ri."}, status=400)
+    except engine.CodeError as error:
+        return JsonResponse({"output": [], "error": error.message, "line": error.line})
+    outcome = engine.capture(engine.Interpreter(), tree)
+    return JsonResponse({"output": engine.printed(outcome), "error": outcome.error, "line": outcome.line})
 
 
 @student_page

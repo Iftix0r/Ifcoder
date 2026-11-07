@@ -1,0 +1,27 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="mx-auto max-w-2xl space-y-3">
+  <section class="card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+      <p class="text-sm font-semibold"><span id="wave">1-to'lqin</span> · <span id="score" class="text-cyan-300">0</span> ball <span id="combo" class="text-amber-300"></span></p>
+      <div class="flex gap-1" id="lives" role="img" aria-label="Jonlar"></div>
+    </div>
+    <pre class="code-sample m-0 rounded-none border-x-0 border-t-0 text-[15px]" id="space-code"></pre>
+    <div class="relative"><canvas id="space" class="block aspect-[4/3] w-full touch-none" tabindex="0" aria-label="Asteroidni bosing yoki chap-o'ng tugmalari va bo'sh joy bilan oting"></canvas>
+      <div id="space-overlay" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/70 p-5 text-center">
+        <p class="text-xl font-extrabold" id="overlay-title">{{ level.title }}</p>
+        <p class="max-w-sm text-sm text-ink-2" id="overlay-text">{{ level.lesson }} To'g'ri javobli asteroidni bosing yoki chap-o'ng tugmalari va bo'sh joy bilan oting.</p>
+        <div class="segmented" role="group" aria-label="Tezlik"><button type="button" data-pace="30">Sekin</button><button type="button" data-pace="20">O'rta</button><button type="button" data-pace="12">Tez</button></div>
+        <button type="button" id="space-start" class="btn btn-primary btn-lg">{% icon "rocket" "size-4" %}Uchish</button>
+      </div>
+    </div>
+    <div id="space-why" class="flex items-center gap-3 border-t border-line px-4 py-3" hidden><p class="min-w-0 flex-1 text-sm" id="why-text"></p><button type="button" id="space-next" class="btn btn-primary btn-sm shrink-0">Davom</button></div>
+  </section>
+  {% include "portal/partials/lesson.html" %}
+</div>
+<template id="heart-template">{% icon "heart" "size-5" %}</template>
+{% include "portal/partials/result.html" %}
+{% endblock %}

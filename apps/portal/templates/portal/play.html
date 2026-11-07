@@ -1,6 +1,6 @@
 {% extends "portal/layout.html" %}
 {% block page_title %}{{ level.title }}{% endblock %}
-{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% if config.blocks %}{% load static %}<script defer src="{% static 'js/portal-blocks.js' %}"></script>{% endif %}{% endblock %}
 {% block content %}
 {% include "portal/partials/level_head.html" %}
 <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
@@ -15,6 +15,16 @@
     {% include "portal/partials/lesson.html" %}
   </div>
   <div class="space-y-3">
+    {% if config.blocks %}
+      <div class="flex items-center justify-between gap-2">
+        <div class="segmented" role="group" aria-label="Yozish usuli"><button type="button" data-mode="blocks">{% icon "blocks" "size-4" %}Bloklar</button><button type="button" data-mode="python">{% icon "code-xml" "size-4" %}Python</button></div>
+        <p class="hidden text-xs text-ink-3 sm:block" id="mode-note">Bloklarni bosing: Python kodi pastda o'zi yoziladi</p>
+      </div>
+      <section class="card p-3" id="blocks" hidden>
+        <div class="flex flex-wrap gap-1.5" id="block-palette"></div>
+        <div class="mt-3 min-h-28 rounded-xl border border-dashed border-line-strong p-2" id="block-program"></div>
+      </section>
+    {% endif %}
     {% include "portal/partials/editor.html" with speed=True %}
     {% if level.changes %}<button type="button" id="restore" class="btn btn-ghost btn-sm">{% icon "undo-2" "size-3.5" %}Buzilgan kodni qaytarish</button>{% endif %}
     {% include "portal/partials/hint.html" %}

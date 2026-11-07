@@ -13,6 +13,8 @@ from apps.core.dates import add_months
 from apps.finance.models import Category, Kind, Transaction
 
 from .catalog import EVERY_LEVEL, GAME_OF, GAMES, MAX_XP, Game
+from .concepts import BY_SLUG as CONCEPT_BY_SLUG
+from .concepts import FOR_CHAPTER
 from .levels import CHAPTERS as ROBOT_CHAPTERS
 from .models import Attendance, LevelProgress, Payment, Post, Student, Submission
 
@@ -37,6 +39,7 @@ class LevelCard:
     number: int
     stars: int
     state: str  # locked | open | done
+    offset: int = 0  # Xaritadagi yo'lning egilishi
 
 
 def rank_for(xp: int) -> dict:
@@ -82,16 +85,20 @@ def chapter_cards(game: Game, progress: dict[str, LevelProgress], *, preview: bo
                 state = "done"
             else:
                 state = "open" if is_unlocked(level, progress, preview=preview) else "locked"
-            items.append(LevelCard(level, number, stars, state))
+            items.append(LevelCard(level, number, stars, state, PATH_OFFSETS[number % len(PATH_OFFSETS)]))
         cards.append(
             {
                 "chapter": chapter,
+                "concept": CONCEPT_BY_SLUG.get(FOR_CHAPTER.get(chapter.slug)),
                 "levels": items,
                 "done": sum(item.state == "done" for item in items),
                 "total": len(items),
             }
         )
     return cards
+
+
+PATH_OFFSETS = (0, 1, 2, 1, 0, -1, -2, -1)
 
 
 def game_cards(progress: dict[str, LevelProgress]) -> list[dict]:
@@ -131,6 +138,8 @@ def save_attempt(student: Student, level, code: str, result: dict) -> LevelProgr
         row, _ = LevelProgress.objects.select_for_update().get_or_create(student=student, level=level.slug)
         row.attempts += 1
         row.code = code
+        if result["ok"] and row.helped:
+            result["stars"] = 1  # Yechimni ko'rib o'tdi: davom etadi, lekin ball uniki emas
         if result["ok"]:
             row.solved_at = row.solved_at or timezone.now()
             if result["stars"] >= row.stars:
@@ -138,6 +147,22 @@ def save_attempt(student: Student, level, code: str, result: dict) -> LevelProgr
                 row.best_code = code
         row.save()
     return row
+
+
+HELP_AFTER = 3  # Avval o'zi urinib ko'rsin, lekin qotib qolmasin
+
+
+def reveal_solution(student: Student | None, level, game: Game) -> str | None:
+    """None: hali erta. Ko'rgandan keyin bu bosqich 1 yulduzdan oshmaydi."""
+    if student is None:
+        return game.solution(level)
+    row = student.progress.filter(level=level.slug).first()
+    if row is None or row.attempts < HELP_AFTER:
+        return None
+    if not row.stars and not row.helped:
+        row.helped = True
+        row.save(update_fields=["helped", "updated_at"])
+    return game.solution(level)
 
 
 def leaderboard(limit: int = 20):

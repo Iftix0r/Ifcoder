@@ -92,6 +92,7 @@
     } else {
       sound.bad();
       Kit.status(data.line ? `${data.line}-qator: ${data.message}` : data.message);
+      Kit.failed(data);
     }
   }
 

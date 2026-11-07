@@ -117,6 +117,7 @@
       sound.bad();
       editor.mark(null, data.line);
       Kit.status(data.line ? `${data.line}-qator: ${data.message}` : data.message);
+      Kit.failed(data);
     }
   }
 

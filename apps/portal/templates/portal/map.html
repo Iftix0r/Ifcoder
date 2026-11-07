@@ -1,30 +1,31 @@
 {% extends "portal/layout.html" %}
 {% block page_title %}{{ game.title }}{% endblock %}
 {% block content %}
-<a href="{% url 'portal_map' %}" class="btn btn-ghost btn-sm -ml-2 mb-2">{% icon "arrow-left" "size-4" %}O'yinlar</a>
-<div class="mb-6 flex items-center gap-3.5 animate-fade-up">
-  <span class="icon-chip {{ game.tone }} size-12 shrink-0 rounded-2xl">{% icon game.icon "size-6" "1.8" %}</span>
-  <div class="min-w-0"><h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">{{ game.title }}</h1><p class="text-sm text-ink-2">{{ game.tagline }}</p></div>
+<a href="{% url 'portal_map' %}" class="btn btn-ghost btn-sm -ml-2 mb-3">{% icon "arrow-left" "size-4" %}O'yinlar</a>
+<div class="game-card art-{{ game.slug }} mx-auto mb-8 max-w-xl animate-fade-up">
+  <div class="game-art h-36">{% include "portal/partials/game_art.html" with slug=game.slug %}</div>
+  <div class="p-4 text-center"><h1 class="text-2xl font-extrabold tracking-tight">{{ game.title }}</h1><p class="mt-1 text-sm text-ink-2">{{ game.tagline }}</p></div>
 </div>
-<div class="space-y-8">
+<div class="mx-auto max-w-xl">
   {% for item in chapters %}
-    <section class="animate-fade-up">
-      <div class="mb-3 flex items-center gap-3">
-        <span class="icon-chip {{ item.chapter.tone }} shrink-0 font-bold">{{ forloop.counter }}</span>
-        <div class="min-w-0 flex-1"><h2 class="text-lg font-bold">{{ item.chapter.title }}</h2><p class="truncate text-sm text-ink-2">{{ item.chapter.concept }}</p></div>
+    <section class="mb-8">
+      <div class="chapter-banner {{ item.chapter.tone }}">
+        <div class="min-w-0 flex-1"><h2 class="text-base font-bold">{{ item.chapter.title }}</h2><p class="truncate text-[13px] opacity-80">{{ item.chapter.concept }}</p></div>
+        {% if item.concept %}<a href="{% url 'portal_lesson' item.concept.slug %}" class="btn btn-secondary btn-sm shrink-0">{% icon "graduation-cap" "size-3.5" %}Dars</a>{% endif %}
         <span class="badge badge-neutral shrink-0">{{ item.done }} / {{ item.total }}</span>
       </div>
-      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="flex flex-col items-center">
         {% for card in item.levels %}
-          {% if card.state == "locked" %}
-            <div class="level-tile is-locked" aria-disabled="true"><span class="level-number">{% icon "lock" "size-4" %}</span><span class="min-w-0 flex-1 truncate text-sm font-semibold">{{ card.level.title }}</span></div>
-          {% else %}
-            <a href="{% url 'portal_play' card.level.slug %}" class="level-tile {% if card.state == 'open' %}is-open{% endif %}">
-              <span class="level-number">{{ card.number }}</span>
-              <span class="min-w-0 flex-1 truncate text-sm font-semibold">{{ card.level.title }}</span>
-              {% if card.state == "done" %}{% include "portal/partials/stars.html" with n=card.stars size="size-3.5" %}{% else %}<span class="text-brand-500">{% icon "play" "size-4" %}</span>{% endif %}
-            </a>
-          {% endif %}
+          <div class="path-step path-o{{ card.offset }}">
+            {% if card.state == "locked" %}
+              <span class="path-node is-locked" aria-disabled="true">{% icon "lock" "size-5" %}</span>
+              <span class="path-title text-ink-3">{{ card.level.title }}</span>
+            {% else %}
+              <a href="{% url 'portal_play' card.level.slug %}" class="path-node {% if card.state == 'open' %}is-open{% else %}is-done{% endif %}" aria-label="{{ card.number }}-bosqich: {{ card.level.title }}">{% if card.state == "open" %}{% icon "play" "size-6" %}{% else %}{{ card.number }}{% endif %}</a>
+              <span class="path-title">{{ card.level.title }}</span>
+              {% if card.state == "done" %}{% include "portal/partials/stars.html" with n=card.stars size="size-3.5" %}{% endif %}
+            {% endif %}
+          </div>
         {% endfor %}
       </div>
     </section>

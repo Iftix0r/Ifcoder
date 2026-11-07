@@ -79,6 +79,7 @@ class LevelProgress(models.Model):
     level = models.CharField("Bosqich", max_length=50)
     attempts = models.PositiveIntegerField("Urinishlar", default=0)
     stars = models.PositiveSmallIntegerField("Yulduzlar", default=0)
+    helped = models.BooleanField("Yechimni ko'rgan", default=False)
     code = models.TextField("Oxirgi kod", blank=True)
     best_code = models.TextField("Eng yaxshi kod", blank=True)
     solved_at = models.DateTimeField("Yechilgan", null=True, blank=True)

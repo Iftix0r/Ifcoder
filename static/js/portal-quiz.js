@@ -64,6 +64,7 @@
       buttons[index].classList.add("is-wrong");
       sound.bad();
     }
+    if (data.why) Kit.status(data.why, "info");
     if (!data.finished) {
       nextButton.firstChild.textContent = "Keyingi savol ";
       nextButton.onclick = show;
@@ -73,10 +74,10 @@
     Kit.saveProgress(data);
     if (data.ok) {
       const text = data.mistakes ? `${data.mistakes} ta xato bilan.` : "Birorta ham xatosiz!";
-      await Kit.wait(500);
+      await Kit.wait(1200);
       return Kit.win(data, text, restart);
     }
-    Kit.status(data.message);
+    Kit.status(`${data.why} ${data.message}`);
     nextButton.firstChild.textContent = "Qaytadan boshlash ";
     nextButton.onclick = restart;
     nextButton.hidden = false;
