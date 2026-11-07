@@ -1,6 +1,13 @@
 {% extends "portal/layout.html" %}
 {% block page_title %}{{ level.title }}{% endblock %}
-{% block head %}{% include "portal/partials/scripts.html" %}{% if config.blocks %}{% load static %}<script defer src="{% static 'js/portal-blocks.js' %}"></script>{% endif %}{% endblock %}
+{% block head %}{% load static %}
+{# Tartib muhim: portal-game.js ishga tushganda window.Board3D tayyor bo'lsin. Yuklanmasa, 2D taxta ishlaydi #}
+<link rel="modulepreload" href="{% static 'vendor/three/three.module.min.js' %}">
+<script defer src="{% static 'js/portal-kit.js' %}"></script>
+<script type="module" src="{% static 'js/portal-board3d.js' %}"></script>
+<script defer src="{% static 'js/portal-game.js' %}"></script>
+{% if config.blocks %}<script defer src="{% static 'js/portal-blocks.js' %}"></script>{% endif %}
+{% endblock %}
 {% block content %}
 {% include "portal/partials/level_head.html" %}
 <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">

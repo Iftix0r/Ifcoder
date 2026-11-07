@@ -50,17 +50,32 @@
     return outer;
   }
 
+  // 3D taxta: WebGL bo'lmasa yoki kutubxona yuklanmasa, pastdagi SVG taxta ishlaydi
+  let board3d = null;
+  try {
+    if (window.Board3D?.supported()) board3d = window.Board3D.create(board);
+  } catch {
+    board3d = null;
+  }
+
   const placeRobot = (x, y) => {
+    if (board3d) return board3d.place(x, y);
     robot.style.transform = `translate(${x * CELL + CELL / 2}px, ${y * CELL + CELL / 2}px)`;
   };
   const turnRobot = () => {
+    if (board3d) return board3d.turn(angle);
     robot.firstChild.style.transform = `rotate(${angle}deg)`;
   };
   const applySpeed = (value) => {
+    if (board3d) return board3d.setStep(STEP_MS / value);
     board.firstChild?.style.setProperty("--step", `${Math.round(STEP_MS / value)}ms`);
   };
 
   function drawWorld(world) {
+    if (board3d) {
+      angle = world.robot.d * 90;
+      return board3d.load(world);
+    }
     const svg = el("svg", { viewBox: `0 0 ${world.width * CELL} ${world.height * CELL}` });
     const walls = new Set(world.walls.map(([x, y]) => `${x},${y}`));
     for (let y = 0; y < world.height; y++) {
@@ -110,11 +125,13 @@
       turnRobot();
     }
     if (event.a === "take") {
-      board.querySelector(`[data-cell="${event.x},${event.y}"]`)?.classList.add("is-taken");
+      if (board3d) board3d.take(event.x, event.y);
+      else board.querySelector(`[data-cell="${event.x},${event.y}"]`)?.classList.add("is-taken");
       sound.take();
     }
     if (event.a === "crash") {
-      robot.classList.add("is-crashed");
+      if (board3d) board3d.crash();
+      else robot.classList.add("is-crashed");
       sound.bad();
     }
     if (event.a === "print") {
@@ -161,6 +178,7 @@
     Kit.saveProgress(data);
     if (data.ok) {
       editor.mark(null);
+      board3d?.cheer();
       Kit.win(data, winText(data), () => {
         reset();
         $("code").focus();

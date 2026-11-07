@@ -60,7 +60,7 @@ tushuntiriladi (`apps/portal/concepts.py`), yangi bobning birinchi bosqichida sh
 bloklar bilan ishlaydi, yonida Python kodi yoziladi. 2-xatodan keyin maslahat ochiladi, 3-urinishdan keyin yechimni ko'rish mumkin:
 yechim ko'rilgan bosqich 1 yulduz beradi (`LevelProgress.helped`). Har javobdan keyin «nega shunday» tushuntirishi chiqadi.
 
-**O'yinlar:** 11 ta o'yin, 92 bosqich. Har o'yinda o'z yo'li bor, bir-birini qulflamaydi. Yulduz yig'ib robot kiyimi ochiladi
+**O'yinlar:** 12 ta o'yin, 97 bosqich. Har o'yinda o'z yo'li bor, bir-birini qulflamaydi. Yulduz yig'ib robot kiyimi ochiladi
 (`SKINS`), har kuni o'ynasa kunlik seriya o'sadi (`Student.streak`).
 
 | O'yin | Fayl | O'quvchi nima qiladi |
@@ -68,7 +68,8 @@ yechim ko'rilgan bosqich 1 yulduz beradi (`LevelProgress.helped`). Har javobdan 
 | Pufakcha | `apps/portal/games/bubbles.py` | Qoidaga mos pufaklarni bosib yoradi |
 | Rostmi? | `apps/portal/games/truth.py` | Kartani surib rost yoki yolg'onni tanlaydi |
 | Kod iloni | `apps/portal/games/snake.py` | Ilon so'zlarni tartib bilan yeb, kod qatorini yig'adi |
-| Robot yo'li | `apps/portal/levels.py` | Robotni bloklar yoki Python bilan manzilga olib boradi |
+| Robot yo'li | `apps/portal/levels.py` | Robotni bloklar yoki Python bilan 3D orolda manzilga olib boradi |
+| Kod poygasi | `apps/portal/games/race.py` | 3D yo'lda to'g'ri javobli darvozadan o'tadi |
 | Kod kosmosi | `apps/portal/games/space.py` | Kemani boshqarib, to'g'ri javobli asteroidni otadi |
 | Kod juftligi | `apps/portal/games/pairs.py` | Kartalarni ochib, kodni natijasi bilan juftlaydi |
 | Kod jumboq | `apps/portal/games/puzzle.py` | Aralashgan qatorlarni tartiblaydi va suradi |
@@ -105,6 +106,11 @@ npm run css:watch    # ishlab chiqishda
 npm run vendor       # htmx / alpine / lucide ikonlarni yangilash
 ```
 
+### 3D (Three.js)
+
+Robot yo'li va Kod poygasi Three.js ishlatadi. Serverda Node yo'q, shuning uchun kutubxona `static/vendor/three/` da repoga qo'shilgan
+va faqat shu sahifalarda yuklanadi. Yangilash: `npm run three`. WebGL bo'lmasa Robot yo'li 2D taxtaga o'tadi.
+
 ### Testlar va lint
 
 ```bash
@@ -127,7 +133,7 @@ apps/notes/        eslatmalar va kod parchalari
 apps/resources/    domen, server, obunalar
 apps/vault/        shifrlangan kalitlar, 2FA, backup
 apps/userbot/      Telegram akkaunt (Telethon): ulanish, suhbatlar, navbat, buyruqlar
-apps/portal/       o'quvchi kabineti, darslik, 11 ta o'yin (games/, catalog.py), o'qituvchi bo'limi
+apps/portal/       o'quvchi kabineti, darslik, 12 ta o'yin (games/, catalog.py), o'qituvchi bo'limi
 apps/dashboard/    «Bugun» sahifasi
 apps/landing/      ochiq sahifa va ariza formasi
 templates/         layouts, partials (sidebar, topbar, ⌘K, modal, toast), components

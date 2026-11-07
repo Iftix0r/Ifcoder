@@ -634,6 +634,7 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   }
   .game-card:hover { box-shadow: 0 16px 40px -14px var(--glow, rgb(99 102 241 / 0.75)); border-color: var(--glow); }
   .game-art { @apply h-32 overflow-hidden; background: var(--art); }
+  .art-poyga { --art: linear-gradient(180deg, #2e1065, #be185d 72%, #f97316); --glow: rgb(244 114 182 / 0.8); }
   .art-pufak { --art: linear-gradient(135deg, #0c4a6e, #0e7490); --glow: rgb(103 232 249 / 0.75); }
   .art-rostmi { --art: linear-gradient(135deg, #064e3b, #1e3a8a); --glow: rgb(52 211 153 / 0.75); }
   .art-ilon { --art: linear-gradient(135deg, #052e16, #14532d); --glow: rgb(74 222 128 / 0.75); }
@@ -770,6 +771,15 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
 
   .game-board { @apply flex justify-center overflow-x-auto p-3 sm:p-4; background: rgb(7 7 22 / 0.55); }
   .game-board svg { @apply h-auto max-h-[460px] w-full; }
+  .game-board canvas { display: block; }
+  .game-board.is-3d { @apply p-0; background: radial-gradient(70% 90% at 50% 20%, #1e2257, #0a0b22 75%); }
+  .race-stage { @apply relative aspect-[4/3] w-full overflow-hidden sm:aspect-[16/9]; background: #12062b; }
+  .race-stage canvas { @apply block size-full touch-none; }
+  .race-lanes { @apply grid grid-cols-4 gap-1.5 p-2; }
+  .race-lane { @apply min-h-11 truncate rounded-xl border-2 border-line bg-surface-2 px-1 py-2 text-center font-mono text-sm font-bold transition active:scale-95; }
+  .race-lane.is-on { border-color: #f472b6; box-shadow: 0 0 14px -3px #f472b6; }
+  .race-lane.is-right { @apply border-emerald-400 bg-emerald-500/20 text-emerald-200; }
+  .race-lane.is-wrong { @apply border-rose-400 bg-rose-500/20 text-rose-200; }
   .tile-floor { fill: #171a35; stroke: #2c3163; }
   .tile-wall { fill: #3b3f8f; stroke: #6366f1; }
   .robot { transition: transform var(--step, 300ms) ease-in-out; }

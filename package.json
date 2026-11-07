@@ -5,15 +5,18 @@
   "scripts": {
     "css": "tailwindcss -i assets/app.css -o static/dist/app.css --minify",
     "css:watch": "tailwindcss -i assets/app.css -o static/dist/app.css --watch",
-    "vendor": "node scripts/vendor.mjs"
+    "vendor": "node scripts/vendor.mjs",
+    "three": "esbuild node_modules/three/build/three.module.js --bundle --minify --format=esm --legal-comments=inline --outfile=static/vendor/three/three.module.min.js"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.0",
-    "tailwindcss": "^4.1.0",
-    "htmx.org": "^2.0.4",
-    "alpinejs": "^3.14.0",
-    "@alpinejs/focus": "^3.14.0",
     "@alpinejs/collapse": "^3.14.0",
-    "lucide-static": "^0.460.0"
+    "@alpinejs/focus": "^3.14.0",
+    "@tailwindcss/cli": "^4.1.0",
+    "alpinejs": "^3.14.0",
+    "esbuild": "0.28.2",
+    "htmx.org": "^2.0.4",
+    "lucide-static": "^0.460.0",
+    "tailwindcss": "^4.1.0",
+    "three": "0.186.1"
   }
 }
