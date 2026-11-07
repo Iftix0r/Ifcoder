@@ -3,8 +3,22 @@
 {% block content %}
 <div class="mb-5 animate-fade-up">
   <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Profil</h1>
-  <p class="mt-1 text-sm text-ink-2">Login: @{{ user.username }} · {{ rank.title }}</p>
+  <p class="mt-1 text-sm text-ink-2">Login: @{{ user.username }} · {{ rank.title }}{% if student.best_streak %} · Eng uzun seriya: {{ student.best_streak }} kun{% endif %}</p>
 </div>
+<section class="mb-6 max-w-4xl">
+  <h2 class="mb-1 text-base font-bold">Robot kiyimi</h2>
+  <p class="mb-3 text-sm text-ink-2">Yulduz yig'ib yangi rang oching. Rang robot, kema va ilonda ko'rinadi.</p>
+  <form method="post" action="{% url 'portal_skin' %}" class="grid grid-cols-3 gap-3 sm:grid-cols-6">
+    {% csrf_token %}
+    {% for skin in skins %}
+      <button name="skin" value="{{ skin.key }}" {% if not skin.open %}disabled{% endif %} {% if skin.active %}aria-pressed="true"{% endif %} class="skin-card {% if skin.active %}is-active{% endif %}" style="--skin: {{ skin.color }}">
+        {% include "portal/partials/robot.html" with class="mx-auto size-14" %}
+        <span class="mt-1 block text-xs font-semibold">{{ skin.title }}</span>
+        <span class="block text-[11px] text-ink-3">{% if skin.active %}Kiyilgan{% elif skin.open %}Kiyish{% else %}{{ skin.left }} yulduz qoldi{% endif %}</span>
+      </button>
+    {% endfor %}
+  </form>
+</section>
 <section class="mb-6 max-w-4xl">
   <h2 class="mb-3 text-base font-bold">Yutuqlar</h2>
   <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

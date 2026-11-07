@@ -3,11 +3,23 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 
 from apps.core.models import TimeStamped
 
 from .catalog import BY_SLUG, TOTAL_LEVELS
 from .levels import XP_PER_STAR
+
+# (nom, rang, kerakli yulduz). Rang robot, kema va ilonga qo'llanadi
+SKINS = (
+    ("indigo", "Binafsha", "#6366f1", 0),
+    ("cyan", "Moviy", "#06b6d4", 10),
+    ("emerald", "Yashil", "#10b981", 25),
+    ("amber", "Oltin", "#f59e0b", 50),
+    ("rose", "Olovli", "#f43f5e", 80),
+    ("fuchsia", "Sehrli", "#d946ef", 120),
+)
+SKIN_COLORS = {key: color for key, _, color, _ in SKINS}
 
 
 class StudentQuerySet(models.QuerySet):
@@ -42,6 +54,10 @@ class Student(TimeStamped):
     )
     phone = models.CharField("Telefon", max_length=30, blank=True)
     note = models.TextField("O'qituvchi izohi", blank=True)
+    skin = models.CharField("Robot kiyimi", max_length=20, default="indigo")
+    streak = models.PositiveSmallIntegerField("Kunlik seriya", default=0)
+    best_streak = models.PositiveSmallIntegerField("Eng uzun seriya", default=0)
+    last_played = models.DateField("Oxirgi o'yin", null=True, blank=True)
 
     objects = StudentQuerySet.as_manager()
 
@@ -56,6 +72,17 @@ class Student(TimeStamped):
     @property
     def full_name(self) -> str:
         return self.user.get_full_name() or self.user.get_username()
+
+    @property
+    def skin_color(self) -> str:
+        return SKIN_COLORS.get(self.skin, SKIN_COLORS["indigo"])
+
+    @property
+    def live_streak(self) -> int:
+        """Bir kun o'tkazib yuborilsa seriya uziladi, lekin keyingi o'yingacha bazada eskisi turadi."""
+        if self.last_played is None or (timezone.localdate() - self.last_played).days > 1:
+            return 0
+        return self.streak
 
     @property
     def public_name(self) -> str:

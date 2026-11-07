@@ -60,10 +60,14 @@ tushuntiriladi (`apps/portal/concepts.py`), yangi bobning birinchi bosqichida sh
 bloklar bilan ishlaydi, yonida Python kodi yoziladi. 2-xatodan keyin maslahat ochiladi, 3-urinishdan keyin yechimni ko'rish mumkin:
 yechim ko'rilgan bosqich 1 yulduz beradi (`LevelProgress.helped`). Har javobdan keyin «nega shunday» tushuntirishi chiqadi.
 
-**O'yinlar:** 8 ta o'yin, 78 bosqich. Har o'yinda o'z yo'li bor, bir-birini qulflamaydi.
+**O'yinlar:** 11 ta o'yin, 92 bosqich. Har o'yinda o'z yo'li bor, bir-birini qulflamaydi. Yulduz yig'ib robot kiyimi ochiladi
+(`SKINS`), har kuni o'ynasa kunlik seriya o'sadi (`Student.streak`).
 
 | O'yin | Fayl | O'quvchi nima qiladi |
 |---|---|---|
+| Pufakcha | `apps/portal/games/bubbles.py` | Qoidaga mos pufaklarni bosib yoradi |
+| Rostmi? | `apps/portal/games/truth.py` | Kartani surib rost yoki yolg'onni tanlaydi |
+| Kod iloni | `apps/portal/games/snake.py` | Ilon so'zlarni tartib bilan yeb, kod qatorini yig'adi |
 | Robot yo'li | `apps/portal/levels.py` | Robotni bloklar yoki Python bilan manzilga olib boradi |
 | Kod kosmosi | `apps/portal/games/space.py` | Kemani boshqarib, to'g'ri javobli asteroidni otadi |
 | Kod juftligi | `apps/portal/games/pairs.py` | Kartalarni ochib, kodni natijasi bilan juftlaydi |
@@ -123,7 +127,7 @@ apps/notes/        eslatmalar va kod parchalari
 apps/resources/    domen, server, obunalar
 apps/vault/        shifrlangan kalitlar, 2FA, backup
 apps/userbot/      Telegram akkaunt (Telethon): ulanish, suhbatlar, navbat, buyruqlar
-apps/portal/       o'quvchi kabineti, darslik, 8 ta o'yin (games/, catalog.py), o'qituvchi bo'limi
+apps/portal/       o'quvchi kabineti, darslik, 11 ta o'yin (games/, catalog.py), o'qituvchi bo'limi
 apps/dashboard/    «Bugun» sahifasi
 apps/landing/      ochiq sahifa va ariza formasi
 templates/         layouts, partials (sidebar, topbar, ⌘K, modal, toast), components

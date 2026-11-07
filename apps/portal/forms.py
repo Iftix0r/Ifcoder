@@ -54,6 +54,7 @@ class RegisterForm(StyledFormMixin, UserCreationForm):
 class PortalPasswordForm(StyledPasswordChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["old_password"].label = "Hozirgi parol"
         self.fields["new_password1"].help_text = "Kamida 8 ta belgi"
         self.fields["new_password2"].help_text = ""
 

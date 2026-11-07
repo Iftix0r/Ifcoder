@@ -836,7 +836,8 @@ def earned(student):
 
 def test_achievements(student):
     assert earned(student) == set()
-    solve_up_to(student, 4)
+    for level in ALL_LEVELS[:4]:
+        LevelProgress.objects.create(student=student, level=level.slug, stars=3)
     assert earned(student) == {"Birinchi qadam", "Birinchi qadamlar"}
     LevelProgress.objects.all().delete()
     solve_up_to(student, len(EVERY_LEVEL))

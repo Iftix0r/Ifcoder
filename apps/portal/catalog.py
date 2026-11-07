@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from . import engine, solutions
 from . import levels as robot
-from .games import BadPayload, bugs, code_from, draw, machine, pairs, puzzle, quiz, space
+from .games import BadPayload, bubbles, bugs, code_from, draw, machine, pairs, puzzle, quiz, snake, space, truth
 
 # Yangi mavzuning birinchi bosqichlari bo'sh varaqdan boshlanmaydi: bola qolipni to'ldiradi
 SCAFFOLDS = {
@@ -73,6 +73,48 @@ class Game:
 
 
 GAMES: tuple[Game, ...] = (
+    Game(
+        "pufak",
+        "Pufakcha",
+        "Qoidaga mos pufaklarni bosib yoring",
+        "Eng oson",
+        "circle-dot",
+        "tone-cyan",
+        "portal/play_bubbles.html",
+        "portal-bubbles.js",
+        bubbles.CHAPTERS,
+        bubbles.attempt,
+        bubbles.config,
+        "Oson",
+    ),
+    Game(
+        "rostmi",
+        "Rostmi?",
+        "Kartani o'ngga yoki chapga suring: rost yoki yolg'on",
+        "Tez o'yin",
+        "thumbs-up",
+        "tone-emerald",
+        "portal/play_truth.html",
+        "portal-truth.js",
+        truth.CHAPTERS,
+        truth.attempt,
+        truth.config,
+        "Oson",
+    ),
+    Game(
+        "ilon",
+        "Kod iloni",
+        "So'zlarni tartib bilan yeb, kod qatorini yig'ing",
+        "Sintaksis",
+        "worm",
+        "tone-emerald",
+        "portal/play_snake.html",
+        "portal-snake.js",
+        snake.CHAPTERS,
+        snake.attempt,
+        snake.config,
+        "Oson",
+    ),
     Game(
         "robot",
         "Robot yo'li",

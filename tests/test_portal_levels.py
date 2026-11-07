@@ -65,8 +65,8 @@ def test_forbidden_command_is_enforced():
 
 def test_stars_count_statements_not_lines():
     one_line = attempt(LEVELS["salom-robot"], "yur(); yur(); yur(); yur(); chapga(); chapga(); chapga(); chapga()")
-    assert one_line["ok"] and one_line["stars"] == 1
-    assert stars_for(4, 4) == 3 and stars_for(6, 4) == 2 and stars_for(7, 4) == 1
+    assert one_line["ok"] and one_line["stars"] == 2
+    assert stars_for(4, 4) == 3 and stars_for(5, 4) == 3 and stars_for(6, 4) == 2 and stars_for(11, 4) == 1
 
 
 def test_failed_map_is_reported_with_its_own_world():

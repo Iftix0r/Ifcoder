@@ -61,9 +61,9 @@ def assemble(level: PuzzleLevel, payload: dict) -> str:
 
 
 def stars_for_tries(attempts: int) -> int:
-    if attempts == 0:
+    if attempts <= 1:
         return 3
-    return 2 if attempts <= 2 else 1
+    return 2 if attempts <= 3 else 1
 
 
 def attempt(level: PuzzleLevel, payload: dict, attempts: int) -> dict:

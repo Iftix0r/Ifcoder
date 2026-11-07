@@ -51,7 +51,11 @@
 
   function add(id) {
     if (busy) return;
-    picked.push({ id, indent: 0 });
+    // Surilish oldingi qatordan olinadi: «:» dan keyin bir pog'ona ichkariga. Bola faqat chiqishni o'zi belgilaydi
+    const previous = picked[picked.length - 1];
+    const opensBlock = previous && config.tiles[previous.id].endsWith(":");
+    const indent = previous ? Math.min(previous.indent + (opensBlock ? 1 : 0), config.maxIndent) : 0;
+    picked.push({ id, indent });
     sound.step();
     clearNote();
     render();
@@ -87,7 +91,7 @@
     Kit.printLines(data.output);
     Kit.saveProgress(data);
     if (data.ok) {
-      const text = data.stars < 3 ? `${data.tries}-urinishda yechdingiz. 3 yulduz birinchi urinishda beriladi.` : "Birinchi urinishda!";
+      const text = data.stars < 3 ? `${data.tries}-urinishda yechdingiz. 3 yulduz uchun 2 ta urinish yetadi.` : "Ajoyib!";
       Kit.win(data, text);
     } else {
       sound.bad();

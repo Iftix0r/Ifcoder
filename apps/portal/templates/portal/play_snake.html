@@ -1,0 +1,28 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="mx-auto max-w-2xl space-y-3">
+  <section class="card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5"><p class="min-w-0 text-sm font-bold" id="snake-goal"></p><div class="flex shrink-0 gap-1" id="lives" role="img" aria-label="Jonlar"></div></div>
+    <div class="snake-built border-b border-line px-4 py-2" id="built"></div>
+    <div class="relative"><canvas id="snake" class="block aspect-[7/5] w-full touch-none" tabindex="0" aria-label="O'q tugmalari yoki surish bilan ilonni boshqaring"></canvas>
+      <div id="snake-overlay" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/70 p-5 text-center">
+        <p class="text-xl font-extrabold" id="snake-title">{{ level.title }}</p>
+        <p class="max-w-sm text-sm text-ink-2" id="snake-text">{{ level.lesson }} Devorga urilish qo'rqinchli emas: ilon narigi tomondan chiqadi.</p>
+        <button type="button" id="snake-go" class="btn btn-primary btn-lg">{% icon "play" "size-4" %}Boshlash</button>
+      </div>
+    </div>
+  </section>
+  <div class="snake-pad" aria-label="Boshqaruv">
+    <span></span><button type="button" data-dir="up" aria-label="Yuqoriga">{% icon "chevron-up" "size-6" %}</button><span></span>
+    <button type="button" data-dir="left" aria-label="Chapga">{% icon "chevron-left" "size-6" %}</button><span></span><button type="button" data-dir="right" aria-label="O'ngga">{% icon "chevron-right" "size-6" %}</button>
+    <span></span><button type="button" data-dir="down" aria-label="Pastga">{% icon "chevron-down" "size-6" %}</button><span></span>
+  </div>
+  <div id="status" class="game-status" aria-live="polite" hidden></div>
+  {% include "portal/partials/lesson.html" %}
+</div>
+<template id="heart-template">{% icon "heart" "size-5" %}</template>
+{% include "portal/partials/result.html" %}
+{% endblock %}

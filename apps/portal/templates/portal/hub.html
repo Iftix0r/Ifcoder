@@ -3,7 +3,7 @@
 {% block content %}
 <section class="arcade-hero animate-fade-up">
   <div class="min-w-0">
-    <p class="text-xs font-bold tracking-widest text-cyan-300 uppercase">O'yin markazi</p>
+    <p class="text-xs font-bold tracking-widest text-cyan-300 uppercase">O'yin markazi{% if student.live_streak %} · <span class="text-amber-300">{{ student.live_streak }} kunlik seriya</span>{% endif %}</p>
     <h1 class="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">O'ynab o'rganamiz</h1>
     <p class="mt-2 max-w-lg text-sm leading-relaxed text-ink-2">Yangi mavzuni avval Darslikdan o'qing, keyin o'yinda mashq qiling. Qiynalsangiz, o'yin o'zi yordam beradi.</p>
     <div class="mt-4 flex flex-wrap gap-2">

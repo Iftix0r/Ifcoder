@@ -292,6 +292,19 @@ def sandbox(request):
 
 
 @student_page
+@require_POST
+def skin(request):
+    student = current_student(request)
+    if student is None:
+        return redirect("portal_map")
+    if services.choose_skin(student, request.POST.get("skin", "")):
+        messages.success(request, "Robot yangi kiyim kiydi!")
+    else:
+        messages.warning(request, "Bu kiyim hali yopiq. Ko'proq yulduz yig'ing!")
+    return redirect("portal_profile")
+
+
+@student_page
 def materials(request):
     kind = request.GET.get("kind", "")
     student = current_student(request)
@@ -381,6 +394,7 @@ def profile(request):
             "student": student,
             "rank": services.rank_for(student.xp),
             "achievements": services.achievements(student, services.progress_of(student)),
+            "skins": services.skin_cards(student),
             "profile_form": profile_form,
             "password_form": password_form,
         },

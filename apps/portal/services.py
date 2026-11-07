@@ -16,7 +16,7 @@ from .catalog import EVERY_LEVEL, GAME_OF, GAMES, MAX_XP, Game
 from .concepts import BY_SLUG as CONCEPT_BY_SLUG
 from .concepts import FOR_CHAPTER
 from .levels import CHAPTERS as ROBOT_CHAPTERS
-from .models import Attendance, LevelProgress, Payment, Post, Student, Submission
+from .models import SKINS, Attendance, LevelProgress, Payment, Post, Student, Submission
 
 TUITION_CATEGORY = "O'quv to'lovi"
 PAYMENT_ALERT_DAY = 10  # Oy boshida hamma «to'lamagan»: ogohlantirish shu kundan keyin ma'noli
@@ -146,7 +146,43 @@ def save_attempt(student: Student, level, code: str, result: dict) -> LevelProgr
                 row.stars = result["stars"]
                 row.best_code = code
         row.save()
+    _count_day(student)
     return row
+
+
+def _count_day(student: Student) -> None:
+    today = timezone.localdate()
+    if student.last_played == today:
+        return
+    yesterday = student.last_played and (today - student.last_played).days == 1
+    streak = student.streak + 1 if yesterday else 1
+    best = max(student.best_streak, streak)
+    Student.objects.filter(pk=student.pk).update(streak=streak, best_streak=best, last_played=today)
+    student.streak, student.best_streak, student.last_played = streak, best, today
+
+
+def skin_cards(student: Student) -> list[dict]:
+    return [
+        {
+            "key": key,
+            "title": title,
+            "color": color,
+            "need": need,
+            "open": student.stars >= need,
+            "left": max(need - student.stars, 0),
+            "active": student.skin == key,
+        }
+        for key, title, color, need in SKINS
+    ]
+
+
+def choose_skin(student: Student, key: str) -> bool:
+    """Yopiq kiyimni kiyib bo'lmaydi: yulduz serverda sanaladi."""
+    card = next((card for card in skin_cards(student) if card["key"] == key), None)
+    if card is None or not card["open"]:
+        return False
+    Student.objects.filter(pk=student.pk).update(skin=key)
+    return True
 
 
 HELP_AFTER = 3  # Avval o'zi urinib ko'rsin, lekin qotib qolmasin
@@ -216,7 +252,7 @@ def achievements(student: Student, progress: dict[str, LevelProgress]) -> list[d
     top_grades = student.submissions.filter(status=Submission.Status.ACCEPTED, grade=5).count()
     visits = attendance_stats(student)
     items = [("Birinchi qadam", "Birinchi bosqichni yechdi", "footprints", bool(solved))]
-    for game in GAMES[1:]:
+    for game in (game for game in GAMES if game.slug != "robot"):
         finished = all(level.slug in solved for level in game.levels)
         items.append((game.title, f"«{game.title}» o'yinini tugatdi", game.icon, finished))
     for chapter in ROBOT_CHAPTERS:
@@ -227,6 +263,7 @@ def achievements(student: Student, progress: dict[str, LevelProgress]) -> list[d
         ("Mukammal", "Hamma bosqichda 3 yulduz oldi", "crown", perfect == len(EVERY_LEVEL)),
         ("A'lochi", "3 ta uy vazifasidan 5 oldi", "medal", top_grades >= 3),
         ("Intizomli", "10 ta darsdan keyin davomati 90% dan yuqori", "calendar-check", _disciplined(visits)),
+        ("Olovli hafta", "7 kun ketma-ket o'ynadi", "flame", student.best_streak >= 7),
     ]
     return [{"title": t, "text": text, "icon": icon, "earned": earned} for t, text, icon, earned in items]
 

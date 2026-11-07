@@ -1,0 +1,22 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="mx-auto max-w-lg space-y-3">
+  <div class="flex items-center justify-between gap-3">
+    <p class="text-sm font-semibold"><span id="truth-step">1 / 8</span> <span id="combo" class="text-amber-300"></span></p>
+    <div class="flex gap-1" id="lives" role="img" aria-label="Jonlar"></div>
+  </div>
+  <div class="truth-stage" id="stage"></div>
+  <div class="flex gap-3">
+    <button type="button" id="say-no" class="truth-btn bg-rose-600">{% icon "thumbs-down" "size-5" %}Yolg'on</button>
+    <button type="button" id="say-yes" class="truth-btn bg-emerald-600">Rost{% icon "thumbs-up" "size-5" %}</button>
+  </div>
+  <div id="status" class="game-status" aria-live="polite" hidden></div>
+  <button type="button" id="truth-next" class="btn btn-primary w-full" hidden>Davom</button>
+  {% include "portal/partials/lesson.html" %}
+</div>
+<template id="heart-template">{% icon "heart" "size-5" %}</template>
+{% include "portal/partials/result.html" %}
+{% endblock %}

@@ -42,7 +42,7 @@
     const body = el("g", { class: "robot-body" }, outer);
     el("rect", { x: -19, y: -11, width: 6, height: 22, rx: 3, fill: "#312e81" }, body);
     el("rect", { x: 13, y: -11, width: 6, height: 22, rx: 3, fill: "#312e81" }, body);
-    el("rect", { x: -14, y: -16, width: 28, height: 31, rx: 10, fill: "#6366f1" }, body);
+    el("rect", { x: -14, y: -16, width: 28, height: 31, rx: 10, style: "fill: var(--skin, #6366f1)" }, body);
     el("rect", { x: -10, y: -13, width: 20, height: 11, rx: 5, fill: "#0f172a" }, body);
     el("circle", { cx: -4.5, cy: -7.5, r: 2.6, fill: "#22d3ee" }, body);
     el("circle", { cx: 4.5, cy: -7.5, r: 2.6, fill: "#22d3ee" }, body);

@@ -3,7 +3,7 @@
 {% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 {% block title %}{% block page_title %}Kabinet{% endblock %} · Ifcoder{% endblock %}
 {% block body %}
-<div x-data class="min-h-full dark arcade">
+<div x-data class="min-h-full dark arcade" style="--skin: {{ student.skin_color|default:'#6366f1' }}">
   {% if preview %}
     <div class="bg-amber-500/15 px-4 py-2 text-center text-[13px] font-medium text-amber-700 dark:text-amber-300">O'qituvchi ko'rinishi: hamma bosqich ochiq, natija saqlanmaydi. <a href="{% url 'student_list' %}" class="underline">Panelga qaytish</a></div>
   {% endif %}
@@ -18,6 +18,7 @@
         {% include "portal/partials/nav_link.html" with key="rating" href="portal_rating" label="Reyting" %}
       </nav>
       <div class="ml-auto flex items-center gap-1">
+        {% if student.live_streak %}<span class="badge badge-warning mr-1 gap-1" title="Kunlik seriya">{% icon "flame" "size-3" %}{{ student.live_streak }}</span>{% endif %}
         {% if student %}<span class="badge badge-brand mr-1 gap-1">{% icon "star" "size-3" %}<span id="xp-value">{{ student.xp }}</span> XP</span>{% endif %}
         <button type="button" @click="$store.theme.cycle()" class="btn btn-ghost btn-icon theme-toggle" aria-label="Temani almashtirish"><span class="dark:hidden">{% icon "moon" "size-[18px]" %}</span><span class="hidden dark:inline">{% icon "sun" "size-[18px]" %}</span></button>
         <div x-data="{ open: false }" class="relative">

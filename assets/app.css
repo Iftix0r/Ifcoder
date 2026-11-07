@@ -634,6 +634,9 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   }
   .game-card:hover { box-shadow: 0 16px 40px -14px var(--glow, rgb(99 102 241 / 0.75)); border-color: var(--glow); }
   .game-art { @apply h-32 overflow-hidden; background: var(--art); }
+  .art-pufak { --art: linear-gradient(135deg, #0c4a6e, #0e7490); --glow: rgb(103 232 249 / 0.75); }
+  .art-rostmi { --art: linear-gradient(135deg, #064e3b, #1e3a8a); --glow: rgb(52 211 153 / 0.75); }
+  .art-ilon { --art: linear-gradient(135deg, #052e16, #14532d); --glow: rgb(74 222 128 / 0.75); }
   .art-robot { --art: linear-gradient(135deg, #312e81, #4f46e5); --glow: rgb(129 140 248 / 0.8); }
   .art-kosmos { --art: linear-gradient(135deg, #020617, #164e63); --glow: rgb(34 211 238 / 0.75); }
   .art-juftlik { --art: linear-gradient(135deg, #3b0764, #7e22ce); --glow: rgb(192 132 252 / 0.75); }
@@ -689,6 +692,43 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .memory-front { @apply border-line-strong bg-surface-2 font-mono text-[12px] leading-snug whitespace-pre text-ink sm:text-[13px]; transform: rotateY(180deg); }
   .memory-card.is-found .memory-front { border-color: #34d399; background: rgb(16 185 129 / 0.16); }
   .memory-card.is-miss .memory-front { border-color: #fb7185; }
+  .skin-card { @apply rounded-2xl border-2 border-line bg-surface p-2 text-center transition hover:-translate-y-0.5 disabled:opacity-50 disabled:grayscale disabled:hover:translate-y-0; }
+  .skin-card.is-active { border-color: var(--skin); box-shadow: 0 0 18px -4px var(--skin); }
+
+  .bubble-sky { @apply relative h-[62vh] max-h-[560px] min-h-80 overflow-hidden rounded-3xl border border-line; background: linear-gradient(180deg, #082f49, #0c1445 70%, #1e1b4b); }
+  .bubble {
+    @apply absolute flex items-center justify-center rounded-full border-2 px-1 text-center font-mono font-bold text-white select-none;
+    width: var(--d);
+    height: var(--d);
+    left: var(--x);
+    bottom: calc(var(--d) * -1);
+    font-size: clamp(12px, calc(var(--d) / 6), 17px);
+    background: radial-gradient(circle at 32% 28%, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.05) 34%, var(--tint));
+    border-color: rgb(255 255 255 / 0.55);
+    animation: bubble-rise var(--t) linear forwards, bubble-sway 2.6s ease-in-out infinite alternate;
+    touch-action: manipulation;
+  }
+  .bubble.is-hit { animation: bubble-pop 0.28s ease-out forwards; border-color: #34d399; }
+  .bubble.is-miss { animation: bubble-pop 0.28s ease-out forwards; border-color: #fb7185; background: rgb(244 63 94 / 0.5); }
+
+  .truth-stage { @apply relative mx-auto flex h-72 max-w-md items-center justify-center; }
+  .truth-card {
+    @apply absolute inset-x-6 inset-y-3 flex cursor-grab touch-none items-center justify-center rounded-3xl border-2 border-line-strong p-5 shadow-lift select-none;
+    background: linear-gradient(160deg, #1e2150, #11132a);
+    transition: transform 0.28s ease, opacity 0.28s ease;
+  }
+  .truth-card.is-dragging { transition: none; cursor: grabbing; }
+  .truth-card pre { @apply m-0 text-center font-mono text-2xl leading-relaxed font-bold whitespace-pre text-white; }
+  .truth-tag { @apply absolute top-4 rounded-lg border-2 px-2 py-0.5 text-sm font-extrabold opacity-0 transition-opacity; }
+  .truth-yes { @apply left-4 -rotate-12 border-emerald-400 text-emerald-300; }
+  .truth-no { @apply right-4 rotate-12 border-rose-400 text-rose-300; }
+  .truth-btn { @apply flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white transition active:scale-95; }
+
+  .snake-pad { @apply mx-auto grid w-40 grid-cols-3 gap-1.5 md:hidden; }
+  .snake-pad button { @apply flex aspect-square items-center justify-center rounded-xl border border-line bg-surface-2 text-ink active:bg-brand-500; }
+  .snake-built { @apply flex min-h-11 flex-wrap items-center gap-1.5 font-mono text-[15px] font-bold; }
+  .snake-slot { @apply inline-block h-7 w-7 rounded-md border-2 border-dashed border-line-strong; }
+  .snake-word { @apply rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-emerald-300; }
   .confetti { @apply pointer-events-none fixed inset-0 z-[60]; }
 
   .draw-paper { @apply aspect-square w-full max-w-[440px] overflow-hidden rounded-2xl border border-line-strong bg-white shadow-soft; }
@@ -791,6 +831,19 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
 @keyframes node-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgb(34 211 238 / 0.55); }
   50% { box-shadow: 0 0 0 14px rgb(34 211 238 / 0); }
+}
+
+@keyframes bubble-rise {
+  to { bottom: 105%; }
+}
+
+@keyframes bubble-sway {
+  from { translate: -10px 0; }
+  to { translate: 10px 0; }
+}
+
+@keyframes bubble-pop {
+  to { transform: scale(1.5); opacity: 0; }
 }
 
 @keyframes gear-spin {

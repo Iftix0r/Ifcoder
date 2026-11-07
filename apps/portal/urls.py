@@ -20,6 +20,7 @@ urlpatterns = [
     path("portal/vazifa/<int:pk>/", views.homework, name="portal_homework"),
     path("portal/reyting/", views.rating, name="portal_rating"),
     path("portal/profil/", views.profile, name="portal_profile"),
+    path("portal/profil/kiyim/", views.skin, name="portal_skin"),
     # O'qituvchi
     path("students/", teacher.student_list, name="student_list"),
     path("students/<int:pk>/", teacher.student_detail, name="student_detail"),

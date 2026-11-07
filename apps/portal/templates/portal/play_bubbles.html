@@ -1,0 +1,22 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="mx-auto max-w-2xl space-y-3">
+  <section class="flex items-center justify-between gap-3">
+    <p class="text-base font-bold">{{ level.goal }}</p>
+    <p class="shrink-0 text-sm font-semibold"><span id="hits" class="text-emerald-300">0</span> ta <span id="combo" class="text-amber-300"></span></p>
+  </section>
+  <div class="bubble-sky" id="sky">
+    <div id="sky-start" class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-950/55 p-5 text-center">
+      <p class="text-xl font-extrabold">{{ level.goal }}</p>
+      <p class="max-w-sm text-sm text-ink-2">{{ level.lesson }}</p>
+      <button type="button" id="sky-go" class="btn btn-primary btn-lg">{% icon "play" "size-4" %}Boshlash</button>
+    </div>
+  </div>
+  <div id="status" class="game-status" aria-live="polite" hidden></div>
+  {% include "portal/partials/lesson.html" %}
+</div>
+{% include "portal/partials/result.html" %}
+{% endblock %}

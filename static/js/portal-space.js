@@ -176,7 +176,7 @@
     context.translate(shipX, shipY());
     context.shadowColor = "#22d3ee";
     context.shadowBlur = 16;
-    context.fillStyle = "#e0e7ff";
+    context.fillStyle = getComputedStyle(canvas).getPropertyValue("--skin").trim() || "#e0e7ff";
     context.beginPath();
     context.moveTo(0, -24);
     context.lineTo(17, 16);

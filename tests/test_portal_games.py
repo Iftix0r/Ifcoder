@@ -65,13 +65,13 @@ def wrong_index(question):
 # --- Katalog ---
 
 
-def test_there_are_eight_games_with_seven_screens():
-    assert len(GAMES) == 8
-    assert len({game.template for game in GAMES}) == 7  # Xato ovchisi robot taxtasidan foydalanadi
+def test_there_are_eleven_games_with_ten_screens():
+    assert len(GAMES) == 11
+    assert len({game.template for game in GAMES}) == 10  # Xato ovchisi robot taxtasidan foydalanadi
 
 
 def test_games_start_with_easy_ones():
-    assert [game.difficulty for game in GAMES[:4]] == ["Oson"] * 4
+    assert [game.difficulty for game in GAMES[:7]] == ["Oson"] * 7
 
 
 def test_slugs_are_unique_across_games():
@@ -333,7 +333,7 @@ def test_puzzle_other_valid_order_is_accepted():
 
 def test_puzzle_stars_depend_on_tries():
     level = PUZZLE[0]
-    assert [puzzle.attempt(level, picks(level), n)["stars"] for n in (0, 1, 2, 3, 9)] == [3, 2, 2, 1, 1]
+    assert [puzzle.attempt(level, picks(level), n)["stars"] for n in (0, 1, 2, 3, 9)] == [3, 3, 2, 2, 1]
 
 
 def test_puzzle_empty_program_is_not_a_win():
@@ -374,8 +374,9 @@ def test_puzzle_run_saves_assembled_code(child):
     assert row.stars == 3 and row.code == level.answer.strip()
 
 
-def test_puzzle_second_try_cannot_reach_three_stars(child):
+def test_puzzle_third_try_cannot_reach_three_stars(child):
     level = PUZZLE[0]
+    send(child, level.slug, {"lines": []})
     send(child, level.slug, {"lines": []})
     data = send(child, level.slug, picks(level)).json()
     assert data["ok"] and data["stars"] == 2

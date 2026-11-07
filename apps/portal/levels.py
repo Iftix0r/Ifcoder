@@ -512,9 +512,10 @@ CHAPTER_OF: dict[str, Chapter] = {level.slug: chapter for chapter in CHAPTERS fo
 
 
 def stars_for(statements: int, par: int) -> int:
-    if statements <= par:
+    """Ozgina ortiqcha buyruq uchun jazolanmaydi: 3 yulduz bolani ruhlantirsin, qiynamasin."""
+    if statements <= par + max(1, par // 5):
         return 3
-    return 2 if statements <= par + max(2, par // 2) else 1
+    return 2 if statements <= par * 2 + 2 else 1
 
 
 def _missing(level: Level, tree: ast.Module) -> str:
