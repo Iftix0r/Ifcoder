@@ -1,0 +1,32 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}O'yin{% endblock %}
+{% block content %}
+<div class="mb-6 animate-fade-up">
+  <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Robot yo'li</h1>
+  <p class="mt-1 text-sm text-ink-2">Haqiqiy Python yozib robotni boshqaring. Har bosqich yangi narsa o'rgatadi.</p>
+</div>
+<div class="space-y-8">
+  {% for item in chapters %}
+    <section class="animate-fade-up">
+      <div class="mb-3 flex items-center gap-3">
+        <span class="icon-chip {{ item.chapter.tone }} shrink-0 font-bold">{{ forloop.counter }}</span>
+        <div class="min-w-0 flex-1"><h2 class="text-lg font-bold">{{ item.chapter.title }}</h2><p class="truncate text-sm text-ink-2">{{ item.chapter.concept }}</p></div>
+        <span class="badge badge-neutral shrink-0">{{ item.done }} / {{ item.total }}</span>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {% for card in item.levels %}
+          {% if card.state == "locked" %}
+            <div class="level-tile is-locked" aria-disabled="true"><span class="level-number">{% icon "lock" "size-4" %}</span><span class="min-w-0 flex-1 truncate text-sm font-semibold">{{ card.level.title }}</span></div>
+          {% else %}
+            <a href="{% url 'portal_play' card.level.slug %}" class="level-tile {% if card.state == 'open' %}is-open{% endif %}">
+              <span class="level-number">{{ card.number }}</span>
+              <span class="min-w-0 flex-1 truncate text-sm font-semibold">{{ card.level.title }}</span>
+              {% if card.state == "done" %}{% include "portal/partials/stars.html" with n=card.stars size="size-3.5" %}{% else %}<span class="text-brand-500">{% icon "play" "size-4" %}</span>{% endif %}
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}

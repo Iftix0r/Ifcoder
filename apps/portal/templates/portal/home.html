@@ -1,0 +1,46 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}Bosh sahifa{% endblock %}
+{% block content %}
+<section class="relative overflow-hidden rounded-3xl bg-[#14123a] p-6 text-white shadow-lift sm:p-8 animate-fade-up">
+  <div class="absolute inset-0" style="background: radial-gradient(60% 90% at 15% 0%, rgba(99,102,241,.6), transparent 70%), radial-gradient(50% 80% at 95% 100%, rgba(6,182,212,.35), transparent 70%);"></div>
+  <div class="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+    <div class="min-w-0">
+      <p class="flex items-center gap-1.5 text-sm font-medium text-white/70">{% icon rank.icon "size-4" %}{{ rank.title }}</p>
+      <h1 class="mt-1 text-2xl font-bold sm:text-3xl">Salom, {{ user.first_name|default:user.username }}!</h1>
+      {% if next_level %}
+        <p class="mt-2 text-sm text-white/70">Keyingi bosqich: <span class="font-semibold text-white">{{ next_level.title }}</span></p>
+        <a href="{% url 'portal_play' next_level.slug %}" class="btn btn-lg mt-4 bg-white text-brand-700 hover:brightness-95">{% icon "play" "size-4" %}{% if student.solved %}Davom etish{% else %}Boshlash{% endif %}</a>
+      {% else %}
+        <p class="mt-2 text-sm text-white/70">Hamma bosqichni yechdingiz. Endi uch yulduzga intiling!</p>
+        <a href="{% url 'portal_map' %}" class="btn btn-lg mt-4 bg-white text-brand-700 hover:brightness-95">{% icon "map" "size-4" %}Xaritaga o'tish</a>
+      {% endif %}
+    </div>
+    {% include "portal/partials/robot.html" with class="hidden size-28 shrink-0 animate-float sm:block" %}
+  </div>
+</section>
+
+<div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+  <div class="card p-4 animate-fade-up"><p class="stat-label">Yechilgan bosqich</p><p class="mt-2 text-xl font-bold">{{ student.solved }} / {{ total_levels }}</p><div class="progress mt-3"><span style="width: {{ student.percent }}%"></span></div></div>
+  <div class="card p-4 animate-fade-up"><p class="stat-label">Yulduzlar</p><p class="mt-2 flex items-center gap-1.5 text-xl font-bold"><span class="star-on">{% icon "star" "size-5" %}</span>{{ student.stars }}</p><p class="mt-2 text-xs text-ink-3">Jami {{ student.xp }} / {{ max_xp }} XP</p></div>
+  <div class="card col-span-2 p-4 animate-fade-up lg:col-span-1"><p class="stat-label">Unvon</p><p class="mt-2 text-xl font-bold">{{ rank.title }}</p>{% if rank.next_xp %}<div class="progress mt-3"><span style="width: {{ rank.percent }}%"></span></div><p class="mt-2 text-xs text-ink-3">«{{ rank.next_title }}» uchun yana {{ rank.left }} XP</p>{% else %}<p class="mt-2 text-xs text-ink-3">Eng yuqori unvon</p>{% endif %}</div>
+</div>
+
+<div class="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+  <section>
+    <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-bold">O'qituvchidan</h2><a href="{% url 'portal_materials' %}" class="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">Hammasi</a></div>
+    <div class="space-y-3">
+      {% for post in posts %}{% include "portal/partials/post_card.html" %}{% empty %}<div class="card">{% include "components/empty_state.html" with icon="megaphone" title="Hozircha e'lon yo'q" text="O'qituvchi yozgan e'lon va vazifalar shu yerda chiqadi." %}</div>{% endfor %}
+    </div>
+  </section>
+  <section>
+    <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-bold">Reyting</h2><a href="{% url 'portal_rating' %}" class="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">To'liq</a></div>
+    <div class="card divide-y divide-line">
+      {% for s in leaders %}
+        <div class="flex items-center gap-3 px-4 py-3 {% if s.pk == student.pk %}bg-brand-500/5{% endif %}"><span class="w-5 text-center text-sm font-bold text-ink-3">{{ forloop.counter }}</span><span class="min-w-0 flex-1 truncate text-sm font-medium">{{ s.public_name }}</span><span class="text-sm font-semibold">{{ s.xp }} XP</span></div>
+      {% empty %}
+        <p class="px-4 py-6 text-center text-sm text-ink-3">Birinchi bosqichni yeching va reytingni boshlab bering.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

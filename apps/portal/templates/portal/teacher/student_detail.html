@@ -1,0 +1,56 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}{{ student.full_name }}{% endblock %}
+{% block content %}
+<div id="student-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#student-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+<a href="{% url 'student_list' %}" class="mb-3 inline-flex items-center gap-1.5 text-sm text-ink-2 hover:text-ink">{% icon "arrow-left" "size-4" %}O'quvchilar</a>
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-up">
+  <div class="flex min-w-0 items-center gap-3.5">
+    <span class="avatar size-12 text-sm">{{ student.full_name|initials }}</span>
+    <div class="min-w-0">
+      <h1 class="truncate text-2xl font-bold tracking-tight">{{ student.full_name }}</h1>
+      <p class="truncate text-sm text-ink-2">@{{ student.user.username }}{% if student.phone %} · {{ student.phone }}{% endif %} · {{ student.created_at|date:"j E Y" }} dan beri</p>
+    </div>
+    {% if not student.user.is_active %}<span class="badge badge-danger shrink-0">Bloklangan</span>{% endif %}
+  </div>
+  <div class="flex shrink-0 gap-2">
+    <button type="button" class="btn btn-secondary" hx-get="{% url 'student_password' student.pk %}" hx-target="#modal-content">{% icon "key-round" "size-4" %}Yangi parol</button>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'student_edit' student.pk %}" hx-target="#modal-content">{% icon "pencil" "size-4" %}Tahrirlash</button>
+  </div>
+</div>
+
+<div class="mb-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+  <div class="card p-4"><p class="stat-label">Yechilgan</p><p class="mt-2 text-xl font-bold">{{ student.solved }} / {{ total_levels }}</p></div>
+  <div class="card p-4"><p class="stat-label">Ball</p><p class="mt-2 text-xl font-bold">{{ student.xp }} XP</p></div>
+  <div class="card p-4"><p class="stat-label">Unvon</p><p class="mt-2 text-lg font-bold">{{ rank.title }}</p></div>
+  <div class="card p-4"><p class="stat-label">Urinishlar</p><p class="mt-2 text-xl font-bold">{{ attempts }} ta</p></div>
+</div>
+{% if student.note %}<div class="card mb-5 p-4"><p class="stat-label">Izoh</p><p class="mt-1.5 text-sm text-ink-2">{{ student.note|linebreaksbr }}</p></div>{% endif %}
+
+<div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+  <section class="card p-5">
+    <h2 class="mb-3 text-base font-bold">Boblar bo'yicha</h2>
+    <div class="space-y-3.5">
+      {% for item in chapters %}
+        <div><div class="mb-1 flex justify-between text-sm"><span class="font-medium">{{ item.chapter.title }}</span><span class="text-ink-3">{{ item.done }} / {{ item.total }}</span></div><div class="progress"><span style="width: {% widthratio item.done item.total 100 %}%"></span></div></div>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="card">
+    <h2 class="px-5 pt-5 pb-3 text-base font-bold">So'nggi harakatlar</h2>
+    {% if rows %}
+      <div class="divide-y divide-line">
+        {% for row in rows %}
+          <button type="button" class="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-surface-2/60" hx-get="{% url 'student_code' student.pk row.level %}" hx-target="#modal-content">
+            <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ row.level_title }}</p><p class="text-xs text-ink-3">{{ row.attempts }} ta urinish · {{ row.updated_at|date:"j E, H:i" }}</p></div>
+            {% if row.stars %}{% include "portal/partials/stars.html" with n=row.stars size="size-3.5" %}{% else %}<span class="badge badge-warning">Yechilmagan</span>{% endif %}
+            <span class="text-ink-3">{% icon "code-xml" "size-4" %}</span>
+          </button>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% include "components/empty_state.html" with icon="gamepad-2" title="Hali o'ynamagan" text="Birinchi urinishdan keyin kodi shu yerda ko'rinadi." %}
+    {% endif %}
+  </section>
+</div>
+</div>
+{% endblock %}

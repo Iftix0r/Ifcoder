@@ -1,0 +1,21 @@
+{% extends "portal/auth.html" %}
+{% block title %}Ro'yxatdan o'tish · Ifcoder{% endblock %}
+{% block form %}
+<h1 class="text-center text-2xl font-bold tracking-tight">Ro'yxatdan o'tish</h1>
+<p class="mt-1.5 text-center text-sm text-ink-2">Bir daqiqada akkaunt oching va birinchi bosqichni boshlang.</p>
+<form method="post" class="mt-6 space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/form_errors.html" %}
+  <div class="grid gap-4 sm:grid-cols-2">
+    {% include "components/field.html" with field=form.first_name %}
+    {% include "components/field.html" with field=form.last_name %}
+  </div>
+  {% include "components/field.html" with field=form.username prefix="user" %}
+  {% include "components/field.html" with field=form.phone prefix="phone" %}
+  {% include "components/field.html" with field=form.password1 prefix="lock-keyhole" %}
+  {% include "components/field.html" with field=form.password2 prefix="lock-keyhole" %}
+  {{ form.website }}
+  <button class="btn btn-primary btn-lg w-full">Boshlash {% icon "arrow-right" "size-4" %}</button>
+</form>
+<p class="mt-5 text-center text-sm text-ink-2">Akkauntingiz bormi? <a href="{% url 'portal_login' %}" class="font-semibold text-brand-600 hover:underline dark:text-brand-300">Kirish</a></p>
+{% endblock %}

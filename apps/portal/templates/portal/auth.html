@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block body_class %}min-h-full{% endblock %}
+{% block body %}
+<div class="flex min-h-screen flex-col px-4 py-6">
+  <div class="mx-auto flex w-full max-w-5xl items-center justify-between">
+    <a href="{% url 'landing' %}" class="flex items-center gap-2.5"><img src="{% static 'img/logo.svg' %}" alt="" class="size-9"><span class="font-display text-lg font-bold">Ifcoder</span></a>
+    <button type="button" x-data @click="$store.theme.cycle()" class="btn btn-ghost btn-icon" aria-label="Temani almashtirish"><span class="dark:hidden">{% icon "moon" "size-[18px]" %}</span><span class="hidden dark:inline">{% icon "sun" "size-[18px]" %}</span></button>
+  </div>
+  <div class="flex flex-1 items-center justify-center py-8">
+    <div class="w-full max-w-[420px] animate-fade-up">
+      <div class="mb-5 flex justify-center">{% include "portal/partials/robot.html" with class="size-20 animate-float" %}</div>
+      <div class="card p-6 sm:p-7">{% block form %}{% endblock %}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

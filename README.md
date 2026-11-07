@@ -18,6 +18,8 @@ Dizayn tizimi AIMarkaz bilan bir xil (indigo → violet, yorug'/qorong'i rejim, 
 | Mijozlar | `/contacts/` | Mijoz kartasi, aloqalar tarixi (qo'ng'iroq/uchrashuv/xabar), keyingi aloqa eslatmasi |
 | Bitimlar | `/deals/` | Voronka kanbani: Yangi → Aloqa → Taklif → Muzokara → Yutildi/Yo'qotildi |
 | Telegram | `/telegram/` | Akkauntni ulash, messenjer: suhbatlar, javob, tahrir, o'chirish, fayl yuborish, media, o'qildi, online, CRM, buyruqlar |
+| O'quvchilar | `/students/` | Natijalar, yozgan kodi, izoh, bloklash, yangi parol, ro'yxatdan o'tish havolasi |
+| E'lon va materiallar | `/students/posts/` | O'quvchilar kabinetida chiqadigan e'lon, material va uy vazifalari |
 | Kirim-chiqim | `/finance/` | Oylik hisob, 6 oylik grafik, xarajatlar tarkibi, toifalar (so'm va $), oylik limitlar, CSV eksport |
 | Takroriy to'lovlar | `/finance/recurring/` | Maosh, ijara, obuna: vaqti kelganda eslatiladi, tasdiqlangach kirim-chiqimga yoziladi |
 | Hisob-fakturalar | `/invoices/` | Xizmat qatorlari, holatlar, chop etish/PDF; «To'landi» → kirim avtomatik yoziladi |
@@ -37,6 +39,20 @@ Tezkor tugmalar: `Ctrl+K` yoki `/` — qidiruv, `N` — yangi vazifa.
 Takroriy to'lovlar o'zidan-o'zi yozilmaydi: pul haqiqatan o'tganini faqat siz bilasiz. O'tkazib yuborilgan har bir davr
 alohida turadi va o'z sanasi bilan yoziladi. Oylik limit 80% da sariq, oshganda qizil bo'ladi va «E'tibor talab qiladi»
 hamda ertalabki xulosaga tushadi. Cron kerak emas.
+
+## O'quvchi portali
+
+O'quvchi `/portal/register/` da o'zi ro'yxatdan o'tadi va `/portal/` kabinetiga kiradi: bosh sahifa, robot o'yini, materiallar,
+reyting va profil. Parolni unutgan o'quvchiga yangisini o'qituvchi `/students/<id>/` sahifasidan beradi.
+
+**Panel bitta egaga mo'ljallangan, ma'lumotlarda `user` ustuni yo'q.** O'quvchini faqat `StudentGateMiddleware` to'sadi: `Student`
+yozuvi bor foydalanuvchiga `/portal/` va `/static/` dan boshqa hamma manzil yopiq. Shu middleware'ni olib tashlamang va
+o'quvchiga ochiladigan sahifalarni faqat `/portal/` ostiga qo'shing. O'quvchi kirishlari xavfsizlik jurnaliga yozilmaydi.
+
+**O'yin:** o'quvchi haqiqiy Python yozadi, 6 bob va 25 bosqich. Kod `apps/portal/engine.py` da bajariladi: `eval`/`exec` yo'q, `ast`
+daraxti faqat ruxsat etilgan tugunlar bo'yicha yuriladi, qadamlar soni cheklangan. Yulduz serverda hisoblanadi. Yangi bosqich
+`apps/portal/levels.py` ga qo'shiladi, yechimi `tests/test_portal_levels.py` dagi `SOLUTIONS` ga yoziladi. Mavjud `slug` ni
+o'zgartirmang: natijalar shu nom bilan saqlangan.
 
 ## Lokal ishga tushirish
 
@@ -83,6 +99,7 @@ apps/notes/        eslatmalar va kod parchalari
 apps/resources/    domen, server, obunalar
 apps/vault/        shifrlangan kalitlar, 2FA, backup
 apps/userbot/      Telegram akkaunt (Telethon): ulanish, suhbatlar, navbat, buyruqlar
+apps/portal/       o'quvchi kabineti, robot o'yini, o'qituvchi bo'limi
 apps/dashboard/    «Bugun» sahifasi
 apps/landing/      ochiq sahifa va ariza formasi
 templates/         layouts, partials (sidebar, topbar, ⌘K, modal, toast), components

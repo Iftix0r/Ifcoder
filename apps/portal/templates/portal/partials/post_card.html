@@ -1,0 +1,13 @@
+<article class="card flex gap-3.5 p-4">
+  <span class="icon-chip {{ post.tone }} shrink-0">{% icon post.icon "size-5" %}</span>
+  <div class="min-w-0 flex-1">
+    <div class="flex flex-wrap items-center gap-2">
+      <h3 class="text-[15px] font-semibold">{{ post.title }}</h3>
+      {% if post.pinned %}<span class="text-ink-3" title="Muhim">{% icon "pin" "size-3.5" %}</span>{% endif %}
+      {% if post.due_date %}<span class="badge {{ post.due_date|due_badge }}">{{ post.due_date|due_label }}</span>{% endif %}
+    </div>
+    <p class="mt-0.5 text-xs text-ink-3">{{ post.get_kind_display }} · {{ post.created_at|date:"j E" }}</p>
+    {% if post.body %}<div class="mt-2 text-sm leading-relaxed text-ink-2">{{ post.body|linebreaksbr }}</div>{% endif %}
+    {% if post.url %}<a href="{{ post.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm mt-3">{% icon "external-link" "size-3.5" %}Ochish</a>{% endif %}
+  </div>
+</article>

@@ -39,6 +39,8 @@ PAGES = [
     "security_home",
     "settings",
     "2fa_setup",
+    "student_list",
+    "post_list",
 ]
 MODALS = [
     "task_create",

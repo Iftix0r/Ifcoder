@@ -1,0 +1,47 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}O'quvchilar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">O'quvchilar</h1>
+    <p class="mt-1 text-sm text-ink-2">Kim qayerda, qaysi bosqichda qiynalyapti va qanday kod yozyapti.</p>
+  </div>
+  <a href="{% url 'portal_map' %}" hx-boost="false" class="btn btn-secondary">{% icon "gamepad-2" "size-4" %}O'yinni ko'rish</a>
+</div>
+
+<div class="mb-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+  <div class="card stat animate-fade-up"><span class="stat-glow tone-brand"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Jami o'quvchi</p><span class="icon-chip tone-brand size-9 shrink-0">{% icon "school" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold sm:text-xl">{{ total }} ta</p></div>
+  <div class="card stat animate-fade-up"><span class="stat-glow tone-emerald"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">Shu hafta faol</p><span class="icon-chip tone-emerald size-9 shrink-0">{% icon "activity" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold sm:text-xl">{{ active_week }} ta</p></div>
+  <div class="card stat col-span-2 animate-fade-up lg:col-span-1"><span class="stat-glow tone-amber"></span><div class="relative flex items-center justify-between gap-3"><p class="stat-label">O'yinni tugatgan</p><span class="icon-chip tone-amber size-9 shrink-0">{% icon "trophy" "size-[18px]" %}</span></div><p class="relative mt-3 text-lg font-bold sm:text-xl">{{ finished }} ta</p></div>
+</div>
+
+<div class="card mb-5 flex flex-col gap-3 p-4 sm:flex-row sm:items-center animate-fade-up" x-data="{ copied: false }">
+  <div class="min-w-0 flex-1"><p class="text-sm font-semibold">Ro'yxatdan o'tish havolasi</p><p class="truncate font-mono text-xs text-ink-2">{{ register_url }}</p></div>
+  <button type="button" class="btn btn-secondary btn-sm shrink-0" @click="navigator.clipboard.writeText('{{ register_url|escapejs }}'); copied = true; setTimeout(() => copied = false, 1500)">{% icon "copy" "size-3.5" %}<span x-text="copied ? 'Nusxalandi' : 'Nusxa olish'">Nusxa olish</span></button>
+</div>
+
+<form method="get" class="mb-4 animate-fade-up">
+  <label class="relative flex h-10 items-center sm:max-w-80"><span class="pointer-events-none absolute left-3 text-ink-3">{% icon "search" "size-4" %}</span><input type="search" name="q" value="{{ q }}" placeholder="Ism, login yoki telefon…" autocomplete="off" class="input h-10 pl-9"></label>
+</form>
+
+<div id="students-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#students-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if page.object_list %}
+  <div class="card divide-y divide-line">
+    {% for s in page.object_list %}
+      <a href="{% url 'student_detail' s.pk %}" class="flex items-center gap-3 px-4 py-3 transition hover:bg-surface-2/60 {% if not s.user.is_active %}opacity-60{% endif %}">
+        <span class="avatar size-9 text-xs">{{ s.full_name|initials }}</span>
+        <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ s.full_name }}</p><p class="truncate text-xs text-ink-3">@{{ s.user.username }}{% if s.phone %} · {{ s.phone }}{% endif %}</p></div>
+        {% if not s.user.is_active %}<span class="badge badge-danger shrink-0">Bloklangan</span>{% endif %}
+        <div class="hidden w-40 shrink-0 sm:block"><p class="mb-1 text-right text-xs text-ink-3">{{ s.solved }} / {{ total_levels }}</p><div class="progress"><span style="width: {{ s.percent }}%"></span></div></div>
+        <span class="w-16 shrink-0 text-right text-sm font-bold">{{ s.xp }} XP</span>
+      </a>
+    {% endfor %}
+    {% include "components/pagination.html" %}
+  </div>
+{% elif q %}
+  <div class="card">{% include "components/empty_state.html" with icon="search" title="Topilmadi" text="Boshqa ism yoki login bilan qidiring." %}</div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="school" title="Hali o'quvchi yo'q" text="Yuqoridagi havolani o'quvchilarga yuboring: ular ro'yxatdan o'tgach shu yerda ko'rinadi." %}</div>
+{% endif %}
+</div>
+{% endblock %}

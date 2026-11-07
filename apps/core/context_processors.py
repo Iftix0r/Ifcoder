@@ -2,6 +2,7 @@ from django.urls import NoReverseMatch
 
 from .icons import icon_svg
 from .navigation import NAV_SECTIONS
+from .roles import is_student
 
 
 def _palette(sections):
@@ -14,7 +15,7 @@ def _palette(sections):
 
 def app_context(request):
     user = getattr(request, "user", None)
-    if not (user and user.is_authenticated) or request.path.startswith("/admin/"):
+    if not (user and user.is_authenticated) or request.path.startswith("/admin/") or is_student(user):
         return {}
     from apps.planner.services import running_entry
     from apps.userbot.services import unread_total

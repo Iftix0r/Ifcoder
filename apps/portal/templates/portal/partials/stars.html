@@ -1,0 +1,2 @@
+{# {% include "portal/partials/stars.html" with n=2 size="size-4" %} #}
+<span class="inline-flex items-center gap-0.5" role="img" aria-label="{{ n|default:0 }} ta yulduz">{% for i in "123" %}<span class="{% if forloop.counter <= n %}star-on{% else %}star-off{% endif %}">{% icon "star" size|default:"size-4" %}</span>{% endfor %}</span>

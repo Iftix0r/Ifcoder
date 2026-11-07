@@ -1,0 +1,27 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}E'lon va materiallar{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">E'lon va materiallar</h1>
+    <p class="mt-1 text-sm text-ink-2">Bu yerga yozilganini o'quvchilar kabinetida ko'radi.</p>
+  </div>
+  <button type="button" class="btn btn-primary" hx-get="{% url 'post_create' %}" hx-target="#modal-content">{% icon "plus" "size-4" %}Qo'shish</button>
+</div>
+<div id="posts-region" hx-get="{{ request.get_full_path }}" hx-trigger="changed from:body" hx-select="#posts-region" hx-target="this" hx-swap="outerHTML" hx-disinherit="*">
+{% if posts %}
+  <div class="card divide-y divide-line">
+    {% for post in posts %}
+      <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-surface-2/60" hx-get="{% url 'post_edit' post.pk %}" hx-target="#modal-content">
+        <span class="icon-chip {{ post.tone }} size-9 shrink-0">{% icon post.icon "size-[18px]" %}</span>
+        <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ post.title }}</p><p class="truncate text-xs text-ink-3">{{ post.get_kind_display }} · {{ post.created_at|date:"j E" }}</p></div>
+        {% if post.pinned %}<span class="text-ink-3">{% icon "pin" "size-4" %}</span>{% endif %}
+        {% if not post.is_published %}<span class="badge badge-neutral shrink-0">Yashirin</span>{% endif %}
+      </button>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">{% include "components/empty_state.html" with icon="megaphone" title="Hali hech narsa yo'q" text="Dars materiali, e'lon yoki uy vazifasini shu yerdan qo'shing." %}</div>
+{% endif %}
+</div>
+{% endblock %}

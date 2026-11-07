@@ -1,0 +1,15 @@
+<div data-modal-size="lg">
+  <div class="flex items-center justify-between gap-3 border-b border-line px-6 py-4">
+    <div class="min-w-0"><h2 class="truncate text-[17px] font-bold">{{ row.level_title }}</h2><p class="truncate text-xs text-ink-3">{{ student.full_name }} · {{ row.attempts }} ta urinish</p></div>
+    <button type="button" class="btn btn-ghost btn-icon btn-sm shrink-0" @click="$store.modal.close()" aria-label="Yopish">{% icon "x" "size-4" %}</button>
+  </div>
+  <div class="space-y-4 px-6 py-5">
+    {% if level %}<p class="text-sm text-ink-2">{{ level.goal }}</p>{% endif %}
+    {% if row.best_code %}
+      <div><p class="mb-1.5 flex items-center gap-2 text-sm font-semibold">Eng yaxshi yechim {% include "portal/partials/stars.html" with n=row.stars size="size-3.5" %}</p><pre class="code-sample">{{ row.best_code }}</pre></div>
+    {% endif %}
+    {% if row.code != row.best_code %}
+      <div><p class="mb-1.5 text-sm font-semibold">Oxirgi urinish</p><pre class="code-sample">{{ row.code|default:"(bo'sh)" }}</pre></div>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,16 @@
+{% extends "portal/auth.html" %}
+{% block title %}O'quvchi kabineti · Ifcoder{% endblock %}
+{% block form %}
+<h1 class="text-center text-2xl font-bold tracking-tight">O'quvchi kabineti</h1>
+<p class="mt-1.5 text-center text-sm text-ink-2">O'ynab dasturlashni o'rganamiz.</p>
+<form method="post" class="mt-6 space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/form_errors.html" %}
+  {% include "components/field.html" with field=form.username prefix="user" %}
+  {% include "components/field.html" with field=form.password prefix="lock-keyhole" %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn btn-primary btn-lg w-full">Kirish {% icon "arrow-right" "size-4" %}</button>
+</form>
+<p class="mt-5 text-center text-sm text-ink-2">Akkauntingiz yo'qmi? <a href="{% url 'portal_register' %}" class="font-semibold text-brand-600 hover:underline dark:text-brand-300">Ro'yxatdan o'ting</a></p>
+<p class="mt-2 text-center text-xs text-ink-3">Parolni unutdingizmi? O'qituvchingizga ayting.</p>
+{% endblock %}

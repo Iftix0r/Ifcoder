@@ -1,3 +1,5 @@
+from apps.core.roles import is_student
+
 from . import services
 
 
@@ -9,6 +11,6 @@ class SecurityMiddleware:
         if services.TRAP.search(request.path):
             services.note_trap(request)
         response = self.get_response(request)
-        if request.user.is_authenticated:
+        if request.user.is_authenticated and not is_student(request.user):
             services.touch_session(request)
         return response

@@ -559,3 +559,76 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
     .tg-bubble { max-width: 84%; }
   }
 }
+
+/* --- O'quvchi portali va robot o'yini --- */
+@layer components {
+  .star-on { @apply text-amber-400 [&_svg]:fill-amber-400; }
+  .star-off { @apply text-line-strong; }
+  .level-tile {
+    @apply flex h-14 items-center gap-3 rounded-2xl border border-line bg-surface px-3 shadow-soft transition;
+  }
+  a.level-tile:hover { @apply -translate-y-0.5 border-brand-500/40 shadow-lift; }
+  .level-tile.is-open { @apply border-brand-500/50 ring-2 ring-brand-500/15; }
+  .level-tile.is-locked { @apply bg-surface-2/50 text-ink-3 shadow-none; }
+  .level-number {
+    @apply flex size-8 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-sm font-bold text-ink-2;
+  }
+  .level-tile.is-open .level-number { @apply bg-brand-500 text-white; }
+  .rank-place { @apply w-6 shrink-0 text-center text-sm font-bold text-ink-3; }
+  .rank-place.is-top { @apply text-amber-500; }
+
+  .game-board { @apply flex justify-center overflow-x-auto bg-surface-2/50 p-3 sm:p-4; }
+  .game-board svg { @apply h-auto max-h-[460px] w-full; }
+  .tile-floor { fill: var(--color-surface); stroke: var(--color-line); }
+  .tile-wall { fill: var(--color-surface-3); stroke: var(--color-line-strong); }
+  .robot { transition: transform var(--step, 300ms) ease-in-out; }
+  .robot-body { transition: transform var(--step, 300ms) ease-in-out; }
+  .robot.is-crashed .robot-body { animation: robot-shake 0.35s linear; }
+  .crystal { transition: transform 0.25s ease, opacity 0.25s ease; transform-box: fill-box; transform-origin: center; }
+  .crystal.is-taken { transform: scale(1.6); opacity: 0; }
+
+  .code-sample {
+    @apply mt-2 overflow-x-auto rounded-xl border border-line bg-surface-2 p-3 font-mono text-[13px] leading-relaxed text-ink;
+  }
+  .tool-chip {
+    @apply rounded-lg border border-line bg-surface px-2.5 py-1.5 font-mono text-xs font-medium text-ink-2 shadow-soft transition
+      hover:border-brand-500/40 hover:text-ink active:scale-95;
+  }
+  .code-editor {
+    @apply flex h-[340px] font-mono text-[14px];
+    --code-line: 24px;
+  }
+  .code-gutter {
+    @apply w-10 shrink-0 overflow-hidden border-r border-line bg-surface-2/50 py-3 pr-2 text-right text-ink-3 select-none;
+    line-height: var(--code-line);
+  }
+  .code-area { @apply relative min-w-0 flex-1; }
+  .code-layer, .code-input {
+    @apply absolute inset-0 m-0 size-full overflow-auto border-0 bg-transparent py-3 font-mono whitespace-pre;
+    font-size: inherit;
+    line-height: var(--code-line);
+    tab-size: 4;
+  }
+  .code-layer { @apply pointer-events-none overflow-hidden text-ink; }
+  .code-input { @apply resize-none text-transparent outline-none; caret-color: var(--color-ink); }
+  .code-input::placeholder { color: var(--color-ink-3); }
+  .code-line { @apply block min-h-[var(--code-line)] px-3; width: max-content; min-width: 100%; }
+  .code-line.is-active { @apply bg-brand-500/15; }
+  .code-line.is-error { @apply bg-rose-500/15; }
+  .tok-key { @apply font-semibold text-violet-600 dark:text-violet-300; }
+  .tok-cmd { @apply text-brand-600 dark:text-brand-300; }
+  .tok-num { @apply text-amber-600 dark:text-amber-300; }
+  .tok-str { @apply text-emerald-600 dark:text-emerald-300; }
+  .tok-com { @apply text-ink-3 italic; }
+
+  .game-status { @apply rounded-2xl border px-4 py-3 text-sm font-medium; }
+  .game-status.is-error { @apply border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300; }
+  .game-status.is-info { @apply border-line bg-surface-2 text-ink-2; }
+  .game-console { @apply rounded-2xl border border-line bg-surface p-3 font-mono text-[13px]; }
+}
+
+@keyframes robot-shake {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -4px 0; }
+  75% { translate: 4px 0; }
+}

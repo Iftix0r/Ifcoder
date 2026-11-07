@@ -1,0 +1,24 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}Profil{% endblock %}
+{% block content %}
+<div class="mb-5 animate-fade-up">
+  <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Profil</h1>
+  <p class="mt-1 text-sm text-ink-2">Login: @{{ user.username }} · {{ rank.title }}</p>
+</div>
+<div class="grid max-w-4xl items-start gap-4 md:grid-cols-2">
+  <form method="post" class="card space-y-4 p-5" novalidate>
+    {% csrf_token %}
+    <h2 class="text-base font-bold">Ma'lumotlar</h2>
+    {% include "components/form_errors.html" with form=profile_form %}
+    {% for field in profile_form %}{% include "components/field.html" %}{% endfor %}
+    <button name="profile" value="1" class="btn btn-primary">Saqlash</button>
+  </form>
+  <form method="post" class="card space-y-4 p-5" novalidate>
+    {% csrf_token %}
+    <h2 class="text-base font-bold">Parolni almashtirish</h2>
+    {% include "components/form_errors.html" with form=password_form %}
+    {% for field in password_form %}{% include "components/field.html" %}{% endfor %}
+    <button name="password" value="1" class="btn btn-primary">Parolni almashtirish</button>
+  </form>
+</div>
+{% endblock %}

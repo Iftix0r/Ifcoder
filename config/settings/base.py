@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "apps.vault",
     "apps.userbot",
     "apps.security",
+    "apps.portal",
     "apps.dashboard",
     "apps.landing",
 ]
@@ -59,6 +60,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.security.middleware.SecurityMiddleware",
+    "apps.portal.middleware.StudentGateMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "apps.vault.middleware.TwoFactorMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",

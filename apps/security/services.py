@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.utils import timezone
 
 from apps.core import telegram
+from apps.core.roles import is_student
 
 from .models import Event, ScanState, SessionRecord, TrustedIP
 
@@ -57,6 +58,9 @@ def _alert(text: str) -> None:
 
 
 def on_login(request, user) -> None:
+    # O'quvchi IP'si jurnalga tushsa, shu IP'dan panelga kirilganda «yangi IP» ogohlantirishi kelmay qoladi
+    if is_student(user):
+        return
     ip = client_ip(request)
     seen = Event.objects.filter(kind=Event.Kind.LOGIN_OK, ip=ip).exists()
     record(Event.Kind.LOGIN_OK, ip, user_agent=agent(request), username=user.get_username())
@@ -68,7 +72,8 @@ def on_login(request, user) -> None:
 
 
 def on_login_failed(request, username: str) -> None:
-    if request is None:
+    # Portal formasi faqat o'quvchini kiritadi: bolalarning xato paroli panelga hujum emas
+    if request is None or request.path.startswith("/portal/"):
         return
     ip = client_ip(request)
     record(Event.Kind.LOGIN_FAIL, ip, user_agent=agent(request), username=username)

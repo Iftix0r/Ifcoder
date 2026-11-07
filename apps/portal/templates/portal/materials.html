@@ -1,0 +1,14 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}Materiallar{% endblock %}
+{% block content %}
+<div class="mb-5 animate-fade-up">
+  <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Materiallar</h1>
+  <p class="mt-1 text-sm text-ink-2">E'lonlar, dars materiallari va uy vazifalari.</p>
+</div>
+<div class="-mx-4 mb-5 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+  <nav class="segmented w-max"><a href="?" class="{% if not kind %}is-active{% endif %}">Hammasi</a>{% for v, label in kinds %}<a href="?kind={{ v }}" class="whitespace-nowrap {% if kind == v %}is-active{% endif %}">{{ label }}</a>{% endfor %}</nav>
+</div>
+<div class="max-w-3xl space-y-3">
+  {% for post in posts %}{% include "portal/partials/post_card.html" %}{% empty %}<div class="card">{% include "components/empty_state.html" with icon="book-open" title="Bu yerda hali hech narsa yo'q" text="O'qituvchi material qo'shganda shu yerda ko'rinadi." %}</div>{% endfor %}
+</div>
+{% endblock %}

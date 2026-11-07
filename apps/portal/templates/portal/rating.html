@@ -1,0 +1,20 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}Reyting{% endblock %}
+{% block content %}
+<div class="mb-5 animate-fade-up">
+  <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Reyting</h1>
+  <p class="mt-1 text-sm text-ink-2">Har bir yulduz 10 XP. Kodni qisqartirib, ko'proq yulduz oling.</p>
+</div>
+<div class="card max-w-2xl divide-y divide-line animate-fade-up">
+  {% for s in leaders %}
+    <div class="flex items-center gap-3 px-4 py-3.5 {% if s.pk == student.pk %}bg-brand-500/5{% endif %}">
+      <span class="rank-place {% if forloop.counter <= 3 %}is-top{% endif %}">{{ forloop.counter }}</span>
+      <span class="avatar size-9 text-xs">{{ s.public_name|initials }}</span>
+      <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">{{ s.public_name }}{% if s.pk == student.pk %} <span class="font-normal text-ink-3">(siz)</span>{% endif %}</p><p class="text-xs text-ink-3">{{ s.solved }} ta bosqich</p></div>
+      <span class="text-sm font-bold">{{ s.xp }} XP</span>
+    </div>
+  {% empty %}
+    {% include "components/empty_state.html" with icon="trophy" title="Reyting hali bo'sh" text="Birinchi bosqichni yechgan o'quvchi shu yerda chiqadi." %}
+  {% endfor %}
+</div>
+{% endblock %}
