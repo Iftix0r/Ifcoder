@@ -635,6 +635,7 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .game-card:hover { box-shadow: 0 16px 40px -14px var(--glow, rgb(99 102 241 / 0.75)); border-color: var(--glow); }
   .game-art { @apply h-32 overflow-hidden; background: var(--art); }
   .art-poyga { --art: linear-gradient(180deg, #2e1065, #be185d 72%, #f97316); --glow: rgb(244 114 182 / 0.8); }
+  .art-terminal { --art: linear-gradient(135deg, #022c22, #064e3b); --glow: rgb(52 211 153 / 0.8); }
   .art-pufak { --art: linear-gradient(135deg, #0c4a6e, #0e7490); --glow: rgb(103 232 249 / 0.75); }
   .art-rostmi { --art: linear-gradient(135deg, #064e3b, #1e3a8a); --glow: rgb(52 211 153 / 0.75); }
   .art-ilon { --art: linear-gradient(135deg, #052e16, #14532d); --glow: rgb(74 222 128 / 0.75); }
@@ -730,6 +731,33 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .snake-built { @apply flex min-h-11 flex-wrap items-center gap-1.5 font-mono text-[15px] font-bold; }
   .snake-slot { @apply inline-block h-7 w-7 rounded-md border-2 border-dashed border-line-strong; }
   .snake-word { @apply rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-emerald-300; }
+  .term-window { @apply overflow-hidden rounded-2xl border; border-color: rgb(52 211 153 / 0.4); background: #04100c; box-shadow: 0 0 36px -14px rgb(52 211 153 / 0.65); }
+  .term-task { @apply rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm font-bold text-emerald-200; }
+  .term-bar { @apply flex items-center gap-1.5 border-b px-3 py-2; border-color: rgb(52 211 153 / 0.2); background: #0a1f18; }
+  .term-dot { @apply size-3 rounded-full; }
+  .term-title { @apply min-w-0 flex-1 truncate text-center font-mono text-xs text-emerald-200/70; }
+  .term-reset { @apply rounded p-1 text-emerald-200/70 hover:bg-white/10 hover:text-white; }
+  .term-screen {
+    @apply h-[42vh] max-h-[520px] min-h-64 cursor-text overflow-y-auto p-3 font-mono text-[14px] leading-6 text-emerald-300 lg:h-[56vh];
+    background-image: linear-gradient(rgb(255 255 255 / 0.018) 50%, transparent 50%);
+    background-size: 100% 4px;
+    text-shadow: 0 0 6px rgb(52 211 153 / 0.45);
+  }
+  .term-out { @apply break-words whitespace-pre-wrap; }
+  .term-echo { @apply text-emerald-100; }
+  .term-dim { @apply text-emerald-500/80; }
+  .term-err { @apply text-rose-300; text-shadow: none; }
+  .term-tip { @apply text-amber-300; text-shadow: none; }
+  .term-ok { @apply font-bold text-cyan-300; }
+  .term-line { @apply flex flex-wrap items-center gap-x-2; }
+  .term-prompt { @apply shrink-0 font-bold text-emerald-400; }
+  .term-input { @apply min-w-24 flex-1 border-0 bg-transparent p-0 font-mono text-[14px] text-white outline-none; caret-color: #34d399; }
+  .term-example { @apply mt-1 block w-full rounded-lg border border-emerald-500/40 bg-black/30 px-3 py-2 text-left font-mono text-sm text-emerald-300 hover:bg-emerald-500/10; }
+  .step-dot { @apply h-1.5 flex-1 rounded-full bg-surface-3; }
+  .step-dot.is-now { @apply bg-emerald-400/50; }
+  .step-dot.is-done { @apply bg-emerald-400; }
+  .tree-row { @apply truncate rounded px-1.5 text-ink-2; }
+  .tree-row.is-here { @apply bg-emerald-500/15 font-bold text-emerald-300; }
   .confetti { @apply pointer-events-none fixed inset-0 z-[60]; }
 
   .draw-paper { @apply aspect-square w-full max-w-[440px] overflow-hidden rounded-2xl border border-line-strong bg-white shadow-soft; }

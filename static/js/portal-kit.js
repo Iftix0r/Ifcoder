@@ -194,6 +194,8 @@ window.Kit = (() => {
     };
     const close = () => {
       intro.hidden = true;
+      // Yopilgach bola darhol yoza olsin
+      document.querySelector("#term-input, #code")?.focus();
     };
     $("intro-next").addEventListener("click", () => {
       if (index === slides.length - 1) return close();

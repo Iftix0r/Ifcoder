@@ -65,9 +65,9 @@ def wrong_index(question):
 # --- Katalog ---
 
 
-def test_there_are_twelve_games_with_eleven_screens():
-    assert len(GAMES) == 12
-    assert len({game.template for game in GAMES}) == 11  # Xato ovchisi robot taxtasidan foydalanadi
+def test_there_are_thirteen_games_with_twelve_screens():
+    assert len(GAMES) == 13
+    assert len({game.template for game in GAMES}) == 12  # Xato ovchisi robot taxtasidan foydalanadi
 
 
 def test_games_start_with_easy_ones():

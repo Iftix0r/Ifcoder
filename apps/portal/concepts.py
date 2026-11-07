@@ -205,6 +205,51 @@ CONCEPTS: tuple[Concept, ...] = (
         ("10 dan 1 gacha orqaga sanang.", "Qaysi son birinchi bo'lib 1000 dan oshishini toping."),
     ),
     Concept(
+        "terminal",
+        "Linux terminali",
+        "Kompyuterga so'z bilan buyruq berish",
+        "terminal",
+        "tone-emerald",
+        (
+            Slide(
+                "Sichqonchasiz kompyuter",
+                "Odatda belgini bosasiz. Terminalda esa kompyuterga so'z bilan buyurasiz. Serverlar, saytlar va "
+                "robotlarning ko'pchiligi Linux'da ishlaydi va ularni aynan terminal orqali boshqarishadi.",
+            ),
+            Slide(
+                "Buyruq satri",
+                "bola@kema:~$ — bu kim (bola), qayerda (kema kompyuteri, ~ uy papkasi) va tayyorman ($) degani. "
+                "Shundan keyin buyruqni yozib Enter bosasiz.",
+                "pwd\nls",
+            ),
+            Slide(
+                "Papkalar — xonalar",
+                "Papka xonaga o'xshaydi. ls xonaga qaraydi, cd eshikdan o'tadi, cd .. orqaga qaytadi, cat esa "
+                "xonadagi xatni o'qiydi.",
+                "ls\ncd xarita\ncat yulduzlar.txt\ncd ..",
+            ),
+            Slide(
+                "Buyruq tuzilishi",
+                "Avval buyruq, keyin bayroq (-a), keyin nom. Bo'sh joy ularni ajratadi. Katta-kichik harf farq "
+                "qiladi: Fayl.txt va fayl.txt — ikki xil fayl.",
+                "ls -a xarita",
+            ),
+            Slide(
+                "Tab va yuqori o'q",
+                "Dasturchilar hamma narsani yozmaydi. Tab nomni o'zi to'ldiradi, yuqori o'q oldingi buyruqni "
+                "qaytaradi. Shu ikkisini o'rgansangiz, ish ikki baravar tezlashadi.",
+            ),
+            Slide(
+                "Ehtiyot bo'ling",
+                "O'yinda hech narsa buzilmaydi. Haqiqiy kompyuterda esa rm bilan o'chirilgan fayl qaytmaydi. "
+                "Internetdan topilgan buyruqni tushunmasdan ishlatmang.",
+                "rm fayl.txt",
+            ),
+        ),
+        "",
+        ("Kompyuteringizda terminalni ochib, pwd va ls yozing.", "man ls yozib, ls haqida o'qing."),
+    ),
+    Concept(
         "xatolar",
         "Xatolarni tuzatish",
         "Har dasturchi xato qiladi",
@@ -250,4 +295,7 @@ FOR_CHAPTER: dict[str, str] = {
     "tartib": "buyruqlar",
     "bloklar": "for",
     "ovchi": "xatolar",
+    "yol": "terminal",
+    "fayllar": "terminal",
+    "quvur": "terminal",
 }
