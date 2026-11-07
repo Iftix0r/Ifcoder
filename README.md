@@ -55,10 +55,21 @@ o'quvchiga ochiladigan sahifalarni faqat `/portal/` ostiga qo'shing. O'quvchi ki
 **O'quv to'lovi:** summa `Payment` da saqlanmaydi, u moliyadagi `Transaction` ning o'zi. Kirim tahrirlansa to'lov ham o'zgaradi, kirim
 o'chirilsa to'lov ham o'chadi. O'quvchi o'chirilganda kirim qoladi. To'lamaganlar oyning 10-kunidan «E'tibor talab qiladi»ga chiqadi.
 
-**O'yin:** o'quvchi haqiqiy Python yozadi, 6 bob va 25 bosqich. Kod `apps/portal/engine.py` da bajariladi: `eval`/`exec` yo'q, `ast`
-daraxti faqat ruxsat etilgan tugunlar bo'yicha yuriladi, qadamlar soni cheklangan. Yulduz serverda hisoblanadi. Yangi bosqich
-`apps/portal/levels.py` ga qo'shiladi, yechimi `tests/test_portal_levels.py` dagi `SOLUTIONS` ga yoziladi. Mavjud `slug` ni
-o'zgartirmang: natijalar shu nom bilan saqlangan.
+**O'yinlar:** 6 ta o'yin, 68 bosqich. Har o'yinda o'z yo'li bor, bir-birini qulflamaydi.
+
+| O'yin | Fayl | O'quvchi nima qiladi |
+|---|---|---|
+| Robot yo'li | `apps/portal/levels.py` | Robotni Python bilan labirintdan olib chiqadi |
+| Kod rassomi | `apps/portal/games/draw.py` | Qalamni boshqarib namunadagi rasmni chizadi |
+| Sehrli mashina | `apps/portal/games/machine.py` | `mashina()` funksiyasini yozadi, yashirin sinovlardan o'tadi |
+| Kod jumboq | `apps/portal/games/puzzle.py` | Aralashgan qatorlarni tartiblaydi va suradi |
+| Kod detektivi | `apps/portal/games/quiz.py` | Kod nima chiqarishini topadi, 3 ta jon bilan |
+| Xato ovchisi | `apps/portal/games/bugs.py` | Buzilgan kodni eng kam o'zgartirish bilan tuzatadi |
+
+Kod `apps/portal/engine.py` da bajariladi: `eval`/`exec` yo'q, `ast` daraxti faqat ruxsat etilgan tugunlar bo'yicha yuriladi, qadamlar
+soni cheklangan. Yulduz serverda hisoblanadi, brauzer faqat animatsiya qiladi. Yangi o'yin `apps/portal/catalog.py` ga qo'shiladi.
+Mavjud `slug` ni o'zgartirmang: natijalar shu nom bilan saqlangan. Robot yechimlari `tests/test_portal_levels.py` da, boshqalari
+`tests/test_portal_games.py` da tekshiriladi.
 
 ## Lokal ishga tushirish
 
@@ -105,7 +116,7 @@ apps/notes/        eslatmalar va kod parchalari
 apps/resources/    domen, server, obunalar
 apps/vault/        shifrlangan kalitlar, 2FA, backup
 apps/userbot/      Telegram akkaunt (Telethon): ulanish, suhbatlar, navbat, buyruqlar
-apps/portal/       o'quvchi kabineti, robot o'yini, o'qituvchi bo'limi
+apps/portal/       o'quvchi kabineti, 6 ta o'yin (games/, catalog.py), o'qituvchi bo'limi
 apps/dashboard/    «Bugun» sahifasi
 apps/landing/      ochiq sahifa va ariza formasi
 templates/         layouts, partials (sidebar, topbar, ⌘K, modal, toast), components

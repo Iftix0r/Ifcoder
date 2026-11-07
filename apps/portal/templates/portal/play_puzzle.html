@@ -1,0 +1,31 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+  <div class="space-y-4">
+    <section class="card overflow-hidden">
+      <div class="border-b border-line px-4 py-3"><p class="text-sm font-semibold">{% icon game.icon "mr-1 inline size-4 text-cyan-500" %}{{ level.goal }}</p></div>
+      <div class="p-3"><p class="mb-2 text-xs font-semibold text-ink-3">Qatorlar: bosib dasturga qo'shing</p><div id="bank" class="space-y-1.5"></div></div>
+    </section>
+    <section class="game-console"><p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ink-3">{% icon "terminal" "size-3.5" %}Shunday chiqishi kerak</p><div id="expected"></div></section>
+  </div>
+  <div class="space-y-3">
+    <section class="card overflow-hidden">
+      <div class="border-b border-line px-4 py-3"><p class="text-sm font-semibold">Dastur</p></div>
+      <div id="program" class="min-h-48 space-y-1.5 p-3"></div>
+      <div class="flex items-center gap-2 border-t border-line bg-surface-2/50 px-3 py-2.5">
+        <button type="button" id="run" class="btn btn-primary">{% icon "play" "size-4" %}Tekshirish</button>
+        <button type="button" id="reset" class="btn btn-secondary btn-icon" aria-label="Hammasini olib tashlash" title="Boshiga qaytarish">{% icon "rotate-ccw" "size-4" %}</button>
+      </div>
+    </section>
+    <div id="status" class="game-status" aria-live="polite" hidden></div>
+    <div id="console" class="game-console" hidden><p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ink-3">{% icon "terminal" "size-3.5" %}Dastur chiqardi</p><div id="console-lines"></div></div>
+    {% include "portal/partials/hint.html" %}
+    {% include "portal/partials/lesson.html" %}
+  </div>
+</div>
+<template id="tile-tools"><button type="button" class="tile-btn" data-act="out" aria-label="Chapga surish">{% icon "indent-decrease" "size-4" %}</button><button type="button" class="tile-btn" data-act="in" aria-label="O'ngga surish">{% icon "indent-increase" "size-4" %}</button><button type="button" class="tile-btn" data-act="up" aria-label="Yuqoriga">{% icon "chevron-up" "size-4" %}</button><button type="button" class="tile-btn" data-act="down" aria-label="Pastga">{% icon "chevron-down" "size-4" %}</button><button type="button" class="tile-btn" data-act="remove" aria-label="Olib tashlash">{% icon "x" "size-4" %}</button></template>
+{% include "portal/partials/result.html" %}
+{% endblock %}

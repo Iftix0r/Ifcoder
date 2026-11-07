@@ -21,9 +21,10 @@ from apps.core.roles import is_student
 from apps.security.services import client_ip
 
 from . import services
-from .engine import MAX_CODE, World
+from .catalog import BY_SLUG, CHAPTER_OF, GAME_BY_SLUG, GAME_OF, MAX_XP, TOTAL_LEVELS, BadPayload
+from .engine import MAX_CODE
 from .forms import PortalPasswordForm, ProfileForm, RegisterForm, StudentLoginForm, SubmissionForm
-from .levels import ALL_LEVELS, CHAPTER_OF, LEVELS, MAX_XP, XP_PER_STAR, attempt
+from .levels import XP_PER_STAR
 from .models import Post, Student, Submission
 
 REGISTER_LIMIT = 15  # Bir sinf bitta IP'dan ro'yxatdan o'tadi
@@ -92,7 +93,8 @@ def home(request):
             "student": student,
             "rank": services.rank_for(student.xp),
             "next_level": services.next_level(progress),
-            "total_levels": len(ALL_LEVELS),
+            "total_levels": TOTAL_LEVELS,
+            "cards": services.game_cards(progress),
             "max_xp": MAX_XP,
             "posts": services.with_submissions(services.visible_posts(student)[:4], student),
             "leaders": services.leaderboard(5),
@@ -103,7 +105,25 @@ def home(request):
 
 
 @student_page
-def game_map(request):
+def hub(request):
+    student = current_student(request)
+    return render(
+        request,
+        "portal/hub.html",
+        {
+            "nav": "game",
+            "student": student,
+            "preview": student is None,
+            "cards": services.game_cards(services.progress_of(student)),
+        },
+    )
+
+
+@student_page
+def game_map(request, game):
+    current = GAME_BY_SLUG.get(game)
+    if current is None:
+        raise Http404
     student = current_student(request)
     progress = services.progress_of(student)
     return render(
@@ -113,13 +133,14 @@ def game_map(request):
             "nav": "game",
             "student": student,
             "preview": student is None,
-            "chapters": services.chapter_cards(progress, preview=student is None),
+            "game": current,
+            "chapters": services.chapter_cards(current, progress, preview=student is None),
         },
     )
 
 
 def _level_or_404(slug):
-    level = LEVELS.get(slug)
+    level = BY_SLUG.get(slug)
     if level is None:
         raise Http404
     return level
@@ -128,33 +149,33 @@ def _level_or_404(slug):
 @student_page
 def play(request, slug):
     level = _level_or_404(slug)
+    game = GAME_OF[slug]
     student = current_student(request)
     progress = services.progress_of(student)
     if not services.is_unlocked(level, progress, preview=student is None):
         messages.warning(request, "Bu bosqich hali yopiq. Avval oldingisini yeching.")
-        return redirect("portal_map")
+        return redirect("portal_game", game=game.slug)
     row = progress.get(slug)
     following = services.following(level)
+    map_url = reverse("portal_game", args=[game.slug])
     return render(
         request,
-        "portal/play.html",
+        game.template,
         {
             "nav": "game",
             "student": student,
             "preview": student is None,
             "level": level,
+            "game": game,
             "chapter": CHAPTER_OF[slug],
-            "number": ALL_LEVELS.index(level) + 1,
-            "total_levels": len(ALL_LEVELS),
+            "number": game.levels.index(level) + 1,
+            "total_levels": len(game.levels),
             "best_stars": row.stars if row else 0,
-            "game": {
-                "world": World(level.maps[0]).as_dict(),
-                "code": row.code if row and row.code else level.starter,
+            "config": {
+                **game.config(level, row),
                 "runUrl": reverse("portal_run", args=[slug]),
-                "nextUrl": reverse("portal_play", args=[following.slug]) if following else reverse("portal_map"),
-                "maxCode": MAX_CODE,
-                "maps": len(level.maps),
-                "par": level.par,
+                "nextUrl": reverse("portal_play", args=[following.slug]) if following else map_url,
+                "isLast": following is None,
             },
         },
     )
@@ -170,27 +191,30 @@ def _too_many_runs(user) -> bool:
 @require_POST
 def run(request, slug):
     level = _level_or_404(slug)
+    game = GAME_OF[slug]
     student = current_student(request)
     progress = services.progress_of(student)
     if not services.is_unlocked(level, progress, preview=student is None):
         return JsonResponse({"message": "Bu bosqich hali yopiq."}, status=403)
     if _too_many_runs(request.user):
-        return JsonResponse({"message": "Juda tez! Bir daqiqa kutib, kodni yana bir ko'rib chiqing."}, status=429)
+        return JsonResponse({"message": "Juda tez! Bir daqiqa kutib, yana bir ko'rib chiqing."}, status=429)
+    row = progress.get(slug)
     try:
-        code = json.loads(request.body)["code"]
-    except (ValueError, KeyError, TypeError):
-        return JsonResponse({"message": "So'rov noto'g'ri."}, status=400)
-    if not isinstance(code, str):
+        payload = json.loads(request.body)
+        if not isinstance(payload, dict):
+            raise BadPayload
+        result = game.attempt(level, payload, row.attempts if row else 0)
+    except (ValueError, BadPayload):
         return JsonResponse({"message": "So'rov noto'g'ri."}, status=400)
 
-    result = attempt(level, code)
-    if student is None:
-        return JsonResponse({**result, "preview": True, "gained": 0})
-    before = progress[slug].stars if slug in progress else 0
+    stored = result.pop("stored")
+    if student is None or result.get("partial"):
+        return JsonResponse({**result, "preview": student is None, "gained": 0})
+    before = row.stars if row else 0
     # Kod chegaradan uzun bo'lsa saqlanmaydi: baza to'lib ketmasin
-    row = services.save_attempt(student, level, code[:MAX_CODE], result)
-    gained = (row.stars - before) * XP_PER_STAR
-    return JsonResponse({**result, "best_stars": row.stars, "gained": gained, "xp": student.xp + gained})
+    saved = services.save_attempt(student, level, stored[:MAX_CODE], result)
+    gained = (saved.stars - before) * XP_PER_STAR
+    return JsonResponse({**result, "best_stars": saved.stars, "gained": gained, "xp": student.xp + gained})
 
 
 @student_page

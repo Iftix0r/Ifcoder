@@ -1,0 +1,13 @@
+<div id="result" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="result-title" hidden>
+  <div class="card w-full max-w-sm p-6 text-center animate-fade-up">
+    <div class="flex justify-center gap-2" id="result-stars"></div>
+    <h2 id="result-title" class="mt-3 text-2xl font-bold">Barakalla!</h2>
+    <p id="result-text" class="mt-1.5 text-sm text-ink-2"></p>
+    <div class="mt-5 flex flex-col gap-2 sm:flex-row">
+      <button type="button" id="result-again" class="btn btn-secondary flex-1">Yana urinish</button>
+      <a id="result-next" class="btn btn-primary flex-1"><span id="result-next-label">Keyingisi</span> {% icon "arrow-right" "size-4" %}</a>
+    </div>
+  </div>
+</div>
+<template id="star-template">{% icon "star" "size-9" %}</template>
+{{ config|json_script:"game-data" }}

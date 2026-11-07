@@ -1,0 +1,6 @@
+{% if level.hint %}
+<details class="card p-4">
+  <summary class="cursor-pointer text-sm font-semibold">{% icon "lightbulb" "mr-1 inline size-4 text-amber-500" %}Maslahat kerakmi?</summary>
+  <p class="mt-2 text-sm leading-relaxed text-ink-2">{{ level.hint }}</p>
+</details>
+{% endif %}

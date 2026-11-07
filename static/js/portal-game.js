@@ -1,52 +1,17 @@
-/* Robot o'yini: kod serverda bajariladi (apps/portal/engine.py), bu fayl faqat muharrir va animatsiya. */
+/* Robot yo'li va Xato ovchisi: kod serverda bajariladi (apps/portal/engine.py), bu yerda faqat animatsiya. */
 (() => {
-  const config = JSON.parse(document.getElementById("game-data").textContent);
+  const { $, config, sound } = Kit;
   const CELL = 48;
   const SVG = "http://www.w3.org/2000/svg";
   const STEP_MS = 340;
-  const INDENT = "    ";
-  const INLINE_TOOL = /(_devor\(\)|yetib_keldi\(\))$|^elif $/;
-  const KEYWORDS = "for|in|range|while|if|elif|else|def|return|not|and|or|True|False|break|continue|pass|print";
-  const COMMANDS = "yur|chapga|ongga|ol|oldinda_devor|chapda_devor|ongda_devor|kristall_bor|yetib_keldi";
-  const TOKENS = new RegExp(`(#.*$)|("[^"]*"?|'[^']*'?)|\\b(${KEYWORDS})\\b|\\b(${COMMANDS})\\b|\\b(\\d+)\\b`, "g");
-
-  const $ = (id) => document.getElementById(id);
   const board = $("board");
-  const code = $("code");
-  const highlight = $("highlight");
-  const gutter = $("gutter");
-  const statusBox = $("status");
-  const consoleBox = $("console");
-  const consoleLines = $("console-lines");
-  const runButton = $("run");
   const runLabel = $("run-label");
-  const result = $("result");
 
-  const store = {
-    get: (key, fallback) => {
-      try {
-        return localStorage.getItem(key) ?? fallback;
-      } catch {
-        return fallback;
-      }
-    },
-    set: (key, value) => {
-      try {
-        localStorage.setItem(key, value);
-      } catch {
-        /* private rejim */
-      }
-    },
-  };
-
-  let speed = Number(store.get("game-speed", "1")) || 1;
   let runId = 0; // Har yangi ishga tushirish eskisini bekor qiladi
   let running = false;
-  let marks = { active: null, error: null };
   let robot = null;
   let angle = 0;
-
-  /* --- Taxta --- */
+  const lines = [];
 
   const el = (name, attrs = {}, parent = null) => {
     const node = document.createElementNS(SVG, name);
@@ -85,13 +50,15 @@
     return outer;
   }
 
-  function placeRobot(x, y) {
+  const placeRobot = (x, y) => {
     robot.style.transform = `translate(${x * CELL + CELL / 2}px, ${y * CELL + CELL / 2}px)`;
-  }
-
-  function turnRobot() {
+  };
+  const turnRobot = () => {
     robot.firstChild.style.transform = `rotate(${angle}deg)`;
-  }
+  };
+  const applySpeed = (value) => {
+    board.firstChild?.style.setProperty("--step", `${Math.round(STEP_MS / value)}ms`);
+  };
 
   function drawWorld(world) {
     const svg = el("svg", { viewBox: `0 0 ${world.width * CELL} ${world.height * CELL}` });
@@ -110,207 +77,68 @@
     placeRobot(world.robot.x, world.robot.y);
     turnRobot();
     board.replaceChildren(svg);
-    applySpeed();
+    applySpeed(speed());
   }
 
-  function applySpeed() {
-    board.firstChild?.style.setProperty("--step", `${Math.round(STEP_MS / speed)}ms`);
-    document.querySelectorAll("[data-speed]").forEach((button) => {
-      button.classList.toggle("is-active", Number(button.dataset.speed) === speed);
-    });
-  }
-
-  /* --- Muharrir --- */
-
-  const escapeHtml = (text) => text.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
-
-  function colorize(line) {
-    let html = "";
-    let last = 0;
-    for (const match of line.matchAll(TOKENS)) {
-      html += escapeHtml(line.slice(last, match.index));
-      const kind = match[1] ? "com" : match[2] ? "str" : match[3] ? "key" : match[4] ? "cmd" : "num";
-      html += `<span class="tok-${kind}">${escapeHtml(match[0])}</span>`;
-      last = match.index + match[0].length;
-    }
-    return html + escapeHtml(line.slice(last));
-  }
-
-  function renderCode() {
-    const lines = code.value.split("\n");
-    highlight.innerHTML = lines
-      .map((line, index) => {
-        const number = index + 1;
-        const state = number === marks.error ? " is-error" : number === marks.active ? " is-active" : "";
-        return `<span class="code-line${state}">${colorize(line) || " "}</span>`;
-      })
-      .join("");
-    gutter.innerHTML = lines.map((_, index) => `<div>${index + 1}</div>`).join("");
-    syncScroll();
-  }
-
-  function syncScroll() {
-    highlight.scrollTop = code.scrollTop;
-    highlight.scrollLeft = code.scrollLeft;
-    gutter.scrollTop = code.scrollTop;
-  }
-
-  function mark(active, error = null) {
-    marks = { active, error };
-    renderCode();
-  }
-
-  function insert(text) {
-    code.focus();
-    // execCommand brauzerning Ctrl+Z tarixini saqlaydi
-    if (!document.execCommand("insertText", false, text)) {
-      code.setRangeText(text, code.selectionStart, code.selectionEnd, "end");
-      code.dispatchEvent(new Event("input"));
-    }
-  }
-
-  function currentLine() {
-    const start = code.value.lastIndexOf("\n", code.selectionStart - 1) + 1;
-    const found = code.value.indexOf("\n", code.selectionStart);
-    const end = found === -1 ? code.value.length : found;
-    return { start, end, text: code.value.slice(start, end) };
-  }
-
-  const indentOf = (text) => text.match(/^ */)[0];
-
-  function insertTool(tool) {
-    if (INLINE_TOOL.test(tool)) return insert(tool);
-    const line = currentLine();
-    const indent = indentOf(line.text);
-    const after = tool.endsWith(":") ? `\n${indent}${INDENT}` : "";
-    code.focus();
-    if (line.text.trim()) {
-      code.setSelectionRange(line.end, line.end);
-      insert(`\n${indent}${tool}${after}`);
-    } else {
-      insert(tool + after);
-    }
-  }
-
-  code.addEventListener("input", () => {
-    marks = { active: null, error: null };
-    renderCode();
-  });
-  code.addEventListener("scroll", syncScroll);
-  code.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") return code.blur(); // Klaviatura bilan muharrirdan chiqish
-    if (event.key === "Tab" && !event.shiftKey) {
-      event.preventDefault();
-      insert(INDENT);
-    } else if (event.key === "Enter" && !event.ctrlKey && !event.metaKey) {
-      event.preventDefault();
-      const before = code.value.slice(currentLine().start, code.selectionStart);
-      insert(`\n${indentOf(before)}${before.trimEnd().endsWith(":") ? INDENT : ""}`);
-    } else if (event.key === "Enter") {
-      event.preventDefault();
-      run();
-    } else if (event.key === "Backspace" && code.selectionStart === code.selectionEnd) {
-      const before = code.value.slice(currentLine().start, code.selectionStart);
-      if (before.length >= 4 && before.length % 4 === 0 && !before.trim()) {
-        event.preventDefault();
-        code.setSelectionRange(code.selectionStart - 4, code.selectionStart);
-        document.execCommand("delete") || code.setRangeText("");
-      }
-    }
-  });
-  $("tools").addEventListener("click", (event) => {
-    const tool = event.target.closest("[data-tool]")?.dataset.tool;
-    if (tool && !running) insertTool(tool);
-  });
-
-  /* --- Ishga tushirish --- */
-
-  function showStatus(text, kind = "error") {
-    statusBox.textContent = text;
-    statusBox.className = `game-status is-${kind}`;
-    statusBox.hidden = !text;
-  }
+  const speed = Kit.speedControl(applySpeed);
+  const editor = Kit.editor({ onRun: run, isBusy: () => running });
 
   function setRunning(value) {
     running = value;
-    code.readOnly = value;
+    editor.readOnly = value;
     runLabel.textContent = value ? "To'xtatish" : "Ishga tushirish";
   }
 
-  function reset(world = config.world) {
+  function reset() {
     runId += 1;
     setRunning(false);
-    drawWorld(world);
-    mark(null);
-    showStatus("");
-    consoleLines.replaceChildren();
-    consoleBox.hidden = true;
+    drawWorld(config.world);
+    editor.mark(null);
+    Kit.status("");
+    lines.length = 0;
+    Kit.printLines([]);
     if ($("map-label")) $("map-label").textContent = "1-xarita";
   }
 
-  const wait = (ms) => new Promise((done) => setTimeout(done, ms));
-
   function play(event) {
-    if (event.a === "move") placeRobot(event.x, event.y);
+    if (event.a === "move") {
+      placeRobot(event.x, event.y);
+      sound.step();
+    }
     if (event.a === "turn") {
       angle += event.side * 90;
       turnRobot();
     }
-    if (event.a === "take") board.querySelector(`[data-cell="${event.x},${event.y}"]`)?.classList.add("is-taken");
-    if (event.a === "crash") robot.classList.add("is-crashed");
+    if (event.a === "take") {
+      board.querySelector(`[data-cell="${event.x},${event.y}"]`)?.classList.add("is-taken");
+      sound.take();
+    }
+    if (event.a === "crash") {
+      robot.classList.add("is-crashed");
+      sound.bad();
+    }
     if (event.a === "print") {
-      const row = document.createElement("div");
-      row.textContent = event.text;
-      consoleLines.append(row);
-      consoleBox.hidden = false;
+      lines.push(event.text);
+      Kit.printLines(lines);
     }
   }
 
   async function animate(events, id) {
     for (const event of events) {
       if (id !== runId) return false;
-      mark(event.line);
+      editor.mark(event.line);
       play(event);
-      await wait(event.a === "print" ? 80 / speed : (STEP_MS + 40) / speed);
+      await Kit.wait((event.a === "print" ? 80 : STEP_MS + 40) / speed());
     }
     return id === runId;
   }
 
-  function renderBestStars(count) {
-    const stars = document.querySelectorAll("#best-stars [class^=star-]");
-    stars.forEach((star, index) => {
-      star.className = index < count ? "star-on" : "star-off";
-    });
-  }
-
-  function showResult(data) {
-    const holder = $("result-stars");
-    holder.replaceChildren();
-    for (let i = 1; i <= 3; i++) {
-      const star = document.createElement("span");
-      star.className = i <= data.stars ? "star-on" : "star-off";
-      star.append($("star-template").content.cloneNode(true));
-      holder.append(star);
+  function winText(data) {
+    if (data.changes !== undefined) {
+      return data.stars < 3 ? `${data.changes} ta qator o'zgardi. ${data.allowed} tasi yetardi.` : "Eng kam o'zgartirish bilan tuzatdingiz!";
     }
-    const parts = [];
-    if (config.maps > 1) parts.push(`Kod ${config.maps} ta xaritaning hammasida ishladi.`);
-    if (data.gained > 0) parts.push(`+${data.gained} XP`);
-    if (data.stars < 3) parts.push(`Siz ${data.statements} ta buyruq yozdingiz. 3 yulduz uchun ${data.par} ta yetadi.`);
-    $("result-text").textContent = parts.join(" ");
-    $("result-next").href = config.nextUrl;
-    result.hidden = false;
-    $("result-next").focus();
-  }
-
-  async function request() {
-    const token = document.querySelector("meta[name=csrf-token]")?.content;
-    const response = await fetch(config.runUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-CSRFToken": token },
-      body: JSON.stringify({ code: code.value }),
-    });
-    const data = await response.json();
-    return { data, failed: !response.ok };
+    const maps = config.maps > 1 ? `Kod ${config.maps} ta xaritaning hammasida ishladi.` : "";
+    return [maps, Kit.statementsNote(data)].filter(Boolean).join(" ");
   }
 
   async function run() {
@@ -318,56 +146,37 @@
     reset();
     const id = runId;
     setRunning(true);
-    let answer;
-    try {
-      answer = await request();
-    } catch {
-      setRunning(false);
-      return showStatus("Serverdan javob kelmadi. Sahifani yangilab, qayta urinib ko'ring.");
-    }
+    const data = await Kit.post({ code: editor.value });
     if (id !== runId) return;
-    const { data, failed } = answer;
-    if (failed) {
+    if (data.failed) {
       setRunning(false);
-      return showStatus(data.message);
+      return Kit.status(data.message);
     }
     if (data.map_index > 0) {
       drawWorld(data.world);
       if ($("map-label")) $("map-label").textContent = `${data.map_index + 1}-xarita`;
     }
-    const finished = await animate(data.events, id);
-    if (!finished) return;
+    if (!(await animate(data.events, id))) return;
     setRunning(false);
-    if (data.best_stars !== undefined) renderBestStars(data.best_stars);
-    if (data.xp !== undefined && $("xp-value")) $("xp-value").textContent = data.xp;
+    Kit.saveProgress(data);
     if (data.ok) {
-      mark(null);
-      showResult(data);
+      editor.mark(null);
+      Kit.win(data, winText(data), () => {
+        reset();
+        $("code").focus();
+      });
     } else {
-      mark(null, data.line);
-      showStatus(data.line ? `${data.line}-qator: ${data.message}` : data.message);
+      sound.bad();
+      editor.mark(null, data.line);
+      Kit.status(data.line ? `${data.line}-qator: ${data.message}` : data.message);
     }
   }
 
-  runButton.addEventListener("click", run);
-  $("reset").addEventListener("click", () => reset());
-  $("result-again").addEventListener("click", () => {
-    result.hidden = true;
+  $("run").addEventListener("click", run);
+  $("reset").addEventListener("click", reset);
+  $("restore")?.addEventListener("click", () => {
     reset();
-    code.focus();
+    editor.value = config.starter;
   });
-  result.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") $("result-again").click();
-  });
-  document.querySelectorAll("[data-speed]").forEach((button) => {
-    button.addEventListener("click", () => {
-      speed = Number(button.dataset.speed);
-      store.set("game-speed", String(speed));
-      applySpeed();
-    });
-  });
-
-  code.value = config.code;
   drawWorld(config.world);
-  renderCode();
 })();

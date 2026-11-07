@@ -1,0 +1,9 @@
+<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+  <a href="{% url 'portal_game' game.slug %}" class="btn btn-ghost btn-sm -ml-2" aria-label="{{ game.title }}">{% icon "arrow-left" "size-4" %}<span class="hidden sm:inline">{{ game.title }}</span></a>
+  <div class="min-w-0 flex-1">
+    <p class="text-xs font-semibold tracking-wider text-brand-600 uppercase dark:text-brand-300">{{ number }}-bosqich / {{ total_levels }}<span class="hidden sm:inline"> · {{ chapter.title }}</span></p>
+    <h1 class="text-xl font-bold tracking-tight sm:text-2xl">{{ level.title }}</h1>
+  </div>
+  <button type="button" id="sound" class="btn btn-ghost btn-icon" aria-label="Ovoz" aria-pressed="true"><span data-sound="on">{% icon "volume-2" "size-[18px]" %}</span><span data-sound="off" hidden>{% icon "volume-x" "size-[18px]" %}</span></button>
+  <span id="best-stars">{% include "portal/partials/stars.html" with n=best_stars size="size-5" %}</span>
+</div>

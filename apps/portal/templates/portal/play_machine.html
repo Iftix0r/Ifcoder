@@ -1,0 +1,24 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+  <div class="space-y-4">
+    <section class="card overflow-hidden">
+      <div class="border-b border-line px-4 py-3"><p class="text-sm font-semibold">{% icon game.icon "mr-1 inline size-4 text-emerald-500" %}{{ level.goal }}</p></div>
+      <div class="machine" id="machine">
+        <div class="machine-head" aria-hidden="true"><span>Kiradi</span><span class="machine-gear" id="gear">{% icon "cog" "size-7" "1.8" %}</span><span>Chiqishi kerak</span><span>Chiqdi</span></div>
+        <div id="machine-rows" class="divide-y divide-line"></div>
+        <p class="px-4 py-2.5 text-xs text-ink-3" id="machine-hidden"></p>
+      </div>
+    </section>
+    {% include "portal/partials/lesson.html" %}
+  </div>
+  <div class="space-y-3">
+    {% include "portal/partials/editor.html" %}
+    {% include "portal/partials/hint.html" %}
+  </div>
+</div>
+{% include "portal/partials/result.html" %}
+{% endblock %}

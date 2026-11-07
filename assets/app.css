@@ -585,6 +585,49 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .peer:checked + .att-late { @apply border-amber-500 bg-amber-500 text-white; }
   .peer:checked + .att-absent { @apply border-rose-500 bg-rose-500 text-white; }
 
+  .game-card {
+    @apply flex flex-col rounded-3xl border border-line bg-surface p-5 shadow-soft transition duration-200
+      hover:-translate-y-1 hover:border-brand-500/40 hover:shadow-lift;
+  }
+  .confetti { @apply pointer-events-none fixed inset-0 z-[60]; }
+
+  .draw-paper { @apply aspect-square w-full max-w-[440px] overflow-hidden rounded-2xl border border-line-strong bg-white shadow-soft; }
+  .draw-paper svg { @apply block size-full; }
+
+  .machine { @apply bg-surface; }
+  .machine-head, .machine-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 2rem minmax(0, 1fr) minmax(0, 1fr);
+    @apply items-center gap-2 px-4 py-2.5;
+  }
+  .machine-head { @apply border-b border-line bg-surface-2/50 text-xs font-semibold text-ink-3; }
+  .machine-gear { @apply flex justify-center text-emerald-500; }
+  .machine-gear.is-spinning svg { animation: gear-spin 1s linear infinite; }
+  .machine-value { @apply min-w-0 truncate font-mono text-sm; }
+  .machine-row.is-ok { @apply bg-emerald-500/10; }
+  .machine-row.is-ok .machine-got { @apply font-semibold text-emerald-600 dark:text-emerald-400; }
+  .machine-row.is-bad { @apply bg-rose-500/10; }
+  .machine-row.is-bad .machine-got { @apply font-semibold text-rose-600 dark:text-rose-400; }
+
+  .tile {
+    @apply flex w-full min-w-0 items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-left shadow-soft transition;
+  }
+  button.tile:hover { @apply border-brand-500/40; }
+  button.tile:active { @apply scale-[0.98]; }
+  .tile.is-placed { @apply w-auto border-brand-500/30 bg-brand-500/5 transition-[margin]; }
+  .tile-code { @apply min-w-0 flex-1 overflow-x-auto font-mono text-[13px] whitespace-pre; }
+  .tile-tools { @apply flex shrink-0 items-center; }
+  .tile-btn { @apply flex size-8 items-center justify-center rounded-lg text-ink-3 transition hover:bg-surface-2 hover:text-ink; }
+
+  .quiz-option {
+    @apply min-h-12 rounded-xl border-2 border-line bg-surface px-4 py-2.5 text-center font-mono text-[15px] font-semibold transition
+      hover:border-brand-500/50 active:scale-[0.98] disabled:hover:border-line;
+  }
+  .quiz-option.is-right { @apply border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300; }
+  .quiz-option.is-wrong { @apply border-rose-500 bg-rose-500/15 text-rose-700 dark:text-rose-300; }
+  .heart-on { @apply text-rose-500 [&_svg]:fill-rose-500; }
+  .heart-off { @apply text-line-strong; }
+
   .game-board { @apply flex justify-center overflow-x-auto bg-surface-2/50 p-3 sm:p-4; }
   .game-board svg { @apply h-auto max-h-[460px] w-full; }
   .tile-floor { fill: var(--color-surface); stroke: var(--color-line); }
@@ -633,6 +676,10 @@ html.is-done #progress-bar { transform: scaleX(1); opacity: 0; }
   .game-status.is-error { @apply border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300; }
   .game-status.is-info { @apply border-line bg-surface-2 text-ink-2; }
   .game-console { @apply rounded-2xl border border-line bg-surface p-3 font-mono text-[13px]; }
+}
+
+@keyframes gear-spin {
+  to { transform: rotate(360deg); }
 }
 
 @keyframes robot-shake {

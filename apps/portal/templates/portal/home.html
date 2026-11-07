@@ -12,7 +12,7 @@
         <a href="{% url 'portal_play' next_level.slug %}" class="btn btn-lg mt-4 bg-white text-brand-700 hover:brightness-95">{% icon "play" "size-4" %}{% if student.solved %}Davom etish{% else %}Boshlash{% endif %}</a>
       {% else %}
         <p class="mt-2 text-sm text-white/70">Hamma bosqichni yechdingiz. Endi uch yulduzga intiling!</p>
-        <a href="{% url 'portal_map' %}" class="btn btn-lg mt-4 bg-white text-brand-700 hover:brightness-95">{% icon "map" "size-4" %}Xaritaga o'tish</a>
+        <a href="{% url 'portal_map' %}" class="btn btn-lg mt-4 bg-white text-brand-700 hover:brightness-95">{% icon "gamepad-2" "size-4" %}O'yinlarga o'tish</a>
       {% endif %}
     </div>
     {% include "portal/partials/robot.html" with class="hidden size-28 shrink-0 animate-float sm:block" %}
@@ -27,6 +27,15 @@
   <div class="card p-4 animate-fade-up"><p class="stat-label">Davomat</p><p class="mt-2 text-xl font-bold">{% if visits.total %}{{ visits.percent }}%{% else %}—{% endif %}</p><p class="mt-2 text-xs text-ink-3">{% if visits.total %}{{ visits.came }} / {{ visits.total }} dars{% else %}Hali dars yozilmagan{% endif %}</p></div>
   <div class="card p-4 animate-fade-up"><p class="stat-label">Unvon</p><p class="mt-2 text-xl font-bold">{{ rank.title }}</p>{% if rank.next_xp %}<div class="progress mt-3"><span style="width: {{ rank.percent }}%"></span></div><p class="mt-2 text-xs text-ink-3">«{{ rank.next_title }}» uchun yana {{ rank.left }} XP</p>{% else %}<p class="mt-2 text-xs text-ink-3">Eng yuqori unvon</p>{% endif %}</div>
 </div>
+
+<section class="mt-6">
+  <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-bold">O'yinlar</h2><a href="{% url 'portal_map' %}" class="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">Hammasi</a></div>
+  <div class="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:px-0 lg:grid-cols-6">
+    {% for card in cards %}
+      <a href="{% url 'portal_game' card.game.slug %}" class="card card-hover flex w-32 shrink-0 flex-col items-center p-3 text-center sm:w-auto"><span class="icon-chip {{ card.game.tone }}">{% icon card.game.icon "size-5" %}</span><span class="mt-2 text-[13px] font-semibold">{{ card.game.title }}</span><span class="mt-0.5 text-xs text-ink-3">{{ card.done }} / {{ card.total }}</span></a>
+    {% endfor %}
+  </div>
+</section>
 
 <div class="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
   <section>

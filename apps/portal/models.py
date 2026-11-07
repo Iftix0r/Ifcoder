@@ -6,7 +6,8 @@ from django.db.models.functions import Coalesce
 
 from apps.core.models import TimeStamped
 
-from .levels import ALL_LEVELS, LEVELS, XP_PER_STAR
+from .catalog import BY_SLUG, TOTAL_LEVELS
+from .levels import XP_PER_STAR
 
 
 class StudentQuerySet(models.QuerySet):
@@ -70,7 +71,7 @@ class Student(TimeStamped):
 
     @property
     def percent(self) -> int:
-        return round(self.solved * 100 / len(ALL_LEVELS))
+        return round(self.solved * 100 / TOTAL_LEVELS)
 
 
 class LevelProgress(models.Model):
@@ -93,7 +94,7 @@ class LevelProgress(models.Model):
 
     @property
     def level_title(self) -> str:
-        level = LEVELS.get(self.level)
+        level = BY_SLUG.get(self.level)
         return level.title if level else self.level
 
 

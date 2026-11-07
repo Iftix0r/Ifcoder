@@ -168,8 +168,11 @@ def parse(code: str) -> ast.Module:
 
 
 class Interpreter:
-    def __init__(self, world: World):
-        self.world = world
+    """Python qismi. O'yinlar o'z buyruqlarini ``commands`` ga qo'shadi: {nom: (funksiya, argumentlar soni)}."""
+
+    tired = "Harakatlar juda ko'p. Sikl to'xtayaptimi?"
+
+    def __init__(self):
         self.events: list[dict] = []
         self.steps = 0
         self.actions = 0
@@ -178,47 +181,12 @@ class Interpreter:
         self.line = 1
         self.globals: dict = {}
         self.scopes: list[dict] = [self.globals]
-        self.commands = {
-            "yur": self._move,
-            "chapga": lambda: self._turn(-1),
-            "ongga": lambda: self._turn(1),
-            "ol": self._take,
-            "oldinda_devor": lambda: self.world.blocked(),
-            "chapda_devor": lambda: self.world.blocked(-1),
-            "ongda_devor": lambda: self.world.blocked(1),
-            "kristall_bor": lambda: (self.world.x, self.world.y) in self.world.crystals,
-            "yetib_keldi": lambda: self.world.at_exit,
-        }
-
-    # --- Robot buyruqlari ---
+        self.commands: dict = {}
 
     def _action(self) -> None:
         self.actions += 1
         if self.actions > MAX_ACTIONS:
-            raise CodeError("Robot charchadi: harakatlar juda ko'p. Sikl to'xtayaptimi?", self.line)
-
-    def _move(self) -> None:
-        self._action()
-        world = self.world
-        if world.blocked():
-            self.events.append({"a": "crash", "line": self.line})
-            raise CodeError("Robot devorga urildi!", self.line)
-        dx, dy = DIRECTIONS[world.direction]
-        world.x, world.y = world.x + dx, world.y + dy
-        self.events.append({"a": "move", "x": world.x, "y": world.y, "line": self.line})
-
-    def _turn(self, side: int) -> None:
-        self._action()
-        self.world.direction = (self.world.direction + side) % 4
-        self.events.append({"a": "turn", "side": side, "line": self.line})
-
-    def _take(self) -> None:
-        self._action()
-        here = (self.world.x, self.world.y)
-        if here not in self.world.crystals:
-            raise CodeError("Bu katakda kristall yo'q.", self.line)
-        self.world.crystals.remove(here)
-        self.events.append({"a": "take", "x": here[0], "y": here[1], "line": self.line})
+            raise CodeError(self.tired, self.line)
 
     # --- Bajarish ---
 
@@ -385,9 +353,11 @@ class Interpreter:
         name = node.func.id
         self.line = node.lineno
         if name in self.commands:
-            if node.args:
-                raise CodeError(f"{name}() buyrug'i qavs ichida hech narsa olmaydi.", node.lineno)
-            return self.commands[name]()
+            command, arity = self.commands[name]
+            if len(node.args) != arity:
+                wanted = f"{arity} ta qiymat kutadi" if arity else "qavs ichida hech narsa olmaydi"
+                raise CodeError(f"{name}() buyrug'i {wanted}.", node.lineno)
+            return command(*[self._eval(arg) for arg in node.args])
         if name == "print":
             return self._print(node)
         target = self.scopes[-1].get(name, self.globals.get(name))
@@ -418,6 +388,8 @@ class Interpreter:
             self._block(function.node.body)
         except _Return as result:
             return result.value
+        except (_Break, _Continue):
+            raise CodeError("break va continue faqat sikl ichida ishlaydi.", self.line) from None
         finally:
             self.scopes.pop()
             self.depth -= 1
@@ -470,8 +442,50 @@ class Interpreter:
         return True
 
 
-def execute(tree: ast.Module, world: World) -> Outcome:
-    machine = Interpreter(world)
+class RobotMachine(Interpreter):
+    tired = "Robot charchadi: harakatlar juda ko'p. Sikl to'xtayaptimi?"
+
+    def __init__(self, world: World):
+        super().__init__()
+        self.world = world
+        self.commands = {
+            "yur": (self._move, 0),
+            "chapga": (lambda: self._turn(-1), 0),
+            "ongga": (lambda: self._turn(1), 0),
+            "ol": (self._take, 0),
+            "oldinda_devor": (lambda: self.world.blocked(), 0),
+            "chapda_devor": (lambda: self.world.blocked(-1), 0),
+            "ongda_devor": (lambda: self.world.blocked(1), 0),
+            "kristall_bor": (lambda: (self.world.x, self.world.y) in self.world.crystals, 0),
+            "yetib_keldi": (lambda: self.world.at_exit, 0),
+        }
+
+    def _move(self) -> None:
+        self._action()
+        world = self.world
+        if world.blocked():
+            self.events.append({"a": "crash", "line": self.line})
+            raise CodeError("Robot devorga urildi!", self.line)
+        dx, dy = DIRECTIONS[world.direction]
+        world.x, world.y = world.x + dx, world.y + dy
+        self.events.append({"a": "move", "x": world.x, "y": world.y, "line": self.line})
+
+    def _turn(self, side: int) -> None:
+        self._action()
+        self.world.direction = (self.world.direction + side) % 4
+        self.events.append({"a": "turn", "side": side, "line": self.line})
+
+    def _take(self) -> None:
+        self._action()
+        here = (self.world.x, self.world.y)
+        if here not in self.world.crystals:
+            raise CodeError("Bu katakda kristall yo'q.", self.line)
+        self.world.crystals.remove(here)
+        self.events.append({"a": "take", "x": here[0], "y": here[1], "line": self.line})
+
+
+def capture(machine: Interpreter, tree: ast.Module) -> Outcome:
+    """Dasturni bajaradi. Xato chiqsa ham shu paytgacha bo'lgan hodisalar animatsiya uchun qoladi."""
     outcome = Outcome(events=machine.events)
     try:
         machine.run(tree)
@@ -479,8 +493,17 @@ def execute(tree: ast.Module, world: World) -> Outcome:
         outcome.error, outcome.line = error.message, error.line
     except RecursionError:
         outcome.error, outcome.line = "Kod juda chuqur: soddaroq yozing.", machine.line
+    return outcome
+
+
+def execute(tree: ast.Module, world: World) -> Outcome:
+    outcome = capture(RobotMachine(world), tree)
     outcome.won = not outcome.error and world.won
     return outcome
+
+
+def printed(outcome: Outcome) -> list[str]:
+    return [event["text"] for event in outcome.events if event["a"] == "print"]
 
 
 def count_statements(tree: ast.Module) -> int:

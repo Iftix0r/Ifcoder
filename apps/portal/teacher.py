@@ -12,8 +12,8 @@ from django.views.decorators.http import require_POST
 from apps.core.crud import delete_done, form_modal
 
 from . import services
+from .catalog import BY_SLUG, TOTAL_LEVELS
 from .forms import PostForm, StudentForm, StudentPasswordForm, generate_password
-from .levels import ALL_LEVELS, LEVELS
 from .models import Group, Post, Student
 
 
@@ -42,8 +42,8 @@ def student_list(request):
             "groups": Group.objects.filter(is_active=True),
             "total": Student.objects.count(),
             "active_week": Student.objects.filter(progress__updated_at__gte=week).distinct().count(),
-            "finished": sum(s.solved >= len(ALL_LEVELS) for s in Student.objects.with_stats()),
-            "total_levels": len(ALL_LEVELS),
+            "finished": sum(s.solved >= TOTAL_LEVELS for s in Student.objects.with_stats()),
+            "total_levels": TOTAL_LEVELS,
             "register_url": request.build_absolute_uri(reverse("portal_register")),
         },
     )
@@ -59,12 +59,12 @@ def student_detail(request, pk):
             "nav_active": "students",
             "student": student,
             "rank": services.rank_for(student.xp),
-            "chapters": services.chapter_cards(progress),
+            "games": services.game_cards(progress),
             "rows": sorted(progress.values(), key=lambda row: row.updated_at, reverse=True),
             "attempts": sum(row.attempts for row in progress.values()),
             "visits": services.attendance_stats(student),
             "submissions": student.submissions.select_related("post")[:10],
-            "total_levels": len(ALL_LEVELS),
+            "total_levels": TOTAL_LEVELS,
         },
     )
 
@@ -107,7 +107,7 @@ def student_code(request, pk, level):
     student = get_object_or_404(Student, pk=pk)
     row = get_object_or_404(student.progress, level=level)
     return render(
-        request, "portal/teacher/code_modal.html", {"student": student, "row": row, "level": LEVELS.get(level)}
+        request, "portal/teacher/code_modal.html", {"student": student, "row": row, "level": BY_SLUG.get(level)}
     )
 
 

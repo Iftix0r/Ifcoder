@@ -1,0 +1,24 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="mx-auto max-w-2xl space-y-4">
+  <section class="card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+      <p class="text-sm font-semibold">{% icon game.icon "mr-1 inline size-4 text-amber-500" %}<span id="quiz-step">1-savol</span></p>
+      <div class="flex gap-1" id="lives" role="img" aria-label="Jonlar"></div>
+    </div>
+    <div class="p-4">
+      <p class="mb-2 text-sm text-ink-2">Bu kod nima chiqaradi?</p>
+      <pre class="code-sample mt-0 text-[15px]" id="quiz-code"></pre>
+      <div class="mt-4 grid gap-2 sm:grid-cols-2" id="quiz-options"></div>
+      <div id="status" class="game-status mt-3" aria-live="polite" hidden></div>
+      <button type="button" id="quiz-next" class="btn btn-primary mt-3 w-full" hidden>Keyingi savol {% icon "arrow-right" "size-4" %}</button>
+    </div>
+  </section>
+  {% include "portal/partials/lesson.html" %}
+</div>
+<template id="heart-template">{% icon "heart" "size-5" %}</template>
+{% include "portal/partials/result.html" %}
+{% endblock %}

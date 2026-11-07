@@ -29,10 +29,10 @@
 
 <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
   <section class="card p-5">
-    <h2 class="mb-3 text-base font-bold">Boblar bo'yicha</h2>
+    <h2 class="mb-3 text-base font-bold">O'yinlar bo'yicha</h2>
     <div class="space-y-3.5">
-      {% for item in chapters %}
-        <div><div class="mb-1 flex justify-between text-sm"><span class="font-medium">{{ item.chapter.title }}</span><span class="text-ink-3">{{ item.done }} / {{ item.total }}</span></div><div class="progress"><span style="width: {% widthratio item.done item.total 100 %}%"></span></div></div>
+      {% for item in games %}
+        <div><div class="mb-1 flex justify-between text-sm"><span class="font-medium">{{ item.game.title }}</span><span class="text-ink-3">{{ item.done }} / {{ item.total }}</span></div><div class="progress"><span style="width: {{ item.percent }}%"></span></div></div>
       {% endfor %}
     </div>
   </section>

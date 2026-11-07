@@ -12,7 +12,8 @@ from django.urls import get_resolver, reverse
 from django.utils import timezone
 
 from apps.finance.models import Transaction
-from apps.portal.levels import ALL_LEVELS, LEVELS, MAX_XP
+from apps.portal.catalog import BY_SLUG, EVERY_LEVEL, GAME_OF, MAX_XP
+from apps.portal.levels import ALL_LEVELS
 from apps.portal.models import Attendance, Group, Lesson, LevelProgress, Payment, Post, Student, Submission
 from apps.portal.services import (
     PAYMENT_ALERT_DAY,
@@ -64,7 +65,7 @@ def run_code(client, slug, code):
 
 
 def solve_up_to(student, count):
-    for level in ALL_LEVELS[:count]:
+    for level in EVERY_LEVEL[:count]:
         LevelProgress.objects.create(student=student, level=level.slug, stars=3)
 
 
@@ -347,13 +348,14 @@ def test_csrf_is_enforced_on_run(student):
 
 def test_teacher_preview_opens_everything_and_saves_nothing(client_in):
     last = ALL_LEVELS[-1].slug
+    assert GAME_OF[last].slug == "robot"
     assert client_in.get(reverse("portal_play", args=[last])).status_code == 200
     data = run_code(client_in, last, SOLUTIONS[last]).json()
     assert data["ok"] and data["preview"]
     assert not LevelProgress.objects.exists()
 
 
-@pytest.mark.parametrize("slug", LEVELS)
+@pytest.mark.parametrize("slug", BY_SLUG)
 def test_every_level_page_renders(client_in, slug):
     response = client_in.get(reverse("portal_play", args=[slug]))
     assert response.status_code == 200
@@ -374,7 +376,7 @@ def test_portal_pages_open(student_client, name):
 
 
 def test_finished_student_home(student_client, student):
-    solve_up_to(student, len(ALL_LEVELS))
+    solve_up_to(student, len(EVERY_LEVEL))
     html = student_client.get(reverse("portal_home")).content.decode()
     assert "Hamma bosqichni yechdingiz" in html
 
@@ -837,8 +839,8 @@ def test_achievements(student):
     solve_up_to(student, 4)
     assert earned(student) == {"Birinchi qadam", "Birinchi qadamlar"}
     LevelProgress.objects.all().delete()
-    solve_up_to(student, len(ALL_LEVELS))
-    assert {"Uch yulduz", "Mukammal", "O'zgaruvchilar"} <= earned(student)
+    solve_up_to(student, len(EVERY_LEVEL))
+    assert {"Uch yulduz", "Mukammal", "O'zgaruvchilar", "Kod rassomi", "Xato ovchisi"} <= earned(student)
 
 
 def test_attendance_and_grade_achievements(student, group):

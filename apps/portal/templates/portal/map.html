@@ -1,9 +1,10 @@
 {% extends "portal/layout.html" %}
-{% block page_title %}O'yin{% endblock %}
+{% block page_title %}{{ game.title }}{% endblock %}
 {% block content %}
-<div class="mb-6 animate-fade-up">
-  <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Robot yo'li</h1>
-  <p class="mt-1 text-sm text-ink-2">Haqiqiy Python yozib robotni boshqaring. Har bosqich yangi narsa o'rgatadi.</p>
+<a href="{% url 'portal_map' %}" class="btn btn-ghost btn-sm -ml-2 mb-2">{% icon "arrow-left" "size-4" %}O'yinlar</a>
+<div class="mb-6 flex items-center gap-3.5 animate-fade-up">
+  <span class="icon-chip {{ game.tone }} size-12 shrink-0 rounded-2xl">{% icon game.icon "size-6" "1.8" %}</span>
+  <div class="min-w-0"><h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">{{ game.title }}</h1><p class="text-sm text-ink-2">{{ game.tagline }}</p></div>
 </div>
 <div class="space-y-8">
   {% for item in chapters %}

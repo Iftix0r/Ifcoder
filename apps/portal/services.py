@@ -12,7 +12,8 @@ from django.utils import timezone
 from apps.core.dates import add_months
 from apps.finance.models import Category, Kind, Transaction
 
-from .levels import ALL_LEVELS, CHAPTERS, MAX_XP, Level
+from .catalog import EVERY_LEVEL, GAME_OF, GAMES, MAX_XP, Game
+from .levels import CHAPTERS as ROBOT_CHAPTERS
 from .models import Attendance, LevelProgress, Payment, Post, Student, Submission
 
 TUITION_CATEGORY = "O'quv to'lovi"
@@ -25,12 +26,14 @@ RANKS = (
     (330, "Funksiya ustasi", "braces"),
     (480, "Algoritmchi", "brain-circuit"),
     (660, "Dasturchi", "trophy"),
+    (1000, "Tajribali dasturchi", "rocket"),
+    (1500, "Kod sehrgari", "wand-sparkles"),
 )
 
 
 @dataclass
 class LevelCard:
-    level: Level
+    level: object
     number: int
     stars: int
     state: str  # locked | open | done
@@ -57,18 +60,19 @@ def progress_of(student: Student | None) -> dict[str, LevelProgress]:
     return {row.level: row for row in student.progress.all()}
 
 
-def is_unlocked(level: Level, progress: dict[str, LevelProgress], *, preview: bool = False) -> bool:
-    """Oldingi bosqich yechilgan bo'lsa ochiq. O'qituvchi (``preview``) hammasini ko'radi."""
-    index = ALL_LEVELS.index(level)
+def is_unlocked(level, progress: dict[str, LevelProgress], *, preview: bool = False) -> bool:
+    """Har o'yin o'z yo'lida: oldingi bosqich yechilgan bo'lsa ochiq. O'qituvchi (``preview``) hammasini ko'radi."""
+    levels = GAME_OF[level.slug].levels
+    index = levels.index(level)
     if preview or index == 0:
         return True
-    previous = progress.get(ALL_LEVELS[index - 1].slug)
+    previous = progress.get(levels[index - 1].slug)
     return bool(previous and previous.stars)
 
 
-def chapter_cards(progress: dict[str, LevelProgress], *, preview: bool = False) -> list[dict]:
+def chapter_cards(game: Game, progress: dict[str, LevelProgress], *, preview: bool = False) -> list[dict]:
     cards, number = [], 0
-    for chapter in CHAPTERS:
+    for chapter in game.chapters:
         items = []
         for level in chapter.levels:
             number += 1
@@ -90,20 +94,39 @@ def chapter_cards(progress: dict[str, LevelProgress], *, preview: bool = False) 
     return cards
 
 
-def next_level(progress: dict[str, LevelProgress]) -> Level | None:
-    for level in ALL_LEVELS:
+def game_cards(progress: dict[str, LevelProgress]) -> list[dict]:
+    cards = []
+    for game in GAMES:
+        rows = [progress.get(level.slug) for level in game.levels]
+        done = sum(bool(row and row.stars) for row in rows)
+        cards.append(
+            {
+                "game": game,
+                "done": done,
+                "total": len(rows),
+                "stars": sum(row.stars for row in rows if row),
+                "max_stars": len(rows) * 3,
+                "percent": round(done * 100 / len(rows)),
+            }
+        )
+    return cards
+
+
+def next_level(progress: dict[str, LevelProgress]):
+    for level in EVERY_LEVEL:
         row = progress.get(level.slug)
         if not (row and row.stars):
             return level
     return None
 
 
-def following(level: Level) -> Level | None:
-    index = ALL_LEVELS.index(level) + 1
-    return ALL_LEVELS[index] if index < len(ALL_LEVELS) else None
+def following(level):
+    levels = GAME_OF[level.slug].levels
+    index = levels.index(level) + 1
+    return levels[index] if index < len(levels) else None
 
 
-def save_attempt(student: Student, level: Level, code: str, result: dict) -> LevelProgress:
+def save_attempt(student: Student, level, code: str, result: dict) -> LevelProgress:
     with transaction.atomic():
         row, _ = LevelProgress.objects.select_for_update().get_or_create(student=student, level=level.slug)
         row.attempts += 1
@@ -168,12 +191,15 @@ def achievements(student: Student, progress: dict[str, LevelProgress]) -> list[d
     top_grades = student.submissions.filter(status=Submission.Status.ACCEPTED, grade=5).count()
     visits = attendance_stats(student)
     items = [("Birinchi qadam", "Birinchi bosqichni yechdi", "footprints", bool(solved))]
-    for chapter in CHAPTERS:
+    for game in GAMES[1:]:
+        finished = all(level.slug in solved for level in game.levels)
+        items.append((game.title, f"«{game.title}» o'yinini tugatdi", game.icon, finished))
+    for chapter in ROBOT_CHAPTERS:
         finished = all(level.slug in solved for level in chapter.levels)
         items.append((chapter.title, f"«{chapter.title}» bobini tugatdi", "award", finished))
     items += [
         ("Uch yulduz", "10 ta bosqichda 3 yulduz oldi", "star", perfect >= 10),
-        ("Mukammal", "Hamma bosqichda 3 yulduz oldi", "crown", perfect == len(ALL_LEVELS)),
+        ("Mukammal", "Hamma bosqichda 3 yulduz oldi", "crown", perfect == len(EVERY_LEVEL)),
         ("A'lochi", "3 ta uy vazifasidan 5 oldi", "medal", top_grades >= 3),
         ("Intizomli", "10 ta darsdan keyin davomati 90% dan yuqori", "calendar-check", _disciplined(visits)),
     ]

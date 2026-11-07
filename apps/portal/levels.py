@@ -509,7 +509,6 @@ CHAPTERS: tuple[Chapter, ...] = (
 ALL_LEVELS: tuple[Level, ...] = tuple(level for chapter in CHAPTERS for level in chapter.levels)
 LEVELS: dict[str, Level] = {level.slug: level for level in ALL_LEVELS}
 CHAPTER_OF: dict[str, Chapter] = {level.slug: chapter for chapter in CHAPTERS for level in chapter.levels}
-MAX_XP = len(ALL_LEVELS) * 3 * XP_PER_STAR
 
 
 def stars_for(statements: int, par: int) -> int:

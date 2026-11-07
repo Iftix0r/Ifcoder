@@ -1,0 +1,20 @@
+{% extends "portal/layout.html" %}
+{% block page_title %}{{ level.title }}{% endblock %}
+{% block head %}{% include "portal/partials/scripts.html" %}{% endblock %}
+{% block content %}
+{% include "portal/partials/level_head.html" %}
+<div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+  <div class="space-y-4">
+    <section class="card overflow-hidden">
+      <div class="border-b border-line px-4 py-3"><p class="text-sm font-semibold">{% icon game.icon "mr-1 inline size-4 text-brand-500" %}{{ level.goal }}</p></div>
+      <div class="flex justify-center bg-surface-2/50 p-3 sm:p-4"><div class="draw-paper" id="paper" role="img" aria-label="Qog'oz: kulrang namuna va chizilgan rasm"></div></div>
+    </section>
+    {% include "portal/partials/lesson.html" %}
+  </div>
+  <div class="space-y-3">
+    {% include "portal/partials/editor.html" with speed=True %}
+    {% include "portal/partials/hint.html" %}
+  </div>
+</div>
+{% include "portal/partials/result.html" %}
+{% endblock %}
