@@ -1,13 +1,15 @@
 {% extends "layouts/app.html" %}
 {% block page_title %}Bugun{% endblock %}
 {% block content %}
-<div class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
-  <div>
+<div class="dashboard-hero relative mb-7 flex flex-col gap-4 overflow-hidden rounded-3xl border border-line px-5 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-6 animate-fade-up">
+  <span class="pointer-events-none absolute -top-20 -right-14 size-52 rounded-full bg-brand-300/20 blur-3xl"></span>
+  <span class="pointer-events-none absolute -bottom-24 left-1/3 size-44 rounded-full bg-emerald-500/10 blur-3xl"></span>
+  <div class="relative">
     <p class="text-sm text-ink-3">{{ today|date:"l, j F Y" }}</p>
     <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">{{ greeting }}, {{ user.first_name|default:user.username }} 👋</h1>
     <p class="mt-1 text-sm text-ink-2">{% if today_tasks %}Bugun {{ today_tasks|length }} ta ish rejada. Eng muhimidan boshlang.{% else %}Bugungi rejani tuzing — 3 ta asosiy ish yetarli.{% endif %}</p>
   </div>
-  <div class="flex items-center gap-2">
+  <div class="relative flex items-center gap-2">
     <a href="{% url 'journal_today' %}" class="btn btn-secondary">{% icon "notebook-pen" "size-4" %}<span class="hidden sm:inline">{% if journal_today %}Kundalik ✓{% else %}Kundalik{% endif %}</span></a>
     <button type="button" class="btn btn-primary" hx-get="{% url 'task_create' %}?today=1" hx-target="#modal-content">{% icon "plus" "size-4" %}Vazifa</button>
   </div>
