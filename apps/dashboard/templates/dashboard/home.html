@@ -4,10 +4,19 @@
 <div class="dashboard-hero relative mb-7 flex flex-col gap-4 overflow-hidden rounded-3xl border border-line px-5 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-6 animate-fade-up">
   <span class="pointer-events-none absolute -top-20 -right-14 size-52 rounded-full bg-brand-300/20 blur-3xl"></span>
   <span class="pointer-events-none absolute -bottom-24 left-1/3 size-44 rounded-full bg-emerald-500/10 blur-3xl"></span>
-  <div class="relative">
-    <p class="text-sm text-ink-3">{{ today|date:"l, j F Y" }}</p>
-    <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">{{ greeting }}, {{ user.first_name|default:user.username }} 👋</h1>
-    <p class="mt-1 text-sm text-ink-2">{% if today_tasks %}Bugun {{ today_tasks|length }} ta ish rejada. Eng muhimidan boshlang.{% else %}Bugungi rejani tuzing — 3 ta asosiy ish yetarli.{% endif %}</p>
+  <div class="relative flex items-center gap-4">
+    {% if plan_total %}
+      <div class="day-ring hidden size-[72px] shrink-0 place-items-center rounded-full sm:grid" style="--day-progress: {{ done_today|pct:plan_total }}%">
+        <div class="grid size-[58px] place-items-center rounded-full bg-surface shadow-soft">
+          <span class="text-center"><strong class="block text-sm leading-none">{{ done_today }}/{{ plan_total }}</strong><small class="mt-1 block text-[9px] font-semibold tracking-wide text-ink-3 uppercase">bajarildi</small></span>
+        </div>
+      </div>
+    {% endif %}
+    <div>
+      <p class="flex items-center gap-2 text-sm text-ink-3"><span class="size-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgb(16_185_129/0.1)]"></span>{{ today|date:"l, j F Y" }}</p>
+      <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">{{ greeting }}, {{ user.first_name|default:user.username }} 👋</h1>
+      <p class="mt-1 text-sm text-ink-2">{% if today_tasks %}Bugun {{ today_tasks|length }} ta ish rejada. Eng muhimidan boshlang.{% else %}Bugungi rejani tuzing — 3 ta asosiy ish yetarli.{% endif %}</p>
+    </div>
   </div>
   <div class="relative flex items-center gap-2">
     <a href="{% url 'journal_today' %}" class="btn btn-secondary">{% icon "notebook-pen" "size-4" %}<span class="hidden sm:inline">{% if journal_today %}Kundalik ✓{% else %}Kundalik{% endif %}</span></a>

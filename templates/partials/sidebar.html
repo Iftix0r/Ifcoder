@@ -1,9 +1,9 @@
 {% load static %}
-<div class="flex h-16 shrink-0 items-center gap-3 px-4 {% if not mobile %}collapsed:justify-center collapsed:px-0{% endif %}">
+<div class="sidebar-brand flex h-16 shrink-0 items-center gap-3 px-4 {% if not mobile %}collapsed:justify-center collapsed:px-0{% endif %}">
   <a href="{% url 'dashboard' %}" class="flex min-w-0 items-center gap-3">
     <img src="{% static 'img/logo.svg' %}" alt="Ifcoder" class="size-9 shrink-0 rounded-xl shadow-glow">
     <span class="min-w-0 {% if not mobile %}collapsed:hidden{% endif %}">
-      <span class="font-display block truncate text-[15px] font-bold text-ink">Ifcoder</span>
+      <span class="font-display flex items-center gap-2 truncate text-[15px] font-bold text-ink">Ifcoder <span class="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-emerald-600 uppercase dark:text-emerald-400">Live</span></span>
       <span class="block truncate text-[11px] text-ink-3">Iftixor To‘ychiyev</span>
     </span>
   </a>

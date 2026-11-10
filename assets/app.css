@@ -158,8 +158,22 @@
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), var(--shadow-soft);
   }
   .card-hover {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/25 hover:shadow-lift;
+    @apply relative transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/25 hover:shadow-lift;
+    isolation: isolate;
   }
+  .card-hover::after {
+    content: "";
+    position: absolute;
+    inset: 0.4rem 1.25rem auto;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, var(--color-brand-400), var(--color-violet-brand), transparent);
+    opacity: 0;
+    transform: scaleX(0.7);
+    transition: opacity 200ms ease, transform 300ms ease;
+    pointer-events: none;
+  }
+  .card-hover:hover::after { opacity: 0.55; transform: scaleX(1); }
   .card-header {
     @apply flex items-center justify-between gap-3 border-b border-line px-5 py-4;
   }
@@ -241,6 +255,21 @@
   .app-topbar {
     box-shadow: 0 1px 0 rgb(255 255 255 / 0.55), 0 8px 30px -26px rgb(86 63 22 / 0.45);
   }
+  .sidebar-brand { position: relative; }
+  .sidebar-brand::after {
+    content: "";
+    position: absolute;
+    right: 1rem;
+    bottom: 0;
+    left: 1rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-line-strong), transparent);
+  }
+  .topbar-search:focus-within,
+  .topbar-search:active {
+    border-color: color-mix(in srgb, var(--color-brand-500) 45%, var(--color-line));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-brand-500) 10%, transparent), var(--shadow-soft);
+  }
   .dashboard-hero {
     background:
       linear-gradient(115deg, color-mix(in srgb, var(--color-surface) 94%, var(--color-brand-100)), color-mix(in srgb, var(--color-surface) 96%, var(--color-violet-brand)));
@@ -248,6 +277,10 @@
   }
   .dark .dashboard-hero {
     background: linear-gradient(115deg, color-mix(in srgb, var(--color-surface) 91%, var(--color-brand-900)), color-mix(in srgb, var(--color-surface) 94%, var(--color-violet-brand)));
+  }
+  .day-ring {
+    background: conic-gradient(var(--color-brand-500) var(--day-progress), var(--color-surface-3) 0);
+    box-shadow: 0 8px 24px -12px rgb(227 154 11 / 0.55), inset 0 0 0 1px rgb(255 255 255 / 0.28);
   }
   .mobile-dock { margin-bottom: env(safe-area-inset-bottom); }
   /* Telegram: o'qilmagan xabarlar soni */
