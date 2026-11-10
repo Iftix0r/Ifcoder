@@ -12,9 +12,12 @@ class Event(models.Model):
         TRAP = "trap", "Skaner"
         LEAK = "leak", "Maxfiy fayl yuklandi"
         KILLED = "killed", "Sessiya yopildi"
+        BLOCKED = "blocked", "IP bloklandi"
+        RATE_LIMIT = "rate_limit", "So'rov limiti"
 
     TONE = {"login_ok": "badge-success", "login_fail": "badge-warning", "new_ip": "badge-warning"}
     TONE |= {"trap": "badge-neutral", "leak": "badge-danger", "killed": "badge-neutral"}
+    TONE |= {"blocked": "badge-danger", "rate_limit": "badge-warning"}
 
     kind = models.CharField(max_length=10, choices=Kind.choices, db_index=True)
     ip = models.CharField(max_length=45, blank=True, db_index=True)
@@ -46,6 +49,22 @@ class TrustedIP(models.Model):
 
     def __str__(self):
         return self.ip
+
+
+class BlockedIP(models.Model):
+    """Middleware darajasida avtomatik bloklangan manzil."""
+
+    ip = models.CharField(max_length=45, unique=True, db_index=True)
+    reason = models.CharField(max_length=200)
+    hits = models.PositiveIntegerField(default=1)
+    expires_at = models.DateTimeField(db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.ip} — {self.reason}"
 
 
 class SessionRecord(models.Model):

@@ -1,14 +1,18 @@
+from datetime import timedelta
+
 from django.conf import settings as conf
 from django.contrib import messages
+from django.core.cache import cache
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.core import telegram
 from apps.vault.services import has_2fa
 
 from . import services
-from .forms import TrustedForm
-from .models import Event, ScanState, TrustedIP
+from .forms import BlockForm, TrustedForm
+from .models import BlockedIP, Event, ScanState, TrustedIP
 
 EVENT_LIMIT = 150
 
@@ -23,6 +27,8 @@ def home(request):
     for row in rows:
         row.trusted = any(row.ip.startswith(item) for item in trusted)
     current = services.key_hash(request.session.session_key) if request.session.session_key else ""
+    since = timezone.now() - timedelta(hours=24)
+    recent = Event.objects.filter(created_at__gte=since)
     return render(
         request,
         "security/home.html",
@@ -35,7 +41,12 @@ def home(request):
             "current_hash": current,
             "my_ip": services.client_ip(request),
             "trusted_rows": TrustedIP.objects.all(),
+            "blocked_rows": BlockedIP.objects.filter(expires_at__gt=timezone.now()),
             "form": TrustedForm(),
+            "block_form": BlockForm(),
+            "day_traps": recent.filter(kind=Event.Kind.TRAP).count(),
+            "day_fails": recent.filter(kind=Event.Kind.LOGIN_FAIL).count(),
+            "day_blocks": recent.filter(kind=Event.Kind.BLOCKED).count(),
             "has_2fa": has_2fa(request.user),
             "bot_ok": telegram.is_configured(),
             "scanned_at": ScanState.load().scanned_at,
@@ -69,4 +80,31 @@ def kill(request):
         messages.error(request, "Joriy sessiyani bu yerdan yopib bo'lmaydi: chiqish tugmasidan foydalaning.")
     elif services.kill_session(digest, services.client_ip(request), request.user.get_username()):
         messages.success(request, "Sessiya yopildi.")
+    return redirect("security_home")
+
+
+@require_POST
+def unblock(request, pk):
+    row = get_object_or_404(BlockedIP, pk=pk)
+    ip = row.ip
+    row.delete()
+    cache.delete(f"sec-blocked:{ip}")
+    messages.success(request, f"{ip} blokdan chiqarildi.")
+    return redirect("security_home")
+
+
+@require_POST
+def block(request):
+    form = BlockForm(request.POST)
+    if form.is_valid():
+        ip = form.cleaned_data["ip"]
+        if services.is_trusted(ip):
+            messages.error(request, "Ishonchli IP bloklanmaydi. Avval ishonchli ro'yxatdan olib tashlang.")
+        elif ip == services.client_ip(request):
+            messages.error(request, "Joriy IP'ingizni paneldan bloklab bo'lmaydi.")
+        else:
+            services.block_ip(ip, form.cleaned_data["reason"], hours=form.cleaned_data["hours"])
+            messages.success(request, f"{ip} bloklandi.")
+    else:
+        messages.error(request, "IP, sabab yoki muddat noto'g'ri.")
     return redirect("security_home")

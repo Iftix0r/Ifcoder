@@ -3,7 +3,7 @@ from django.core.validators import RegexValidator
 
 from apps.core.forms import StyledFormMixin
 
-from .models import TrustedIP
+from .models import BlockedIP, TrustedIP
 
 
 class TrustedForm(StyledFormMixin, forms.ModelForm):
@@ -16,3 +16,18 @@ class TrustedForm(StyledFormMixin, forms.ModelForm):
     class Meta:
         model = TrustedIP
         fields = ["ip", "note"]
+
+
+class BlockForm(StyledFormMixin, forms.ModelForm):
+    ip = forms.GenericIPAddressField(label="IP manzil")
+    hours = forms.TypedChoiceField(
+        label="Muddat",
+        choices=[(1, "1 soat"), (24, "24 soat"), (168, "7 kun"), (720, "30 kun")],
+        coerce=int,
+        initial=24,
+    )
+
+    class Meta:
+        model = BlockedIP
+        fields = ["ip", "reason"]
+        labels = {"reason": "Sabab"}

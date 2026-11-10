@@ -7,18 +7,25 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
+from django.db import models
 from django.utils import timezone
 
 from apps.core import telegram
 from apps.core.roles import is_student
 
-from .models import Event, ScanState, SessionRecord, TrustedIP
+from .models import BlockedIP, Event, ScanState, SessionRecord, TrustedIP
 
 FAIL_ALERT = 5
 FAIL_WINDOW = timedelta(minutes=15)
 NEW_IP_REPEAT = timedelta(hours=24)
 TOUCH_SECONDS = 300
 TRAP_SECONDS = 3600
+TRAP_BLOCK_THRESHOLD = 3
+AUTO_BLOCK_HOURS = 24
+RATE_WINDOW = 60
+RATE_ANONYMOUS = 120
+RATE_AUTHENTICATED = 300
+MAX_REQUEST_BYTES = 20 * 1024 * 1024
 KEEP_DAYS = 90
 
 # Hech qachon so'ralmasligi kerak bo'lgan manzillar: buni faqat skaner yoki hujumchi ochadi
@@ -26,6 +33,7 @@ TRAP = re.compile(
     r"(^/\.env|/\.git(/|$)|\.sqlite3?$|wp-login|wp-admin|xmlrpc\.php|phpmyadmin|/backup\.|\.sql$|firebase.*\.json)",
     re.I,
 )
+HOSTILE_PATH = re.compile(r"(?:\.\./|%2e%2e|%00|/etc/passwd|/proc/self|/vendor/phpunit|cgi-bin/)", re.I)
 SENSITIVE = re.compile(r"^/(\.env|db\.sqlite3|[^/]*firebase[^/]*\.json|backups/|logs/|\.git/|public/media/)", re.I)
 LOG_LINE = re.compile(r'^(\S+) \S+ \S+ \[[^\]]+\] "(GET|HEAD|POST) (\S+) [^"]*" (\d{3}) (\S+)')
 # Hosting «One moment, please» sahifasi: haqiqiy fayl emas
@@ -47,6 +55,75 @@ def key_hash(session_key: str) -> str:
 
 def is_trusted(ip: str) -> bool:
     return any(ip.startswith(row) for row in TrustedIP.objects.values_list("ip", flat=True))
+
+
+def active_block(ip: str):
+    if not ip:
+        return None
+    key = f"sec-blocked:{ip}"
+    cached = cache.get(key)
+    if cached == "clear":
+        return None
+    row = BlockedIP.objects.filter(ip=ip, expires_at__gt=timezone.now()).first()
+    cache.set(key, row.pk if row else "clear", 30)
+    return row
+
+
+def block_ip(ip: str, reason: str, *, hours: int = AUTO_BLOCK_HOURS):
+    if not ip or is_trusted(ip):
+        return None
+    expires = timezone.now() + timedelta(hours=hours)
+    row, created = BlockedIP.objects.update_or_create(
+        ip=ip,
+        defaults={"reason": reason[:200], "expires_at": expires},
+    )
+    if not created:
+        BlockedIP.objects.filter(pk=row.pk).update(hits=models.F("hits") + 1)
+        row.refresh_from_db()
+    cache.delete(f"sec-blocked:{ip}")
+    if created:
+        record(Event.Kind.BLOCKED, ip, path=reason)
+        _alert(
+            f"🛑 <b>Shubhali IP avtomatik bloklandi</b>\n<code>{telegram.h(ip)}</code>\n"
+            f"Sabab: {telegram.h(reason)}\nMuddat: {hours} soat"
+        )
+    return row
+
+
+def request_rate_exceeded(request) -> bool:
+    ip = client_ip(request)
+    if not ip or is_trusted(ip) or request.path.startswith(("/static/", "/healthz/")):
+        return False
+    key = f"sec-rate:{ip}"
+    if cache.add(key, 1, RATE_WINDOW):
+        count = 1
+    else:
+        try:
+            count = cache.incr(key)
+        except ValueError:
+            cache.set(key, 1, RATE_WINDOW)
+            count = 1
+    user = getattr(request, "user", None)
+    limit = RATE_AUTHENTICATED if user and user.is_authenticated else RATE_ANONYMOUS
+    if count == limit + 1:
+        record(Event.Kind.RATE_LIMIT, ip, user_agent=agent(request), path=request.path)
+    if count >= limit + 25:
+        block_ip(ip, f"Bir daqiqada {count} ta so'rov")
+    return count > limit
+
+
+def dangerous_request_reason(request) -> str:
+    if request.method in {"TRACE", "CONNECT"}:
+        return f"Taqiqlangan HTTP usuli: {request.method}"
+    try:
+        size = int(request.META.get("CONTENT_LENGTH") or 0)
+    except (TypeError, ValueError):
+        size = 0
+    if size > MAX_REQUEST_BYTES:
+        return f"Haddan tashqari katta so'rov: {size} bayt"
+    if HOSTILE_PATH.search(request.get_full_path()):
+        return "Path traversal yoki tizim fayliga hujum"
+    return ""
 
 
 def record(kind: str, ip: str = "", *, user_agent: str = "", path: str = "", username: str = "") -> Event:
@@ -80,7 +157,7 @@ def on_login_failed(request, username: str) -> None:
     since = timezone.now() - FAIL_WINDOW
     fails = Event.objects.filter(kind=Event.Kind.LOGIN_FAIL, ip=ip, created_at__gte=since).count()
     if fails == FAIL_ALERT and not is_trusted(ip):
-        _alert(f"⚠️ <b>Parol terib ko'rilmoqda</b>\n<code>{telegram.h(ip)}</code>: {fails} ta xato urinish")
+        block_ip(ip, f"15 daqiqada {fails} ta xato login", hours=1)
 
 
 def note_trap(request) -> None:
@@ -88,6 +165,13 @@ def note_trap(request) -> None:
     key = f"sec-trap:{ip}"
     if cache.add(key, 1, TRAP_SECONDS):  # skanerlar ko'p: IP'ga soatiga bitta yozuv
         record(Event.Kind.TRAP, ip, user_agent=agent(request), path=request.path)
+    attempts_key = f"sec-trap-count:{ip}"
+    if cache.add(attempts_key, 1, TRAP_SECONDS):
+        attempts = 1
+    else:
+        attempts = cache.incr(attempts_key)
+    if attempts >= TRAP_BLOCK_THRESHOLD:
+        block_ip(ip, f"Taqiqlangan manzillarni skanerlash ({attempts} urinish)")
 
 
 def touch_session(request) -> None:
@@ -165,6 +249,7 @@ def scan_log() -> list[tuple[str, str, int]]:
     state.scanned_at = timezone.now()
     state.save()
     Event.objects.filter(created_at__lt=timezone.now() - timedelta(days=KEEP_DAYS)).delete()
+    BlockedIP.objects.filter(expires_at__lte=timezone.now()).delete()
     return leaks
 
 

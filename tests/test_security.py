@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.security import services
-from apps.security.models import Event, ScanState, SessionRecord, TrustedIP
+from apps.security.models import BlockedIP, Event, ScanState, SessionRecord, TrustedIP
 
 PASSWORD = "Parol-2026!"
 LOGIN = {"username": "iftixor", "password": PASSWORD}
@@ -51,6 +51,7 @@ def test_failed_login_recorded_and_alerts_at_threshold(client, user, alerts):
     for _ in range(5):
         login(client, data={"username": "iftixor", "password": "xato"})
     assert Event.objects.filter(kind="login_fail").count() == 5
+    assert BlockedIP.objects.filter(ip="1.2.3.4").exists()
     assert alerts.call_count == 1 and "5 ta" in alerts.call_args.args[0]
 
 
@@ -58,7 +59,7 @@ def test_forged_forwarded_header_cannot_bypass_lock(client, user):
     for number in range(6):
         login(client, data={"username": "iftixor", "password": "xato"}, HTTP_X_FORWARDED_FOR=f"9.9.9.{number}")
     resp = login(client, HTTP_X_FORWARDED_FOR="9.9.9.99")
-    assert "Juda ko" in resp.content.decode() and not Event.objects.filter(kind="login_ok").exists()
+    assert resp.status_code == 403 and not Event.objects.filter(kind="login_ok").exists()
     assert not Event.objects.filter(ip__startswith="9.9.9").exists()
 
 
@@ -81,16 +82,59 @@ def test_session_used_from_new_ip_alerts(client_in, alerts):
     assert Event.objects.filter(kind="new_ip", ip="6.6.6.6").count() == 1
 
 
-def test_trap_paths_logged_once_per_hour_without_alert(client, db, alerts):
+def test_trap_paths_logged_once_and_then_blocked(client, db, alerts):
     for path in ("/.env.backup", "/wp-login.php", "/.git/HEAD"):
         client.get(path, REMOTE_ADDR="5.5.5.5")
-    assert Event.objects.filter(kind="trap", ip="5.5.5.5").count() == 1 and not alerts.called
+    assert Event.objects.filter(kind="trap", ip="5.5.5.5").count() == 1
+    assert BlockedIP.objects.filter(ip="5.5.5.5").exists()
+    assert alerts.call_count == 1
 
 
 def test_normal_pages_are_not_traps(client, db):
     client.get("/", REMOTE_ADDR="5.5.5.5")
     client.get("/accounts/login/", REMOTE_ADDR="5.5.5.5")
     assert not Event.objects.exists()
+
+
+def test_repeated_scanner_is_automatically_blocked(client, db, alerts):
+    ip = "5.5.5.5"
+    client.get("/.env", REMOTE_ADDR=ip)
+    client.get("/wp-login.php", REMOTE_ADDR=ip)
+    response = client.get("/.git/HEAD", REMOTE_ADDR=ip)
+    assert response.status_code == 403
+    assert BlockedIP.objects.filter(ip=ip).exists()
+    assert Event.objects.filter(kind=Event.Kind.BLOCKED, ip=ip).exists()
+    assert alerts.call_count == 1
+
+
+def test_hostile_path_is_blocked_immediately(client, db, alerts):
+    response = client.get("/%2e%2e/%2e%2e/etc/passwd", REMOTE_ADDR="6.6.6.6")
+    assert response.status_code == 403
+    assert BlockedIP.objects.filter(ip="6.6.6.6").exists()
+
+
+def test_security_headers_are_added(client, db):
+    response = client.get("/", REMOTE_ADDR="7.7.7.7")
+    assert "Content-Security-Policy" in response
+    assert response["Cross-Origin-Opener-Policy"] == "same-origin"
+
+
+def test_manual_block_and_unblock(client_in):
+    response = client_in.post(
+        reverse("security_block"),
+        {"ip": "8.8.8.8", "reason": "Qo'lda blok", "hours": "24"},
+        REMOTE_ADDR="1.1.1.1",
+    )
+    assert response.status_code == 302
+    row = BlockedIP.objects.get(ip="8.8.8.8")
+    client_in.post(reverse("security_unblock", args=[row.pk]), REMOTE_ADDR="1.1.1.1")
+    assert not BlockedIP.objects.filter(ip="8.8.8.8").exists()
+
+
+def test_trace_and_oversized_request_are_blocked(client, db):
+    assert client.trace("/", REMOTE_ADDR="9.9.9.1").status_code == 403
+    response = client.post("/", REMOTE_ADDR="9.9.9.2", CONTENT_LENGTH=str(21 * 1024 * 1024))
+    assert response.status_code == 403
 
 
 def test_panel_page_and_kill_other_session(client_in, user):

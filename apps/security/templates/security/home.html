@@ -6,10 +6,17 @@
   <p class="mt-1 text-sm text-ink-2">Kim, qachon va qayerdan kirgani. Sizning IP'ingiz: <code class="font-mono">{{ my_ip }}</code></p>
 </div>
 
-<div class="mb-4 grid gap-3 sm:grid-cols-3 animate-fade-up">
+<div class="mb-4 grid grid-cols-3 gap-3 animate-fade-up">
+  <div class="card p-4"><p class="text-xs text-ink-3">24 soatda skanerlar</p><p class="mt-1 text-2xl font-bold tabular-nums">{{ day_traps }}</p></div>
+  <div class="card p-4"><p class="text-xs text-ink-3">Xato loginlar</p><p class="mt-1 text-2xl font-bold tabular-nums">{{ day_fails }}</p></div>
+  <div class="card p-4"><p class="text-xs text-ink-3">Avtomatik bloklar</p><p class="mt-1 text-2xl font-bold tabular-nums text-rose-500">{{ day_blocks }}</p></div>
+</div>
+
+<div class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 animate-fade-up">
   <div class="card p-4"><p class="text-xs text-ink-3">2FA</p><p class="mt-1">{% if has_2fa %}<span class="badge badge-success">Yoqilgan</span>{% else %}<a href="{% url '2fa_setup' %}" class="badge badge-danger">Yoqilmagan: yoqish</a>{% endif %}</p></div>
   <div class="card p-4"><p class="text-xs text-ink-3">Bot ogohlantirishi</p><p class="mt-1">{% if bot_ok %}<span class="badge badge-success">Ulangan</span>{% else %}<span class="badge badge-danger">Sozlanmagan</span>{% endif %}</p></div>
   <div class="card p-4"><p class="text-xs text-ink-3">Log tekshiruvi</p><p class="mt-1 text-sm">{% if scanned_at %}{{ scanned_at|date:"j E, H:i" }}{% else %}<span class="badge badge-warning">Hali ishlamagan</span>{% endif %}</p></div>
+  <div class="card p-4"><p class="text-xs text-ink-3">Avtomatik himoya</p><p class="mt-1"><span class="badge badge-success">Faol</span> <span class="ml-1 text-xs text-ink-3">{{ blocked_rows|length }} ta blok</span></p></div>
 </div>
 
 <div class="grid gap-4 lg:grid-cols-3">
@@ -53,6 +60,7 @@
     </div>
   </div>
 
+  <div class="space-y-4">
   <div class="card h-fit animate-fade-up">
     <div class="card-header"><p class="card-title">Ishonchli IP'lar</p></div>
     <div class="card-body space-y-3">
@@ -69,6 +77,27 @@
         {% endfor %}
       </ul>
     </div>
+  </div>
+  <div class="card h-fit overflow-hidden animate-fade-up">
+    <div class="card-header"><p class="card-title">Bloklangan IP'lar</p><span class="badge badge-danger">{{ blocked_rows|length }}</span></div>
+    <ul class="divide-y divide-line">
+      {% for b in blocked_rows %}
+        <li class="flex items-center gap-2 px-4 py-3">
+          <div class="min-w-0 flex-1"><p class="truncate font-mono text-sm font-semibold">{{ b.ip }}</p><p class="truncate text-xs text-ink-3">{{ b.reason }} · {{ b.expires_at|date:"j E, H:i" }} gacha</p></div>
+          <form method="post" action="{% url 'security_unblock' b.pk %}">{% csrf_token %}<button class="btn btn-ghost btn-sm">Ochish</button></form>
+        </li>
+      {% empty %}<li class="px-4 py-6 text-center text-sm text-ink-3">Hozir bloklangan IP yo'q.</li>{% endfor %}
+    </ul>
+    <div class="border-t border-line p-4">
+      <p class="mb-3 text-sm font-semibold">IP'ni qo'lda bloklash</p>
+      <form method="post" action="{% url 'security_block' %}" class="space-y-3">{% csrf_token %}
+        {% include "components/field.html" with field=block_form.ip %}
+        {% include "components/field.html" with field=block_form.reason %}
+        {% include "components/field.html" with field=block_form.hours %}
+        <button class="btn btn-danger btn-sm">{% icon "shield-ban" "size-4" %}Bloklash</button>
+      </form>
+    </div>
+  </div>
   </div>
 </div>
 {% endblock %}
