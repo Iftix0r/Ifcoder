@@ -16,35 +16,35 @@
   --font-display: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
 
-  /* Brend: indigo → violet */
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-300: #a5b4fc;
-  --color-brand-400: #818cf8;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
-  --color-brand-800: #3730a3;
-  --color-brand-900: #312e81;
-  --color-brand-950: #1e1b4b;
-  --color-violet-brand: #8b5cf6;
-  --color-accent: #06b6d4;
+  /* Brend: iliq za'faron + tabiiy yashil */
+  --color-brand-50: #fffbea;
+  --color-brand-100: #fff3c4;
+  --color-brand-200: #ffe588;
+  --color-brand-300: #ffd24a;
+  --color-brand-400: #f8b91f;
+  --color-brand-500: #e39a0b;
+  --color-brand-600: #bd7106;
+  --color-brand-700: #965008;
+  --color-brand-800: #793f0e;
+  --color-brand-900: #663410;
+  --color-brand-950: #3b1a05;
+  --color-violet-brand: #5f8f63;
+  --color-accent: #86a873;
 
   /* Semantik tokenlar (dark mode'da pastda qayta belgilanadi) */
-  --color-canvas: #f7f8fb;
-  --color-surface: #ffffff;
-  --color-surface-2: #f2f4f8;
-  --color-surface-3: #e9ecf3;
-  --color-line: #e4e7ef;
-  --color-line-strong: #d3d8e3;
-  --color-ink: #0f172a;
-  --color-ink-2: #475569;
-  --color-ink-3: #94a3b8;
+  --color-canvas: #f7f4ed;
+  --color-surface: #fffdf8;
+  --color-surface-2: #f2eee4;
+  --color-surface-3: #e9e2d4;
+  --color-line: #e5ddce;
+  --color-line-strong: #d4c9b7;
+  --color-ink: #29251f;
+  --color-ink-2: #655e52;
+  --color-ink-3: #9a9183;
 
   --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 6px 20px -8px rgb(15 23 42 / 0.08);
   --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.04), 0 18px 40px -14px rgb(15 23 42 / 0.18);
-  --shadow-glow: 0 8px 30px -6px rgb(99 102 241 / 0.55);
+  --shadow-glow: 0 8px 30px -6px rgb(227 154 11 / 0.45);
 
   --animate-fade-up: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-float: float 6s ease-in-out infinite;
@@ -66,15 +66,15 @@
 
 @layer base {
   .dark {
-    --color-canvas: #07080d;
-    --color-surface: #0e1017;
-    --color-surface-2: #151822;
-    --color-surface-3: #1c2030;
-    --color-line: #1f2433;
-    --color-line-strong: #2b3245;
-    --color-ink: #eef1f8;
-    --color-ink-2: #a3acc2;
-    --color-ink-3: #636d86;
+    --color-canvas: #171511;
+    --color-surface: #201d17;
+    --color-surface-2: #29251d;
+    --color-surface-3: #332e24;
+    --color-line: #383226;
+    --color-line-strong: #4b4333;
+    --color-ink: #f5efe3;
+    --color-ink-2: #c3b8a5;
+    --color-ink-3: #827867;
     --shadow-soft: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 1px 2px rgb(0 0 0 / 0.4);
     --shadow-lift: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 20px 50px -12px rgb(0 0 0 / 0.7);
     color-scheme: dark;
@@ -89,8 +89,8 @@
     font-feature-settings: "cv11", "ss01", "ss03";
     /* Yuqori burchaklarda yumshoq brend nurlanishi — tekis fonga chuqurlik beradi */
     background-image:
-      radial-gradient(900px 480px at 100% -8%, rgb(99 102 241 / var(--glow-a, 0.07)), transparent 65%),
-      radial-gradient(700px 420px at 20% -12%, rgb(139 92 246 / var(--glow-b, 0.05)), transparent 65%);
+      radial-gradient(900px 480px at 100% -8%, rgb(227 154 11 / var(--glow-a, 0.09)), transparent 65%),
+      radial-gradient(700px 420px at 20% -12%, rgb(95 143 99 / var(--glow-b, 0.06)), transparent 65%);
     background-attachment: fixed;
     background-repeat: no-repeat;
   }
@@ -134,8 +134,8 @@
       active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
-    @apply text-white shadow-[0_1px_0_rgb(255_255_255/0.2)_inset,0_6px_18px_-6px_rgb(99_102_241/0.7)]
-      hover:shadow-[0_1px_0_rgb(255_255_255/0.2)_inset,0_10px_26px_-6px_rgb(99_102_241/0.8)] hover:brightness-110;
+    @apply text-brand-950 shadow-[0_1px_0_rgb(255_255_255/0.35)_inset,0_6px_18px_-6px_rgb(227_154_11/0.6)]
+      hover:shadow-[0_1px_0_rgb(255_255_255/0.4)_inset,0_10px_26px_-6px_rgb(227_154_11/0.7)] hover:brightness-105;
     background-image: linear-gradient(135deg, var(--color-brand-500), var(--color-violet-brand));
   }
   .btn-secondary {
