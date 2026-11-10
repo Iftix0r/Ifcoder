@@ -20,7 +20,13 @@ class NavItem:
 
 
 NAV_SECTIONS: list[tuple[str, list[NavItem]]] = [
-    ("", [NavItem("dashboard", "Bugun", "sun", "dashboard", mobile=True, short="Bugun")]),
+    (
+        "",
+        [
+            NavItem("dashboard", "Bugun", "sun", "dashboard", mobile=True, short="Bugun"),
+            NavItem("notifications", "Bildirishnomalar", "bell", "notifications"),
+        ],
+    ),
     (
         "Ish",
         [

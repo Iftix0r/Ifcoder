@@ -15,6 +15,7 @@ HX = {"HTTP_HX_REQUEST": "true"}
 
 PAGES = [
     "dashboard",
+    "notifications",
     "calendar",
     "recurring_list",
     "task_board",

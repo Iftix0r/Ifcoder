@@ -1,8 +1,10 @@
 import calendar
+import hashlib
 from datetime import timedelta
 
 from django.db.models import Count, Q
-from django.shortcuts import render
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
@@ -131,6 +133,47 @@ def _alerts(today):
             }
         )
     return items
+
+
+def notification_items(request):
+    """Dashboard ogohlantirishlarini barqaror ID va o'qilgan holati bilan qaytaradi."""
+    read_ids = set(request.session.get("read_notifications", []))
+    items = []
+    for item in _alerts(timezone.localdate()):
+        key = f"{item.get('title', '')}|{item.get('url', '')}|{item.get('hint', '')}"
+        item = {**item, "id": hashlib.sha1(key.encode()).hexdigest()[:12]}
+        item["is_read"] = item["id"] in read_ids
+        items.append(item)
+    return items
+
+
+def notifications(request):
+    items = notification_items(request)
+    return render(
+        request,
+        "dashboard/notifications.html",
+        {
+            "nav_active": "notifications",
+            "items": items,
+            "unread_count": sum(not item["is_read"] for item in items),
+        },
+    )
+
+
+def notification_read(request, notification_id):
+    if request.method == "POST":
+        read_ids = set(request.session.get("read_notifications", []))
+        read_ids.add(notification_id)
+        request.session["read_notifications"] = list(read_ids)[-200:]
+    if request.htmx:
+        return HttpResponse(status=204, headers={"HX-Trigger": "notificationsChanged"})
+    return redirect("notifications")
+
+
+def notifications_read_all(request):
+    if request.method == "POST":
+        request.session["read_notifications"] = [item["id"] for item in notification_items(request)][-200:]
+    return redirect("notifications")
 
 
 def home(request):

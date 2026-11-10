@@ -259,9 +259,16 @@
     font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 20px; text-align: center;
   }
   .nav-badge-dot { position: absolute; top: 2px; right: 12px; width: 9px; height: 9px; border: 2px solid var(--color-surface); border-radius: 999px; background: #e11d48; box-sizing: content-box; }
+  .notification-count {
+    min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+    background: var(--color-brand-500); color: var(--color-brand-950);
+    box-shadow: 0 2px 8px rgb(227 154 11 / 0.32), inset 0 0 0 1px rgb(255 255 255 / 0.24);
+    font-size: 10.5px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 20px; text-align: center;
+  }
   @media (min-width: 1024px) {
     .sb-collapsed .nav-badge-slot { position: absolute; top: -3px; right: 3px; margin: 0; }
     .sb-collapsed .nav-badge { min-width: 16px; height: 16px; padding: 0 4px; font-size: 9.5px; line-height: 16px; }
+    .sb-collapsed .notification-count { min-width: 16px; height: 16px; padding: 0 4px; font-size: 9px; line-height: 16px; }
   }
 
   /* Menyu uzun bo'lsa — yuqori/pastki chekka yumshoq so'nadi (scroll borligini bildiradi) */

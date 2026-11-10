@@ -19,14 +19,17 @@ def app_context(request):
         return {}
     from apps.planner.services import running_entry
     from apps.userbot.services import unread_total
+    from apps.dashboard.views import notification_items
 
     try:
+        notifications = notification_items(request)
         return {
             "running_timer": running_entry(),
             "nav_sections": NAV_SECTIONS,
             "mobile_nav": [i for _, items in NAV_SECTIONS for i in items if i.mobile][:4],
             "palette_items": _palette(NAV_SECTIONS),
             "telegram_unread": unread_total(),
+            "notification_unread": sum(not item["is_read"] for item in notifications),
         }
     except NoReverseMatch:
         return {}

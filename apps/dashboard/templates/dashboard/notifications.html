@@ -1,0 +1,65 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Bildirishnomalar{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
+  <div>
+    <p class="mb-1 text-xs font-semibold tracking-wider text-brand-600 uppercase dark:text-brand-300">Xabarnoma markazi</p>
+    <h1 class="text-2xl font-bold tracking-tight sm:text-[28px]">Bildirishnomalar</h1>
+    <p class="mt-1 text-sm text-ink-2">Muhim muddatlar va e'tibor talab qiladigan ishlar bir joyda.</p>
+  </div>
+  {% if unread_count %}
+    <form method="post" action="{% url 'notifications_read_all' %}">
+      {% csrf_token %}
+      <button class="btn btn-secondary">{% icon "check-check" "size-4" %}Barchasini o'qildi qilish</button>
+    </form>
+  {% endif %}
+</div>
+
+<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+  <section class="card overflow-hidden animate-fade-up">
+    <div class="card-header">
+      <div><p class="card-title">So‘nggi bildirishnomalar</p><p class="text-xs text-ink-3">Holatlar ma'lumotlaringiz asosida avtomatik yangilanadi</p></div>
+      {% if unread_count %}<span class="badge badge-warning">{{ unread_count }} ta yangi</span>{% else %}<span class="badge badge-success">Hammasi o‘qilgan</span>{% endif %}
+    </div>
+    {% if items %}
+      <ul class="divide-y divide-line">
+        {% for item in items %}
+          <li class="relative {% if not item.is_read %}bg-brand-500/[0.045]{% endif %}">
+            <a href="{{ item.url }}" class="group flex items-center gap-3 px-4 py-4 transition hover:bg-surface-2/60 sm:px-5">
+              <span class="icon-chip {{ item.tone }} size-10 shrink-0">{% icon item.icon "size-[18px]" %}</span>
+              <span class="min-w-0 flex-1">
+                <span class="flex items-center gap-2">
+                  <span class="truncate text-sm {% if item.is_read %}font-medium text-ink-2{% else %}font-semibold text-ink{% endif %}">{{ item.title }}</span>
+                  {% if not item.is_read %}<span class="size-2 shrink-0 rounded-full bg-brand-500"></span>{% endif %}
+                </span>
+                <span class="mt-1 block text-xs text-ink-3">{% if item.hint %}Muddat: {{ item.hint|date:"j F Y" }}{% else %}E'tibor talab qiladi{% endif %}</span>
+              </span>
+              <span class="text-ink-3 transition group-hover:translate-x-0.5 group-hover:text-brand-600">{% icon "chevron-right" "size-4" %}</span>
+            </a>
+            {% if not item.is_read %}
+              <form method="post" action="{% url 'notification_read' item.id %}" class="absolute right-11 bottom-2 sm:right-12 sm:bottom-3">
+                {% csrf_token %}<button class="rounded-lg px-2 py-1 text-[11px] font-semibold text-ink-3 transition hover:bg-surface-3 hover:text-ink">O‘qildi</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% include "components/empty_state.html" with icon="bell-ring" title="Yangi bildirishnoma yo‘q" text="Hammasi joyida. Yangi muhim holat paydo bo‘lsa, shu yerda ko‘rinadi." %}
+    {% endif %}
+  </section>
+
+  <aside class="space-y-4 animate-fade-up" style="animation-delay: 80ms">
+    <div class="card p-5">
+      <span class="icon-chip tone-brand">{% icon "sparkles" "size-5" %}</span>
+      <h2 class="mt-4 text-sm font-semibold">Aqlli kuzatuv</h2>
+      <p class="mt-1.5 text-xs leading-relaxed text-ink-3">Kechikkan vazifalar, to‘lovlar, mijozlar va tugayotgan resurslar avtomatik tekshiriladi.</p>
+    </div>
+    <a href="{% url 'settings' %}" class="card card-hover flex items-center gap-3 p-4">
+      <span class="icon-chip tone-emerald size-9">{% icon "settings-2" "size-4" %}</span>
+      <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">Sozlamalar</span><span class="block text-xs text-ink-3">Telegram xabarlari</span></span>
+      {% icon "arrow-up-right" "size-4 text-ink-3" %}
+    </a>
+  </aside>
+</div>
+{% endblock %}
